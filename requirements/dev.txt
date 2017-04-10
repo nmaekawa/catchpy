@@ -1,0 +1,6 @@
+-r test.txt
+
+tox
+flake8
+django-extensions
+django-debug-toolbar
