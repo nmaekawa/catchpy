@@ -1,6 +1,7 @@
 -r base.txt
 
 mock
+model_mommy
 pytest
 pytest-django
 pytest-mock

@@ -25,7 +25,7 @@ class Anno(Model):
     anno_format = CharField(max_length=128, null=False, default='text/html')
     anno_deleted = BooleanField(default=False)
     # delete all replies when deleting an anno
-    anno_reply_to = ForeignKey('Anno', on_delete=CASCADE)
+    anno_reply_to = ForeignKey('Anno', null=True, on_delete=CASCADE)
     anno_permissions = JSONField()
     anno_tags = ManyToManyField('Tag')
 
@@ -33,8 +33,7 @@ class Anno(Model):
     platform_target_id = CharField(max_length=128, null=False)
 
     target_type = CharField(max_length=128, null=False)
-    data = JSONField()
-
+    raw = JSONField()
 
 
 class Platform(Model):
@@ -42,16 +41,27 @@ class Platform(Model):
     platform_id = CharField(max_length=128, primary_key=True)
     context_id = CharField(max_length=128, null=False)
     collection_id = CharField(max_length=128, null=True)
+    created = DateTimeField(auto_now_add=True, null=False)
+    modified = DateTimeField(auto_now=True, null=False)
+
+    def __repr__(self):
+        return self.platform_id
 
 
 class Tag(Model):
-    tag_name = CharField(max_length=128, null=False)
+    tag_name = CharField(max_length=128, unique=True, null=False)
     created = DateTimeField(auto_now_add=True, null=False)
+
+    def __repr__(self):
+        return self.tag_name
 
 
 class Target(Model):
     # this target is specific to a single anno
     # because it represents the specific selection for the anno
+
+    created = DateTimeField(auto_now_add=True, null=False)
+    modified = DateTimeField(auto_now=True, null=False)
 
     # source might be a reference in client internals only
     target_source = CharField(max_length=256, null=True)
@@ -65,6 +75,7 @@ class Target(Model):
 
     # delete all targets when deleting anno
     anno = ForeignKey('Anno', on_delete=CASCADE)
+
 
 
 

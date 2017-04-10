@@ -1,6 +1,7 @@
 -r test.txt
 
 tox
+coverage
 flake8
 django-extensions
 django-debug-toolbar
