@@ -6,7 +6,7 @@ DEBUG = True
 # http://django-extensions.readthedocs.org/en/latest/
 try:
     import django_extensions
-    INSTALLED_APPS += ['django_extenions']
+    INSTALLED_APPS += ['django_extensions']
 except ImportError:
     pass
 
