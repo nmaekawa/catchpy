@@ -1,6 +1,9 @@
 import logging
 from uuid import uuid4
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.db import IntegrityError
 from django.db.models import CASCADE, PROTECT
 from django.db.models import BooleanField
 from django.db.models import CharField
@@ -11,6 +14,8 @@ from django.db.models import Model
 from django.db.models import TextField
 
 from django.contrib.postgres.fields import JSONField
+
+import pdb
 
 
 class Anno(Model):
@@ -47,90 +52,124 @@ class Anno(Model):
 
     raw = JSONField()
 
+
     @classmethod
-    def create_from_annotatorjs(cls, raw):
+    def import_from_annotatorjs(cls, raw):
         # raw is a json object in annotatorjs format
 
         # pull platform object from db
-        platform = Platform.objects.filter(
-            platform_id='hxat',
-            context_id=raw['contextId'],
-            collection_id=raw['collectionId'])
-        if not platform:
+        if 'contextId' in raw and 'collectionId' in raw:
+            found_platform = Platform.objects.filter(
+                platform_id='hxat').filter(
+                context_id=raw['contextId']).filter(
+                collection_id=raw['collectionId'])
+        else:
+            return None
+
+        #pdb.set_trace()
+
+        platform = None
+        if found_platform:
+            platform = found_platform[0]
+        else:
             # create platform
             platform = Platform.objects.create(
                 platform_id='hxat',
                 context_id=raw['contextId'],
-                collection_id=['collectionId'])
+                collection_id=raw['collectionId'])
             platform.save()
-
-        # create tags
-        print('--tags tags tags: {}'.format(raw['tags']))
-        tags = []
-        if raw['tags']:
-            for t in raw['tags']:
-                print('creating tag({})'.format(t))
-                tag = Tag.objects.create(tag_name=t)
-                tag.save()
-                tags.append(tag)
 
         # find original annotation replied to
         parent = None
         if raw['parent'] != '0':
             # pull the parent object
-            parent = Anno.objects.get(pk=raw['parent'])
-            if parent is None:
-                raise Exception(
-                    'creating anno with parent({}) not in db'.format(
-                        raw['parent']))
+            try:
+                parent = Anno.objects.get(pk=raw['parent'])
+            except ObjectDoesNotExist:
+                # importing from inconsistent data, ignore
+                parent = None
+                #raise Exception(
+                #    'creating anno with parent({}) not in db'.format(
+                #        raw['parent']))
 
+
+        anno_id = raw['id'] if 'id' in raw else uuid4()
         a = cls.objects.create(
-            anno_id=uuid4(),
+            anno_id=anno_id,
             creator_id=raw['user']['id'],
             creator_name=raw['user']['name'],
             anno_text=raw['text'],
-            anno_tags=tags,
+            anno_tags=[],
             anno_format='text/html',
             anno_reply_to=parent,
             anno_permissions=raw['permissions'],
             platform=platform,
             platform_target_id=raw['uri'],
             raw=raw)
+        a.save()
 
+        # create tags
+        tags = []
+        if 'tags' in raw and raw['tags']:
+            for t in raw['tags']:
+                try:
+                    tag = Tag.objects.get(tag_name=t)
+                except ObjectDoesNotExist:
+                    print('creating tag({})'.format(t))
+                    tag = Tag.objects.create(tag_name=t)
+                    tag.save()
+                tags.append(tag)
+        a.anno_tags = tags
         a.save()
 
         # create targets
         if raw['media'] == 'comment':
             target_source = raw['parent']
-            target_format = Target.ANNO
+            #target_format = Target.ANNO
+            target_format = 'text/html'
+            target_media = Target.ANNO
         else:
             target_source = raw['uri']
             if raw['media'] == 'video':
                 target_format = 'video/youtube'
+                target_media = Target.VIDEO
             elif raw['media'] == 'image':
                 target_format = 'image/tiff'
+                target_media = Target.IMAGE
             elif raw['media'] == 'audio':
                 target_format = 'audio/mpeg'
+                target_media = Target.AUDIO
             elif raw['media'] == 'text':
                 target_format = 'text/html'
+                target_media = Target.TEXT
 
+        selector = []
         if raw['ranges']:
             selector = raw['ranges']
-        elif raw['rangePosition']:
+        elif 'rangePosition' in raw and raw['rangePosition']:
             selector = raw['rangePosition']
-        elif raw['rangeTime']:
+        elif 'rangeTime' in raw and raw['rangeTime']:
             selector = raw['rangeTime']
+
+        if 'bounds' in raw:
+            bounds = raw['bounds']
+        else:
+            bounds = []
 
         target = Target.objects.create(
             target_source=target_source,
             target_format=target_format,
-            target_media=raw['media'].capitalize(),
+            target_media=target_media,
             target_selector=selector,
-            target_scope=raw['bounds'],
+            target_scope=bounds,
             anno=a)
         target.save()
 
         return a
+
+
+    def __str__(self):
+        return self.anno_id
 
 
 class Platform(Model):
@@ -147,6 +186,9 @@ class Platform(Model):
     def __repr__(self):
         return self.platform_id
 
+    def __str__(self):
+        return self.__repr__()
+
 
 class Tag(Model):
     tag_name = CharField(max_length=128, unique=True, null=False)
@@ -154,6 +196,9 @@ class Tag(Model):
 
     def __repr__(self):
         return self.tag_name
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class Target(Model):
@@ -192,6 +237,9 @@ class Target(Model):
     # delete all targets when deleting anno
     anno = ForeignKey('Anno', on_delete=CASCADE)
 
+
+    def __str__(self):
+        return '({})({})'.format(self.target_source, self.id)
 
 
 

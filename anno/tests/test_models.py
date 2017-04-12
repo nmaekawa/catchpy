@@ -1,7 +1,10 @@
-import pytest
+import json
 import pdb
+import pytest
+import os
 
 from django.test import TestCase
+from django.test import TransactionTestCase
 
 from anno.models import Anno, Platform, Tag, Target
 
@@ -52,8 +55,10 @@ image_anno = {
 }
 
 
+data_filename = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), 'annotatorjs_sample.json')
 
-class AnnoTest(TestCase):
+class AnnoTest(TransactionTestCase):
 
 
     def fake_platform(self):
@@ -65,6 +70,32 @@ class AnnoTest(TestCase):
 
     def fake_tag(self, tag):
         return Tag(tag_name=tag)
+
+
+    @pytest.mark.django_db
+    def test_create_db(self):
+        datafile = open(data_filename, 'r')
+        raw_data = datafile.read()
+        content = json.loads(raw_data)
+        datafile.close()
+
+        for row in content:
+            print('id({}), contextId({}), collectionId({})'.format(
+                    row['id'], row['contextId'], row['collectionId']))
+
+            if 'contextId' not in row or \
+                    row['contextId'] is None or \
+                    row['contextId'] == 'None':
+                print('missing contextId for anno({})'.format(row['id']))
+                continue
+
+            x = Anno.create_from_annotatorjs(row)
+            if x is not None:
+                print('saved anno({})'.format(x.anno_id))
+            else:
+                print('failed to create anno({})'.format(row['id']))
+
+        assert len(Anno.objects.all()) > 0
 
 
     @pytest.mark.django_db
