@@ -1,4 +1,5 @@
 import logging
+from random import randint
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -16,6 +17,12 @@ from django.db.models import TextField
 from django.contrib.postgres.fields import JSONField
 
 import pdb
+
+
+def get_random(cls):
+    last = cls.objects.count() - 1
+    random_index = randint(0, last)
+    return cls.objects.all()[random_index]
 
 
 class Anno(Model):
@@ -37,7 +44,7 @@ class Anno(Model):
     anno_tags = ManyToManyField('Tag', blank=True)
 
     platform = ForeignKey('Platform', on_delete=PROTECT)
-    platform_target_id = CharField(max_length=128, null=False)
+    platform_target_id = CharField(max_length=256, null=False)
 
     target_LIST = 'list'
     target_CHOICE = 'choice'
@@ -53,20 +60,54 @@ class Anno(Model):
     raw = JSONField()
 
 
+
     @classmethod
     def import_from_annotatorjs(cls, raw):
         # raw is a json object in annotatorjs format
 
+        # check if annotation id already in db
+        anno_id = uuid4()
+        if 'id' in raw:
+            anno_id = raw['id']
+            try:
+                a = cls.objects.get(pk=anno_id)
+            except ObjectDoesNotExist:
+                # that's ok, we have to create a fresh annotation
+                pass
+            else:
+                # returning without updating!
+                print('anno({}) already exists'.format(anno_id))
+                return a
+
+        if 'uri' in raw:
+            uri = raw['uri']
+        else:
+            print('missing `uri` field; skipping')
+            return None
+
+        if 'media' not in raw:
+            print('missing `media` field; skipping')
+            return None
+
+
         # pull platform object from db
-        if 'contextId' in raw and 'collectionId' in raw:
+        if 'contextId' in raw:
+            if 'collectionId' not in raw or \
+                    raw['collectionId'] == 'None':
+                raw['collectionId'] = None
+
             found_platform = Platform.objects.filter(
                 platform_id='hxat').filter(
                 context_id=raw['contextId']).filter(
                 collection_id=raw['collectionId'])
         else:
-            return None
-
-        #pdb.set_trace()
+            # pull a random platform because this is a test!
+            random_platform = get_random(Platform)
+            if random_platform:
+                found_platform = [random_platform]
+            else:
+                print('could not guess a platform, skipping...')
+                return None
 
         platform = None
         if found_platform:
@@ -79,37 +120,61 @@ class Anno(Model):
                 collection_id=raw['collectionId'])
             platform.save()
 
+        creator_id = 'anonymous'
+        creator_name = 'nameless'
+        if 'user' in raw:
+            if 'id' in raw['user']:
+                creator_id = raw['user']['id']
+            if 'name' in raw['user']:
+                creator_name = raw['user']['name']
+        if 'text' in raw:
+            anno_text = raw['text']
+        else:
+            anno_text = None
+        if 'permissions' in raw:
+            permissions = raw['permissions']
+        else:
+            permissions = {
+                'read': [],
+                'update': [creator_id],
+                'delete': [creator_id],
+                'admin': [creator_id]
+            }
+        # TODO: keep original created date
+        a = cls.objects.create(
+            anno_id=anno_id,
+            creator_id=creator_id,
+            creator_name=creator_name,
+            anno_text=anno_text,
+            anno_tags=[],
+            anno_format='text/html',
+            anno_reply_to=None,
+            anno_permissions=permissions,
+            platform=platform,
+            platform_target_id=uri,
+            raw=raw)
+        a.save()  # have to save before adding relationships
+
+        # TODO: if fails from here the anno is invalid because still 
+        # doesn't have a target -- target is mandatory!!!
+        # make this whole thing a transaction?
+
         # find original annotation replied to
         parent = None
-        if raw['parent'] != '0':
+        if 'parent' in raw and raw['parent'] != '0':
             # pull the parent object
             try:
                 parent = Anno.objects.get(pk=raw['parent'])
             except ObjectDoesNotExist:
-                # importing from inconsistent data, ignore
-                parent = None
-                #raise Exception(
-                #    'creating anno with parent({}) not in db'.format(
-                #        raw['parent']))
+                # importing from inconsistent data, pull random anno
+                # note that even when importing consistent data,
+                # we'll need to import non-replies first, then replies
+                # to make sure the parent is already in the table
+                parent = get_random(cls)
 
-
-        anno_id = raw['id'] if 'id' in raw else uuid4()
-        a = cls.objects.create(
-            anno_id=anno_id,
-            creator_id=raw['user']['id'],
-            creator_name=raw['user']['name'],
-            anno_text=raw['text'],
-            anno_tags=[],
-            anno_format='text/html',
-            anno_reply_to=parent,
-            anno_permissions=raw['permissions'],
-            platform=platform,
-            platform_target_id=raw['uri'],
-            raw=raw)
-        a.save()
+        a.anno_reply_to=parent
 
         # create tags
-        tags = []
         if 'tags' in raw and raw['tags']:
             for t in raw['tags']:
                 try:
@@ -118,14 +183,11 @@ class Anno(Model):
                     print('creating tag({})'.format(t))
                     tag = Tag.objects.create(tag_name=t)
                     tag.save()
-                tags.append(tag)
-        a.anno_tags = tags
-        a.save()
+                a.anno_tags.add(tag)
 
         # create targets
         if raw['media'] == 'comment':
-            target_source = raw['parent']
-            #target_format = Target.ANNO
+            target_source = raw['parent']  # in future, this info will come in annojs
             target_format = 'text/html'
             target_media = Target.ANNO
         else:
@@ -156,6 +218,18 @@ class Anno(Model):
         else:
             bounds = []
 
+        # is there a choice of targets?
+        if 'thumb' in raw:
+            a.target_type = Anno.target_CHOICE
+            target_choice = Target.objects.create(
+                target_source=raw['thumb'],
+                target_format='image/jpg',
+                target_media=Target.IMAGE,
+                target_selector=None,
+                target_scope=None,
+                anno=a)
+            target_choice.save()
+
         target = Target.objects.create(
             target_source=target_source,
             target_format=target_format,
@@ -164,7 +238,10 @@ class Anno(Model):
             target_scope=bounds,
             anno=a)
         target.save()
+        target.anno = a
+        target.save()
 
+        a.save()  # commit changes when adding relationships
         return a
 
 

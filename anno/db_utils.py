@@ -14,24 +14,33 @@ def create_db(json_datafile):
     content = json.loads(raw_data)
     datafile.close()
 
+    count = 0
+    ignored = 0
     for row in content:
         if 'contextId' not in row or \
                 row['contextId'] is None or \
                 row['contextId'] == 'None':
-            print('missing contextId for anno({})'.format(row['id']))
-            continue
+            row['contextId'] = 'unknown'
 
+        if 'collectionId' not in row or \
+                row['collectionId'] is None or \
+                row['collectionId'] == 'None':
+            row['collectionId'] = 'unknown'
+
+        row_id = row['id'] if 'id' in row else 'unknown'
         print('id({}), contextId({}), collectionId({})'.format(
-                row['id'], row['contextId'], row['collectionId']))
+                row_id, row['contextId'], row['collectionId']))
 
         x = Anno.import_from_annotatorjs(row)
         if x is not None:
+            count += 1
             print('saved anno({})'.format(x.anno_id))
         else:
-            print('failed to create anno({})'.format(row['id']))
+            ignored += 1
+            print('failed to create anno({})'.format(row_id))
 
-    assert len(Anno.objects.all()) > 0
-
+    print('------------------------------ created: {}'.format(count))
+    print('------------------------------ ignored: {}'.format(ignored))
 
 
 
