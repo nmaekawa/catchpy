@@ -319,6 +319,8 @@ class Target(Model):
         return '({})({})'.format(self.target_source, self.id)
 
 
-
-
-
+class Doc(Model):
+    created = DateTimeField(auto_now_add=True, null=False)
+    modified = DateTimeField(auto_now=True, null=False)
+    anno_id = CharField(max_length=128, primary_key=True)
+    doc = JSONField(null=False)
