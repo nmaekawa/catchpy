@@ -8,14 +8,9 @@ from anno.models import Doc
 
 def search_docstore():
     print('***************** something about to happen..')
-    # search by tag
-    result = Doc.objects.filter(doc__body__items__contains={
-        'type': 'TextualBody',
-        'purpose': 'tagging',
-        'value':'pudding',
-        })
+    result = Doc.objects.filter(doc__permissions__can_admin__contains='test@mirador.org')
     for r in result:
-        print ('************** search by TAG = {}'.format(r))
+        print ('************** search by permission = {}'.format(r))
 
     print('***************** or not...')
 
