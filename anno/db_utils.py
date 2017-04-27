@@ -3,6 +3,22 @@ import pdb
 import os
 
 from anno.models import Anno, Platform, Tag, Target
+from anno.models import Doc
+
+
+def search_docstore():
+    print('***************** something about to happen..')
+    # search by tag
+    result = Doc.objects.filter(doc__body__items__contains={
+        'type': 'TextualBody',
+        'purpose': 'tagging',
+        'value':'pudding',
+        })
+    for r in result:
+        print ('************** search by TAG = {}'.format(r))
+
+    print('***************** or not...')
+
 
 
 def create_db(json_datafile):
@@ -43,7 +59,23 @@ def create_db(json_datafile):
     print('------------------------------ ignored: {}'.format(ignored))
 
 
+def populate_docstore(json_datafile):
+    data_filename = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 'tests', json_datafile)
 
+    datafile = open(data_filename, 'r')
+    raw_data = datafile.read()
+    content = json.loads(raw_data)
+    datafile.close()
 
+    count = 0
+    ignored = 0
+    for row in content:
+        row_id = row['id'] if 'id' in row else 'unknown'
+        x = Doc.objects.create(anno_id=row_id, doc=row)
+        print('created anno({})'.format(row_id))
+
+    print('------------------------------ created: {}'.format(count))
+    print('------------------------------ ignored: {}'.format(ignored))
 
 
