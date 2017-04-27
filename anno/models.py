@@ -26,22 +26,28 @@ def get_random(cls):
 
 
 class Anno(Model):
-    anno_id = CharField(max_length=128, primary_key=True)
-    schema_version = CharField(
-        max_length=128, null=False, default='catch_v0.1')
     created = DateTimeField(auto_now_add=True, null=False)
     modified = DateTimeField(auto_now=True, null=False)
+
+    anno_id = CharField(max_length=128, primary_key=True)
+    anno_deleted = BooleanField(default=False)
+    anno_reply_to = ForeignKey('Anno', null=True, blank=True, on_delete=CASCADE)
+
+    schema_version = CharField(
+        max_length=128, null=False, default='catch_v0.1')
     creator_id = CharField(max_length=128, null=False)
     creator_name = CharField(max_length=128, null=False)
 
-    anno_text = TextField(null=True)
+    body_text = TextField(null=True)
     # format is a mime type, 'text/html' or 'text/plain'
-    anno_format = CharField(max_length=128, null=False, default='text/html')
-    anno_deleted = BooleanField(default=False)
-    # delete all replies when deleting an anno
-    anno_reply_to = ForeignKey('Anno', null=True, blank=True, on_delete=CASCADE)
-    anno_permissions = JSONField(null=True, blank=True)
+    body_format = CharField(max_length=128, null=False, default='text/html')
+
     anno_tags = ManyToManyField('Tag', blank=True)
+
+    anno_can_read = JSONField(null=True, blank=True)
+    anno_can_update = JSONField(null=True, blank=True)
+    anno_can_delete = JSONField(null=True, blank=True)
+    anno_can_admin = JSONField(null=True, blank=True)
 
     platform = ForeignKey('Platform', on_delete=PROTECT)
     platform_target_id = CharField(max_length=256, null=False)
