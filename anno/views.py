@@ -53,6 +53,10 @@ def search(request):
     if medias:
         query = query.filter(queryset_target_medias(medias))
 
+    text = request.GET.get('text', [])
+    if text:
+        query = query.filter(body_text__search=text)
+
     # particular to each platform
     platform_name = request.GET.get('platform', [])
     if platform_name:
@@ -73,6 +77,8 @@ def search(request):
             except ValueError:  # when source_id is an actual url
                 target_source_d = str(target_source_id)
             query = query.filter(raw__platform__target_source_id=target_source_id)
+
+
 
     return(HttpResponse(query))
 
