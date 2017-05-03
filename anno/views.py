@@ -31,6 +31,11 @@ def postgres(request):
 
 
 def search(request):
+
+    #
+    # TODO: error in any of these queries should cancel the search????
+    #
+
     query = Anno.objects.all()
 
     usernames = request.GET.get('username', [])
@@ -58,6 +63,13 @@ def search(request):
         query = query.filter(body_text__search=text)
 
     # particular to each platform
+    if 'platform' in request.GET:
+        # TODO:
+        # to check if method exists: http://stackoverflow.com/a/7580687
+        # and check for exceptions...
+        q = Anno.platform_manager.search_filter(request.GET)
+        query = query.filter(q)
+    """
     platform_name = request.GET.get('platform', [])
     if platform_name:
         query = query.filter(raw__platform__platform_name=platform_name)
@@ -77,7 +89,7 @@ def search(request):
             except ValueError:  # when source_id is an actual url
                 target_source_d = str(target_source_id)
             query = query.filter(raw__platform__target_source_id=target_source_id)
-
+    """
 
 
     return(HttpResponse(query))

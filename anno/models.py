@@ -1,3 +1,4 @@
+import importlib
 import logging
 from random import randint
 from uuid import uuid4
@@ -9,12 +10,14 @@ from django.db.models import BooleanField
 from django.db.models import CharField
 from django.db.models import DateTimeField
 from django.db.models import ForeignKey
+from django.db.models import Manager
 from django.db.models import ManyToManyField
 from django.db.models import Model
 from django.db.models import TextField
 
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.indexes import GinIndex
 
 from anno.errors import AnnoError
 from anno.errors import DuplicateAnnotationIdError
@@ -27,6 +30,9 @@ from anno.errors import ParentAnnotationMissingError
 from anno.errors import TargetAnnotationForReplyMissingError
 
 import pdb
+
+
+PLATFORM_MANAGER='hxat_plat.hxat_platform.PlatformManager'
 
 # purpose for annotation
 PURPOSE_COMMENTING = 'commenting'
@@ -104,6 +110,22 @@ class Anno(Model):
             default=RESOURCE_TYPE_UNDEFINED)
 
     raw = JSONField()
+
+    # default model manager
+    objects = Manager()
+    # manager for platform specific searches
+    # http://stackoverflow.com/a/30941292
+    module_name, class_name = PLATFORM_MANAGER.rsplit('.',1)
+    PlatformClass = getattr(importlib.import_module(module_name), class_name)
+    platform_manager = PlatformClass()
+
+    class Meta:
+        indexes = [
+            GinIndex(
+                fields=['raw'],
+                name='anno_raw_gin',
+            ),
+        ]
 
     # TODO: django-admin displays __str__ and not __repr__?????
     def __repr__(self):
