@@ -71,7 +71,7 @@ def populate_db(json_datafile):
     for row in content:
         row_id = row['id'] if 'id' in row else 'unknown'
         try:
-            x = Anno.create_from_webannotation(row)
+            x = Anno.objects.create_from_webannotation(row)
         except DuplicateAnnotationIdError as e:
             logging.getLogger(__name__).error('skipping duplicate annotation({})'.format(row['id']))
             print('skipping duplicate annotation({})'.format(row['id']))
