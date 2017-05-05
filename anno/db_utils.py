@@ -5,6 +5,7 @@ import os
 
 from django.db.models import Q
 
+from anno.crud import CRUD
 from anno.errors import DuplicateAnnotationIdError
 from anno.models import Anno, Tag, Target
 
@@ -71,7 +72,7 @@ def populate_db(json_datafile):
     for row in content:
         row_id = row['id'] if 'id' in row else 'unknown'
         try:
-            x = Anno.objects.create_from_webannotation(row)
+            x = CRUD.create_from_webannotation(row)
         except DuplicateAnnotationIdError as e:
             logging.getLogger(__name__).error('skipping duplicate annotation({})'.format(row['id']))
             print('skipping duplicate annotation({})'.format(row['id']))
