@@ -3,5 +3,4 @@
 mock
 model-mommy
 pytest
-pytest
-pytest
+pytest-django
