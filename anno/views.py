@@ -3,25 +3,19 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from anno.db_utils import create_db
-from anno.db_utils import populate_db
-from anno.db_utils import queryset_username
-from anno.db_utils import queryset_userid
-from anno.db_utils import queryset_tags
-from anno.db_utils import queryset_target_medias
-from anno.db_utils import queryset_target_sources
+from anno.import_anno import create_db
+from anno.import_anno import populate_db
+from anno.search import queryset_username
+from anno.search import queryset_userid
+from anno.search import queryset_tags
+from anno.search import queryset_target_medias
+from anno.search import queryset_target_sources
 from anno.models import Anno
 
 import pdb
 
 def index(request):
     return HttpResponse('Hello you. This is the annotation sample.')
-
-
-def docstore(request):
-    # populate_docstore('wa_sample.json')
-    search_docstore()
-    return(HttpResponse('Hi this is the docstore page.'))
 
 
 def postgres(request):
