@@ -52,50 +52,52 @@ class CRUD(object):
                         'could not create annotation({})'.format(wa['id']))
                 except Exception:
                     raise
-        try:
-            a = Anno._default_manager.create(
-                anno_id=wa['id'],
-                schema_version=wa['schema_version'],
-                creator_id=wa['creator']['id'],
-                creator_name=wa['creator']['name'],
-                anno_reply_to=reply_to,
-                can_read=wa['permissions']['can_read'],
-                can_update=wa['permissions']['can_update'],
-                can_delete=wa['permissions']['can_delete'],
-                can_admin=wa['permissions']['can_admin'],
-                body_text=body_sift['body_text'],
-                body_format=body_sift['body_format'],
-                raw=wa,
-            )
-            a.save()  # have to save before creating relationships
-        except IntegrityError as e:
-            raise DuplicateAnnotationIdError(
-                'integrity error creating anno({}): {}'.format(wa['id'], e))
-        except Exception:
-                raise
 
-        # ATTENTION from now on annotation is created in DB
-        # and if you raise an exception, you have to cleanup!
+        # create the annotation object
+        a = Anno._default_manager.create(
+            anno_id=wa['id'],
+            schema_version=wa['schema_version'],
+            creator_id=wa['creator']['id'],
+            creator_name=wa['creator']['name'],
+            anno_reply_to=reply_to,
+            can_read=wa['permissions']['can_read'],
+            can_update=wa['permissions']['can_update'],
+            can_delete=wa['permissions']['can_delete'],
+            can_admin=wa['permissions']['can_admin'],
+            body_text=body_sift['body_text'],
+            body_format=body_sift['body_format'],
+            raw=wa,
+        )
 
-        # create tags
-        if body_sift['tags']:
-            tags = cls._create_taglist(body_sift['tags'])
-            a.anno_tags = tags
-            a.save()
-
-        # create targets
+        # create target objects
         try:
             targets = cls._create_targets_for_annotation(a, wa)
         except (InvalidAnnotationTargetTypeError,
                 InvalidTargetMediaTypeError) as e:
             logging.getLogger(__name__).error(
-                ('failed to create target object ({}), deleting associated '
-                'annotation({})').format(e, a.anno_id))
-            a.delete()  # what if this delete raises an exception????
+                ('failed to create target object ({}), associated '
+                'annotation({}) NOT SAVED!').format(e, a.anno_id))
             raise e
 
-        # a last save, just in case
-        a.save()
+        # save as transaction
+        try:
+            with transaction.atomic():
+                a.save()  # have to save before creating relationships
+                for t_item in targets:
+                    t_item.save()
+        except IntegrityError as e:
+            msg = 'integrity error creating anno({}) or target({}): {}'.format(
+                    wa['id'], t_item['target_source'], e)
+            logging.getLogger(__name__).error(msg)
+            # is it beter to just re-raise??
+            raise DuplicateAnnotationIdError(msg)
+
+        # create tags
+        if body_sift['tags']:
+            tags = cls._create_taglist(body_sift['tags'])
+            a.anno_tags = tags
+            a.save()  # TODO: catch exceptions?
+
 
 
     @classmethod
@@ -117,7 +119,6 @@ class CRUD(object):
                 target_source=t['source'],
                 target_media=t['type'],
                 anno=anno)
-            t_item.save()  # TODO: catch exceptions...
             target_list.append(t_item)
 
         return target_list
