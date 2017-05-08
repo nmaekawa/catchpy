@@ -19,10 +19,10 @@ def get_version(*file_paths):
     raise RuntimeError('Unable to find version string.')
 
 
-version = get_version("anno", "__init__.py")
+version = get_version("catchpy", "__init__.py")
 
 readme = open('README.md').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+history = open('HISTORY.md').read().replace('.. :changelog:', '')
 
 requirements = [
     "Django",
