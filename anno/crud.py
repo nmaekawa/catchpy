@@ -98,6 +98,7 @@ class CRUD(object):
             a.anno_tags = tags
             a.save()  # TODO: catch exceptions?
 
+        return a
 
 
     @classmethod

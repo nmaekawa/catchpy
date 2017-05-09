@@ -1,21 +1,37 @@
 import json
 import pdb
 import pytest
+from random import randint
 import os
 
 
+from django.db import IntegrityError
 from django.test import TestCase
 from django.test import TransactionTestCase
 
 from model_mommy import mommy
 from model_mommy.recipe import Recipe, foreign_key
 
+from anno.crud import CRUD
 from anno.models import Anno, Tag, Target
 from anno.models import MEDIA_TYPES
 
+def wa_list():
+    data_filename = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 'wa_sample.json')
+    with open(data_filename, 'r') as datafile:
+        raw_data = datafile.read()
 
-data_filename = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), 'wa2-dev-mille.json')
+    content = json.loads(raw_data)
+    return content
+
+
+def wa_object():
+    content = wa_list()
+    last = len(content) - 1
+    random_index = randint(0, last)
+    return content[random_index]
+
 
 class AnnoTest(TransactionTestCase):
 
@@ -47,21 +63,31 @@ class AnnoTest(TransactionTestCase):
         assert(anno.schema_version == 'catch_v0.1')
 
 
-
-    @pytest.mark.skip(reason='not ready to run yet')
+    @pytest.mark.django_db(transaction=True)
     def test_create_anno_ok(self):
-        datafile = open(data_filename, 'r')
-        raw_data = datafile.read()
-        content = json.loads(raw_data)
-        datafile.close()
+        wa = wa_object()
+        x = CRUD.create_from_webannotation(wa)
+        assert(x is not None)
+        assert(len(Anno.objects.all()) == 1)
+        assert(len(x.target_set.all()) == len(wa['target']['items']))
 
-        for row in content:
-            x = Anno.create_from_webannotation(row)
-            if x is not None:
-                print('saved anno({})'.format(x.anno_id))
-            else:
-                print('failed to create anno({})'.format(row['id']))
 
-        assert len(Anno.objects.all()) > 0
+    @pytest.mark.django_db(transaction=True)
+    def test_create_transaction(self):
+        wa = wa_object()
+
+        x1 = CRUD.create_from_webannotation(wa)
+        assert(x1 is not None)
+        assert(len(Anno.objects.all()) == 1)
+
+        with pytest.raises(IntegrityError):
+            x2 = CRUD.create_from_webannotation(wa)
+
+        assert(len(Anno.objects.all()) == 1)
+        assert(len(Target.objects.all()) == len(wa['target']['items']))
+
+
+
+
 
 
