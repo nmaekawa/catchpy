@@ -13,6 +13,7 @@ from model_mommy import mommy
 from model_mommy.recipe import Recipe, foreign_key
 
 from anno.crud import CRUD
+from anno.errors import MissingAnnotationError
 from anno.models import Anno, Tag, Target
 from anno.models import MEDIA_TYPES
 
@@ -62,8 +63,17 @@ class AnnoTest(TransactionTestCase):
         assert(len(anno.target_set.all()) == 0)
         assert(anno.schema_version == 'catch_v0.1')
 
+    @pytest.mark.django_db
+    def test_anno_object(self):
+        anno = Anno(anno_id='123', raw='baba')
+        tag1 = Tag(tag_name='tag1')
+        tag1.save()
+        anno.save()
+        anno.anno_tags = [tag1]
+        assert(len(anno.anno_tags.all()) == 1)
 
-    @pytest.mark.django_db(transaction=True)
+
+    @pytest.mark.django_db
     def test_create_anno_ok(self):
         wa = wa_object()
         x = CRUD.create_from_webannotation(wa)
@@ -72,7 +82,7 @@ class AnnoTest(TransactionTestCase):
         assert(len(x.target_set.all()) == len(wa['target']['items']))
 
 
-    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.django_db
     def test_create_transaction(self):
         wa = wa_object()
 
@@ -87,7 +97,45 @@ class AnnoTest(TransactionTestCase):
         assert(len(Target.objects.all()) == len(wa['target']['items']))
 
 
+    @pytest.mark.django_db
+    def test_update_anno_ok(self):
+        wa = wa_object()
+        x = CRUD.create_from_webannotation(wa)
+        original_tags = len(x.anno_tags.all())
+        original_targets = len(x.target_set.all())
+        original_body_text = x.body_text
+        original_created = x.created
+        original_modified = x.modified
+
+        # add tag and target
+        wa['body']['items'].append({
+            'type': 'TextualBody',
+            'purpose': 'tagging',
+            'value': 'tag1',
+        })
+        wa['target']['type'] = 'List'
+        wa['target']['items'].append({
+            'type': 'Video',
+            'format': 'video/youtube',
+            'source': 'https://youtu.be/92vuuZt7wak',
+        })
+        x = CRUD.update_from_webannotation(wa)
+        assert(len(x.anno_tags.all()) == original_tags+1)
+        assert(len(x.target_set.all()) == original_targets+1)
+        assert(x.body_text == original_body_text)
+        assert(x.created == original_created)
+        assert(x.modified > original_created)
 
 
+    @pytest.mark.django_db
+    def test_delete_anno_ok(self):
+        w = []
+        for i in [0, 1, 2, 3]:
+            w.append(CRUD.create_from_webannotation(wa_object()))
+        total = len(Anno.objects.all())
 
+        x = CRUD.delete_anno(w[2].anno_id)
+        assert(len(Anno.objects.all()) == total-1)
+        with pytest.raises(MissingAnnotationError):
+            y = CRUD.read_anno(w[2].anno_id)
 

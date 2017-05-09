@@ -13,6 +13,7 @@ from anno.errors import InvalidAnnotationPurposeError
 from anno.errors import InvalidAnnotationTargetTypeError
 from anno.errors import InvalidInputWebAnnotationError
 from anno.errors import InvalidTargetMediaTypeError
+from anno.errors import MissingAnnotationError
 from anno.errors import ParentAnnotationMissingError
 from anno.errors import TargetAnnotationForReplyMissingError
 
@@ -172,5 +173,118 @@ class CRUD(object):
             'body_format': body_format,
             'tags': tags,
         }
+
+
+    @classmethod
+    def update_from_webannotation(cls, wa):
+        '''
+        this update does not check much; will replace comming annotation
+        as is in database.
+        '''
+        # retrieve annotation from db
+        try:
+            original = Anno.objects.get(pk=wa['id'])
+        except Anno.DoesNotExist as e:
+            raise MissingAnnotationError(
+                'cannot update missing anno({})'.format(wa['id']))
+
+        # dissociate tags from annotation
+        original.anno_tags.clear()
+        # remove all targets
+        cls._delete_targets(original)
+        # sort out body items
+        body_sift = cls._group_body_items(wa)
+
+        # is a reply?
+        reply_to = None
+        if body_sift['reply']:
+            parent = None
+            for t in wa['target']['items']:
+                if t['type'] == ANNO:
+                    parent = t
+                    break  # trusts that only one item is type ANNO
+            if parent is None:
+                raise TargetAnnotationForReplyMissingError(
+                    'missing parent reference for anno({})'.format(wa['id']))
+            else:
+                try:
+                    # TODO: check if source is a uri for the annotation
+                    reply_to = Anno._default_manager.get(pk=parent['source'])
+                except Anno.DoesNotExist:
+                    raise ParentAnnotationMissingError(
+                        'could not update annotation({})'.format(wa['id']))
+                except Exception:
+                    raise
+
+        # update the annotation object
+        original.schema_version=wa['schema_version']
+        original.creator_id=wa['creator']['id']
+        original.creator_name=wa['creator']['name']
+        original.anno_reply_to=reply_to
+        original.can_read=wa['permissions']['can_read']
+        original.can_update=wa['permissions']['can_update']
+        original.can_delete=wa['permissions']['can_delete']
+        original.can_admin=wa['permissions']['can_admin']
+        original.body_text=body_sift['body_text']
+        original.body_format=body_sift['body_format']
+        original.raw=wa
+
+        # create target objects
+        try:
+            targets = cls._create_targets_for_annotation(original, wa)
+        except (InvalidAnnotationTargetTypeError,
+                InvalidTargetMediaTypeError) as e:
+            logging.getLogger(__name__).error(
+                ('failed to create target object ({}), associated '
+                'annotation({}) NOT SAVED!').format(e, a.anno_id))
+            raise e
+
+        # save as transaction
+        try:
+            original.save()  # have to save before creating relationships
+            for t_item in targets:
+                t_item.save()
+        except IntegrityError as e:
+            msg = 'integrity error creating anno({}) or target({}): {}'.format(
+                    wa['id'], t_item['target_source'], e)
+            logging.getLogger(__name__).error(msg)
+            # is it beter to just re-raise??
+            raise DuplicateAnnotationIdError(msg)
+
+        # create tags
+        if body_sift['tags']:
+            tags = cls._create_taglist(body_sift['tags'])
+            original.anno_tags = tags
+
+        original.save()
+        return original
+
+
+    @classmethod
+    def _delete_targets(cls, anno):
+        targets = anno.target_set.all()
+        for t in targets:
+            t.delete()
+        return targets
+
+
+    @classmethod
+    def delete_anno(cls, anno_id):
+        try:
+            original = Anno.objects.get(pk=anno_id)
+        except Anno.DoesNotExist:
+            raise MissingAnnotationError(
+                'cannot delete missing anno({})'.format(anno_id))
+        original.delete()
+        return original
+
+    @classmethod
+    def read_anno(cls, anno_id):
+        try:
+            original = Anno.objects.get(pk=anno_id)
+        except Anno.DoesNotExist:
+            raise MissingAnnotationError(
+                'cannot read missing anno({})'.format(anno_id))
+        return original
 
 

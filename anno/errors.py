@@ -28,3 +28,6 @@ class ParentAnnotationMissingError(InvalidInputWebAnnotationError):
 
 class TargetAnnotationForReplyMissingError(InvalidInputWebAnnotationError):
     '''expected target for comment is missing.'''
+
+class MissingAnnotationError(AnnoError):
+    '''annotation does not exist.'''
