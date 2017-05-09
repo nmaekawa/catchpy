@@ -5,16 +5,12 @@ import os
 
 from django.db.models import Q
 
-import pdb
-
 
 # from https://djangosnippets.org/snippets/1700/
 def queryset_field_lookup_valuelist(field, values, op='or', lookup=None):
     q = Q()
     if not isinstance(values, list):
         values = [values]
-
-    #pdb.set_trace()
 
     for v in values:
         # only bulid query with a value

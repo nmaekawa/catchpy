@@ -1,9 +1,9 @@
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from anno.import_anno import create_db
 from anno.import_anno import populate_db
 from anno.search import queryset_username
 from anno.search import queryset_userid
@@ -17,9 +17,8 @@ import pdb
 def index(request):
     return HttpResponse('Hello you. This is the annotation sample.')
 
-
+@transaction.non_atomic_requests
 def postgres(request):
-    #create_db('annotatorjs_sample.json')
     populate_db('wa2-dev-mille.json')
     return(HttpResponse('OH! A postgres page!'))
 

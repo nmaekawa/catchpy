@@ -81,10 +81,9 @@ class CRUD(object):
 
         # save as transaction
         try:
-            with transaction.atomic():
-                a.save()  # have to save before creating relationships
-                for t_item in targets:
-                    t_item.save()
+            a.save()  # have to save before creating relationships
+            for t_item in targets:
+                t_item.save()
         except IntegrityError as e:
             msg = 'integrity error creating anno({}) or target({}): {}'.format(
                     wa['id'], t_item['target_source'], e)
@@ -96,7 +95,7 @@ class CRUD(object):
         if body_sift['tags']:
             tags = cls._create_taglist(body_sift['tags'])
             a.anno_tags = tags
-            a.save()  # TODO: catch exceptions?
+            a.save()
 
         return a
 

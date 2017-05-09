@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import importlib
 import logging
 from random import randint
@@ -55,7 +57,7 @@ RESOURCE_TYPE_CHOICES = (
 )
 RESOURCE_TYPES = [x[0] for x in RESOURCE_TYPE_CHOICES]
 
-# media = 'Audio', 'Image', 'Text', 'Video', 'Annotation', 'Thumbnail'
+# target media = 'Audio', 'Image', 'Text', 'Video', 'Annotation', 'Thumbnail'
 ANNO = 'Annotation'
 AUDIO = 'Audio'
 IMAGE = 'Image'
@@ -166,7 +168,6 @@ class Target(Model):
 
     def __repr__(self):
         return '({}_{})'.format(self.target_source, self.id)
-
 
     def __str__(self):
         return self.__repr__()
