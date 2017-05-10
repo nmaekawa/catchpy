@@ -27,6 +27,16 @@ import pdb
 
 class CRUD(object):
     @classmethod
+    def create_anno(cls, anno_id, **kwargs):
+        # validate webannotation json
+
+        # conversion happens where????
+
+        # call create_from_webanno
+        pass
+
+
+    @classmethod
     def create_from_webannotation(cls, wa):
         '''expects well-formed web annotation, including id.'''
 
@@ -176,6 +186,11 @@ class CRUD(object):
 
 
     @classmethod
+    def update_anno(cls, anno_id, **kwargs):
+        pass
+
+
+    @classmethod
     def update_from_webannotation(cls, wa):
         '''
         this update does not check much; will replace comming annotation
@@ -269,7 +284,7 @@ class CRUD(object):
 
 
     @classmethod
-    def delete_anno(cls, anno_id):
+    def delete_anno(cls, anno_id, **kwargs):
         try:
             original = Anno.objects.get(pk=anno_id)
         except Anno.DoesNotExist:
@@ -279,7 +294,7 @@ class CRUD(object):
         return original
 
     @classmethod
-    def read_anno(cls, anno_id):
+    def read_anno(cls, anno_id, **kwargs):
         try:
             original = Anno.objects.get(pk=anno_id)
         except Anno.DoesNotExist:
