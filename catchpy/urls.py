@@ -17,7 +17,9 @@ from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 
+import catchpy_anno
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^anno/', include('anno.urls')),
+    url(r'^anno/', include('catchpy_anno.urls')),
 ]
