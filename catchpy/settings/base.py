@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'consumer.jwt_middleware.jwt_middleware',
 ]
 
 ROOT_URLCONF = PROJECT_NAME + '.urls'
@@ -154,7 +155,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'django': {
+        'consumer': {
             'level': 'DEBUG',
             'handlers': ['console', 'errorfile_handler'],
             'propagate': True
