@@ -6,6 +6,8 @@ import jwt
 import logging
 import pytz
 
+from .catchjwt import decode_token
+from .catchjwt import validate_token
 from .models import Consumer
 
 
@@ -30,33 +32,42 @@ def jwt_middleware(get_response):
 
         msg = ''
 
+
+        #
+        # TODO: refactor into more legible code...
+        #
+
         # get token from request header
         credentials = get_credentials(request)
         if credentials is not None:
             # decode token to get consumerKey
-            payload = get_token_payload(credentials)
+            payload = decode_token(credentials)
             if payload is not None:
                 consumer = fetch_consumer(payload)
                 if consumer is not None:
-                    # validate token signature
-                    validate_signature = get_token_payload(
-                        credentials, verify=True,
-                        secret_key=consumer.secret_key)
-                    if validate_signature is not None:
-                        # validate token claims
-                        error = validate_token(payload, consumer)
-                        if error:
-                            # valid, replace info in request
-                            payload['consumer'] = consumer
-                            request.catchjwt = payload
-                            logger.error(
-                                'found profile({}) for consumer({})'.format(
-                                    consumer.parent_profile,
-                                    consumer.consumer))
+                    # validate consumer
+                    if not consumer.has_expired():
+                        # validate token signature
+                        validate_signature = decode_token(
+                            credentials, secret_key=consumer.secret_key,
+                            verify=True)
+                        if validate_signature is not None:
+                            # validate token claims
+                            error = validate_token(payload)
+                            if not error:
+                                # valid, replace info in request
+                                payload['consumer'] = consumer
+                                request.catchjwt = payload
+                                logger.error(
+                                    'found profile({}) for consumer({})'.format(
+                                        consumer.parent_profile,
+                                        consumer.consumer))
+                            else:
+                                msg = error
                         else:
-                            msg = error
+                            msg = 'failed to validate auth token signature'
                     else:
-                        msg = 'failed to validate auth token signature'
+                        msg = 'consumer({}) has expired'.format(consumer.consumer)
                 else:
                     msg = 'invalid consumerKey in auth token'
             else:
@@ -84,27 +95,21 @@ def get_credentials(request):
     if header:  # try catchpy header
         (header_type, token) = header.split()
         if header_type.lower() == 'token':
-            credentials = token
+            # Work around django test client oddness:
+            # https://github.com/jpadilla/django-jwt-auth/blob/master/jwt_auth/utils.py
+            if isinstance(header_type, type('')):
+                credentials = token.encode('iso-8859-1')
+            else:
+                credentials = token
     else:       # try annotator header
         header = request.META.get(JWT_ANNOTATOR_HEADER)
         if header:
             credentials = header
+            if isinstance(header, type('')):
+                credentials = header.encode('iso-8859-1')
+            else:
+                credentials = header
     return credentials
-
-
-def get_token_payload(credentials, verify=False, secret_key=''):
-    try:    # decode to get consumerKey
-        payload = jwt.decode(credentials, secret_key, verify=verify)
-    except jwt.exceptions.InvalidTokenError as e:
-        logger.info(
-            'failed to decode jwt: {}'.format(e), exc_info=True)
-        return None
-    else:
-        return payload
-
-
-def now_utc():
-    return datetime.now(pytz.utc)
 
 
 def fetch_consumer(token_payload):
@@ -123,36 +128,4 @@ def fetch_consumer(token_payload):
         return consumer
 
 
-def validate_token(token_payload, consumer):
-    '''check for token expiration, secret-key expiration.'''
-
-    now = now_utc()
-
-    # check secret-key expiration date
-    if consumer.has_expired(now):
-        return 'secret key for consumer({}) has expired'.format(
-            consumer.consumer)
-
-    # check token expiration date
-    issued_at = token_payload.get('issuedAt', None)
-    ttl = token_payload.get('ttl', None)
-    if issued_at is None or ttl is None:
-        return 'missing `issuedAt` or `ttl` in auth token'
-    try:
-        iat = iso8601.parse_date(issued_at)
-        ttl = int(ttl)
-    except iso8601.ParseError as e:
-        return 'invalid `issuedAt` date format, expected iso8601. {}'.format(e)
-    except ValueError:
-        return 'invaild `ttl` value, expected integer'
-
-    token_exp = iat + timedelta(seconds=ttl)
-    if token_exp < now:
-        return 'token has expired'
-
-    # check for issuing at future - trying to cheat expiration?
-    if iat > now:
-        return 'invalid `issuedAt` in the future.'
-
-    return None
 

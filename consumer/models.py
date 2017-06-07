@@ -59,7 +59,7 @@ class Consumer(Model):
     created = DateTimeField(auto_now_add=True, null=False)
     modified = DateTimeField(auto_now=True, null=False)
     consumer = CharField(max_length=128, primary_key=True, default=generate_id)
-    secret_key = CharField(max_length=128, default=uuid4)
+    secret_key = CharField(max_length=128, default=generate_id)
     expire_on = DateTimeField(default=expire_in_weeks)
     parent_profile = ForeignKey(
         'Profile',
