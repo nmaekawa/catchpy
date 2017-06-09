@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'catchpy_anno.apps.AnnoConfig',
+    'anno.apps.AnnoConfig',
     'consumer.apps.ConsumerConfig',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -1,7 +1,8 @@
 Django
 PyLD
 python-dotenv
+python-dateutil
 psycopg2
 PyJWT
 iso8601
-git+https://github.com/nmaekawa/catchpy-anno.git
+

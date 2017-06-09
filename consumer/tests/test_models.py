@@ -5,8 +5,8 @@ import os
 
 from django.contrib.auth.models import User
 
-from consumer.models import Consumer
-from consumer.models import Profile
+from ..models import Consumer
+from ..models import Profile
 
 @pytest.mark.django_db
 class TestConsumer(object):
