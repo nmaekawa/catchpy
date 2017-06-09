@@ -171,13 +171,13 @@ class CRUD(object):
                 a.anno_tags = tags
 
                 if is_copy:  # keep original date if it's a copy
-                    print('----------------- created({})'.format(
-                        a.created.isoformat()))
+                    #print('----------------- created({})'.format(
+                    #    a.created.isoformat()))
 
                     a.created = cls._get_original_created(catcha)
 
-                    print('----------------- created({})'.format(
-                        a.created.isoformat()))
+                    #print('----------------- created({})'.format(
+                    #    a.created.isoformat()))
 
                     a.anno_deleted = catcha.get('deleted', False)
 
@@ -271,38 +271,25 @@ class CRUD(object):
 
 
     @classmethod
-    def delete_anno(cls, anno, requesting_user):
+    def delete_anno(cls, anno):
         if anno.anno_deleted:
             logger.warn('anno({}) soft deleted'.format(anno.anno_id))
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
 
-        if requesting_user in anno.can_delete:
-            with transaction.atomic():
-                anno.delete()
-                anno.save()
-        else:  # not allowed to delete
-            msg = 'user({}) not allowed to delete anno({})'.format(
-                requesting_user, anno.anno_id)
-            logger.error(msg)
-            raise NoPermissionForOperationError(msg)
+        with transaction.atomic():
+            anno.delete()
+            anno.save()
         return anno
 
 
     @classmethod
-    def read_anno(cls, anno, requesting_user):
+    def read_anno(cls, anno):
         if anno.anno_deleted:
             logger.warn('anno({}) soft deleted'.format(anno.anno_id))
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
 
-        # allowed to read?
-        if anno.can_read and \
-                requesting_user not in anno.can_read:
-            msg = 'user({}) not allowed to read anno({})'.format(
-                requesting_user, anno.anno_id)
-            logger.warn(msg)
-            raise NoPermissionForOperationError(msg)
         return anno
 
 
@@ -325,7 +312,7 @@ class CRUD(object):
 
 
     @classmethod
-    def update_anno(cls, anno, catcha, requesting_user):
+    def update_anno(cls, anno, catcha):
         '''updates anno according to catcha input.
 
         recreates list of tags and targets every time
@@ -333,22 +320,6 @@ class CRUD(object):
         if anno.anno_deleted:
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
-
-        if requesting_user not in anno.can_update:
-            msg = 'user({}) not allowed to update anno({})'.format(
-                requesting_user, anno.anno_id)
-            logger.info(msg)
-            raise NoPermissionForOperationError(msg)
-
-        # trying to update permissions? compare permissions
-        if not cls.is_identical_permissions(catcha, anno.raw):
-            if requesting_user not in anno.can_admin:
-                msg = 'user({}) not allowed to admin anno({})'.format(
-                    requesting_user, anno.anno_id)
-                logger.info(msg)
-                raise NoPermissionForOperationError(msg)
-
-        # finally, performs update and save to database
         try:
             cls._update_from_webannotation(anno, catcha)
         except AnnoError as e:

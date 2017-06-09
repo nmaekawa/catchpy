@@ -181,6 +181,17 @@ class Anno(Model):
         '''
         self.anno_deleted = True
 
+    def has_permission_for(self, op, user_id):
+        '''check if user has permission for operation.'''
+        if op == 'read':
+            if not self.can_read or user_id in self.can_read:
+                return True
+        permission = getattr(self, 'can_{}'.format(op))
+        if permission is not None:
+            return (user_id in permission)
+        else:
+            return False
+
 
 class Tag(Model):
     tag_name = CharField(max_length=256, unique=True, null=False)

@@ -126,6 +126,3 @@ def fetch_consumer(token_payload):
         return None
     else:
         return consumer
-
-
-

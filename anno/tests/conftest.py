@@ -1,11 +1,13 @@
 from datetime import datetime
 from datetime import timedelta
+from dateutil import tz
 import json
 import os
 import pytest
-import pytz
 from random import randint
 from uuid import uuid4
+
+from django.test import RequestFactory
 
 from anno.models import ANNO, AUDIO, TEXT, THUMB, VIDEO, IMAGE
 from anno.models import PURPOSE_COMMENTING
@@ -14,6 +16,9 @@ from anno.models import PURPOSE_TAGGING
 from anno.models import RESOURCE_TYPE_LIST
 from anno.models import RESOURCE_TYPE_CHOICE
 from anno.views import CATCH_CONTEXT_IRI
+
+from consumer.catchjwt import encode_token
+
 
 MEDIAS = [ANNO, AUDIO, TEXT, VIDEO, IMAGE]
 
@@ -32,7 +37,6 @@ def wa_list():
             reply_to=was[0]['id']))
 
     return was
-
 
 @pytest.fixture(scope='function')
 def wa_text():
@@ -70,7 +74,6 @@ def js_list():
 
     return jss
 
-
 @pytest.fixture(scope='function')
 def js_text():
     return make_annotatorjs_object(age_in_hours=randint(30, 100))
@@ -98,9 +101,9 @@ def get_fake_url():
     return 'http://fake{}.com'.format(randint(100,1000))
 
 def get_past_datetime(age_in_hours):
-    now = datetime.now(pytz.utc)
+    now = datetime.now(tz.tzutc())
     delta = timedelta(hours=age_in_hours)
-    return (now - delta).isoformat()
+    return (now - delta).replace(microsecond=0).isoformat()
 
 def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
     creator_id = str(uuid4())
@@ -314,4 +317,41 @@ def make_annotatorjs_object(age_in_hours=0, media=TEXT, reply_to=None):
 
     wa.update(created)
     return wa
+
+
+def make_jwt_payload(apikey=None, user=None, iat=None, ttl=60, override=[]):
+    return {
+        'consumerKey': apikey if apikey else str(uuid4()),
+        'userId': user if user else str(uuid4()),
+        'issuedAt': iat if iat else datetime.now(
+            tz.tzutc()).replace(microsecond=0).isoformat(),
+        'ttl': ttl,
+        'override': override,
+        'error': '',
+    }
+
+def make_encoded_token(secret, payload=None):
+    if payload is None:
+        payload = make_jwt_payload()
+    return encode_token(payload, secret).decode('utf-8')
+
+
+def make_request(method='GET', jwt_payload=None, anno_id='tbd'):
+    factory = RequestFactory()
+    method_to_call = getattr(factory, method.lower(), 'get')
+
+    request = method_to_call('/annos/{}'.format(anno_id))
+    request.catchjwt = jwt_payload if jwt_payload else make_jwt_payload()
+    return request
+
+
+def make_json_request(
+        method='POST', jwt_payload=None, anno_id='tbd', data=None):
+    factory = RequestFactory()
+    method_to_call = getattr(factory, method.lower(), 'post')
+
+    request = method_to_call('/annos/{}'.format(anno_id),
+                            data=data, content_type='application/json')
+    request.catchjwt = jwt_payload if jwt_payload else make_jwt_payload()
+    return request
 

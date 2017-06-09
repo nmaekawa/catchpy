@@ -1,5 +1,6 @@
 from datetime import datetime
 import dateutil
+from functools import wraps
 import json
 import logging
 from uuid import uuid4
@@ -22,6 +23,7 @@ from .errors import InvalidAnnotationCreatorError
 from .errors import DuplicateAnnotationIdError
 from .errors import MissingAnnotationError
 from .errors import MissingAnnotationInputError
+from .errors import NoPermissionForOperationError
 from .errors import UnknownOutputFormatError
 from .search import query_username
 from .search import query_userid
@@ -41,14 +43,37 @@ ANNOTATORJS_FORMAT = 'ANNOTATORJS_FORMAT'
 OUTPUT_FORMATS = [CATCH_ANNO_FORMAT, ANNOTATORJS_FORMAT]
 CATCH_OUTPUT_FORMAT_HTTPHEADER = 'HTTP_X_CATCH_OUTPUT_FORMAT'
 
+METHOD_PERMISSION_MAP = {
+    'GET': 'read',
+    'HEAD': 'read',
+    'DELETE': 'delete',
+    'PUT': 'update',
+}
+
 logger = logging.getLogger(__name__)
 
-def get_requesting_user(request):
-    try:
-        return request.catchjwt['userId']
-    except Exception:
-        # TODO: REMOVE FAKE
-        return '1234567890'
+
+def require_catchjwt(view_func):
+    def _decorator(request, *args, **kwargs):
+        # check that middleware added jwt info in request
+        catchjwt = getattr(request, 'catchjwt', None)
+        if catchjwt is None:
+            return JsonResponse(
+                status=HTTPStatus.UNAUTHORIZED,
+                data={'status': HTTPStatus.UNAUTHORIZED,
+                      'payload': ['looks like catchjwt middleware is not on']}
+            )
+        if catchjwt['error']:
+            return JsonResponse(
+                status=HTTPStatus.UNAUTHORIZED,
+                data={'status': HTTPStatus.UNAUTHORIZED,
+                      'payload': catchjwt['error']},
+            )
+
+        response = view_func(request, *args, **kwargs)
+        return response
+    return wraps(view_func)(_decorator)
+
 
 def get_jwt_payload(request):
     try:
@@ -82,18 +107,18 @@ def get_input_json(request):
         raise MissingAnnotationInputError(
             'missing json in body request for create/update')
 
-def process_create(request, requesting_user, anno_id):
+def process_create(request, anno_id):
     # throws MissingAnnotationInputError
     a_input = get_input_json(request)
 
     # fill info for create-anno
+    requesting_user = request.catchjwt['userId']
     a_input['id'] = anno_id
     if 'permissions' not in a_input:
         a_input['permissions'] = get_default_permissions_for_user(
             requesting_user)
     if 'schema_version' not in a_input:
         a_input['schema_version'] = SCHEMA_VERSION
-
 
     # throws CatchFormatsError, AnnotatorJSError
     catcha = validate_input(a_input)
@@ -104,6 +129,7 @@ def process_create(request, requesting_user, anno_id):
             ('anno({}) conflict in input creator_id({}) does not match '
                 'requesting_user({}) - not created').format(
                     anno_id, catcha['creator']['id'], requesting_user))
+
     # TODO: check if creator in permissions
     # TODO: check if reply to itself
     # TODO: check if annotation in targets if reply
@@ -113,19 +139,30 @@ def process_create(request, requesting_user, anno_id):
     return anno
 
 
-def process_update(request, requesting_user, anno):
+def process_update(request, anno):
     # throws MissingAnnotationInputError
     a_input = get_input_json(request)
 
     # throws CatchFormatsERror, AnnotatorJSError
     catcha = validate_input(a_input)
 
+    # check if trying to update permissions
+    requesting_user = request.catchjwt['userId']
+    if not CRUD.is_identical_permissions(catcha, anno.raw):
+        if requesting_user not in anno.can_admin \
+                and 'CAN_ADMIN' not in request.catchjwt['override']:
+            msg = 'user({}) not allowed to admin anno({})'.format(
+                requesting_user, anno.anno_id)
+            logger.info(msg)
+            raise NoPermissionForOperationError(msg)
+
     # throws AnnoError
-    anno = CRUD.update_anno(anno, catcha, requesting_user)
+    anno = CRUD.update_anno(anno, catcha)
     return anno
 
 
 @require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE'])
+@require_catchjwt
 def crud_api(request, anno_id):
     '''view to deal with crud api requests.'''
     try:
@@ -155,36 +192,48 @@ def crud_api(request, anno_id):
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
 
-def _do_crud_api(request, anno_id):
+def has_permission_for_op(request, anno):
+    permission = METHOD_PERMISSION_MAP[request.method]
+    if anno.has_permission_for(permission, request.catchjwt['userId']) \
+       or 'CAN_{}'.format(permission).upper() in request.catchjwt['override']:
+        return True
+    else:
+        return False
 
+
+def _do_crud_api(request, anno_id):
     # assumes went through main auth and is ok
 
     # retrieves anno
     anno = CRUD.get_anno(anno_id)
 
-    # TODO: while we don't have catch auth, fake requesting_user
-    # the plan is to have it set in the request by middleware
-    requesting_user = get_requesting_user(request)
-
     if anno is None:
         if request.method == 'POST':
             # sure there's no duplication and it's a create
-            r = process_create(request, requesting_user, anno_id)
+            r = process_create(request, anno_id)
         else:
             raise MissingAnnotationError('anno({}) not found'.format(anno_id))
     else:
-        # django strips body from response to HEAD requests
-        # https://code.djangoproject.com/ticket/15668
-        if request.method == 'GET' or request.method == 'HEAD':
-            r = CRUD.read_anno(anno, requesting_user)
-        elif request.method == 'DELETE':
-            r = CRUD.delete_anno(anno, requesting_user)
-        elif request.method == 'PUT':
-            r = process_update(request, requesting_user, anno)
-        elif request.method == 'POST':
+        if request.method == 'POST':
             raise DuplicateAnnotationIdError(
                 'anno({}): already exists, failed to create'.format(
                     anno.anno_id))
+
+        if not has_permission_for_op(request, anno):
+            raise NoPermissionForOperationError(
+                'no permission to {} anno({}) for user({})'.format(
+                    METHOD_PERMISSION_MAP[request.method], anno_id,
+                    request.catchjwt['userId']))
+
+        if request.method == 'GET' or request.method == 'HEAD':
+            r = CRUD.read_anno(anno)
+        elif request.method == 'DELETE':
+            r = CRUD.delete_anno(anno)
+        elif request.method == 'PUT':
+            r = process_update(request, anno)
+        else:
+            raise MethodNotAllowedError(
+                'method ({}) not allowed'.format(request.method))
 
     assert r is not None
 
@@ -205,7 +254,6 @@ def _do_crud_api(request, anno_id):
             output_format))
 
     return payload
-
 
 
 def partial_update_api(request, anno_id):
@@ -324,16 +372,10 @@ def _do_search_api(request):
     return response
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(['GET'])
 def index(request):
-    if request.method == 'POST':
-        # create request without `id` in querystring, generate new `id`
-        resp = crud_api(request, str(uuid4()))
-
-        return resp
-    else:
-        # TODO: return info on the api
-        return HttpResponse('Hello you. This is the annotation sample.')
+    # TODO: return info on the api
+    return HttpResponse('placeholder for api docs. soon.')
 
 
 @require_http_methods(['GET'])
@@ -366,7 +408,7 @@ def stash(request):
 
 
 
-def process_partial_update(request, requesting_user, anno_id):
+def process_partial_update(request, anno_id):
     # assumes request.method == PUT
     return {
         'status': HTTPStatus.NOT_IMPLEMENTED,

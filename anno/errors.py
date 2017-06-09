@@ -57,6 +57,9 @@ class MissingAnnotationCreatorInputError(AnnoError):
 class NoPermissionForOperationError(AnnoError):
     status = HTTPStatus.FORBIDDEN  # 403
 
+class MethodNotAllowedError(AnnoError):
+    status = HTTPStatus.METHOD_NOT_ALLOWED  # 405
+
 
 class AnnotatorJSError(AnnoError):
     '''annotatorjs is malformed or not possible to format.'''

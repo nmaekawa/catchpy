@@ -20,7 +20,7 @@ from anno.models import PURPOSE_TAGGING
 @pytest.mark.django_db
 def test_create_anno_ok(wa_text):
     catcha = wa_text
-    x = CRUD.create_anno(catcha, catcha['creator']['id'])
+    x = CRUD.create_anno(catcha)
     assert(x is not None)
     assert(Anno.objects.count() == 1)
     assert(x.target_set.count() == len(catcha['target']['items']))
@@ -31,13 +31,13 @@ def test_create_anno_ok(wa_text):
 @pytest.mark.django_db(transaction=True)
 def test_create_duplicate_anno(wa_image):
     catcha = wa_image
-    x1 = CRUD.create_anno(catcha, catcha['creator']['id'])
+    x1 = CRUD.create_anno(catcha)
     assert(x1 is not None)
     assert(Anno.objects.count() == 1)
 
     x2 = None
     with pytest.raises(AnnoError):
-        x2 = CRUD.create_anno(catcha, catcha['creator']['id'])
+        x2 = CRUD.create_anno(catcha)
 
     assert x2 is None
     assert(Anno.objects.count() == 1)
@@ -57,7 +57,7 @@ def test_create_anno_invalid_target(wa_video):
 
     x = None
     with pytest.raises(InvalidAnnotationTargetTypeError):
-        x = CRUD.create_anno(catcha, catcha['creator']['id'])
+        x = CRUD.create_anno(catcha)
 
     assert x is None
     y = CRUD.get_anno(catcha['id'])
@@ -90,7 +90,7 @@ def test_update_anno_ok(wa_text):
         'format': 'video/youtube',
         'source': 'https://youtu.be/92vuuZt7wak',
     })
-    CRUD.update_anno(x, catcha, catcha['creator']['id'])
+    CRUD.update_anno(x, catcha)
 
     assert x.modified.utcoffset() is not None
     assert original_created.utcoffset() is not None
@@ -106,7 +106,7 @@ def test_update_anno_ok(wa_text):
 @pytest.mark.django_db
 def test_update_anno_delete_tags_ok(wa_text):
     catcha = wa_text
-    x = CRUD.create_anno(catcha, catcha['creator']['id'])
+    x = CRUD.create_anno(catcha)
     # save values before update
     original_tags = x.anno_tags.count()
     original_targets = x.target_set.count()
@@ -120,7 +120,7 @@ def test_update_anno_delete_tags_ok(wa_text):
     assert len(no_tags) == 1
     wa['body']['items'] = no_tags
 
-    CRUD.update_anno(x, catcha, catcha['creator']['id'])
+    CRUD.update_anno(x, catcha)
     assert(x.anno_tags.count() == 0)
     assert(x.target_set.count() == original_targets)
     assert(x.body_text == original_body_text)
@@ -132,7 +132,7 @@ def test_update_anno_delete_tags_ok(wa_text):
 @pytest.mark.django_db
 def test_update_anno_tag_too_long(wa_text):
     catcha = wa_text
-    x = CRUD.create_anno(catcha, catcha['creator']['id'])
+    x = CRUD.create_anno(catcha)
     # save values before update
     original_tags = x.anno_tags.count()
     original_targets = x.target_set.count()
@@ -171,7 +171,7 @@ def test_update_anno_tag_too_long(wa_text):
     })
 
     with pytest.raises(InvalidInputWebAnnotationError):
-        CRUD.update_anno(x, catcha, catcha['creator']['id'])
+        CRUD.update_anno(x, catcha)
 
     assert(x.anno_tags.count() == original_tags)
     assert(x.target_set.count() == original_targets)
@@ -180,42 +180,23 @@ def test_update_anno_tag_too_long(wa_text):
     assert(x.modified > original_created)
 
 
-@pytest.mark.usefixtures('wa_audio')
-@pytest.mark.django_db
-def test_read_anno_with_no_permission(wa_audio):
-    catcha = wa_audio
-    catcha['permissions']['can_read'] = [catcha['creator']['id']]
-    x = CRUD.create_anno(catcha, catcha['creator']['id'])
-    # save values before update
-    original_tags = x.anno_tags.count()
-    original_targets = x.target_set.count()
-    original_body_text = x.body_text
-    original_created = x.created
-    original_modified = x.modified
-
-    y = None
-    with pytest.raises(NoPermissionForOperationError):
-        y= CRUD.read_anno(x, 'peeping_tom')
-
-    assert y is None
-
 @pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db(transaction=True)
 def test_delete_anno_ok(wa_list):
     annos = []
     for wa in wa_list:
         catcha = wa
-        annos.append(CRUD.create_anno(catcha, catcha['creator']['id']))
+        annos.append(CRUD.create_anno(catcha))
     total = Anno.objects.count()
     assert len(annos) == total
     assert len(wa_list) == total
 
     x = annos[2]
 
-    CRUD.delete_anno(x, x.creator_id)
+    CRUD.delete_anno(x)
     assert x.anno_deleted == True
     with pytest.raises(MissingAnnotationError):
-        CRUD.read_anno(x, x.creator_id)  # this just checks current anno for deleted
+        CRUD.read_anno(x)  # this just checks current anno for deleted
 
     assert(CRUD.get_anno(x.anno_id) is None)  # this pulls from db
 

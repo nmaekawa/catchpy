@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from datetime import timedelta
+from dateutil import tz
 import iso8601
 import jwt
 import logging
-import pytz
 
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ def encode_token(payload, secret_key):
     return jwt.encode(payload, secret_key)
 
 
-def encode_catchjwt(
-    apikey=None, secret=None, user=None, iat=None, ttl=60, override=[]):
+def encode_catchjwt(apikey=None, secret=None,
+                    user=None, iat=None, ttl=60, override=[]):
     payload = {
         'consumerKey': apikey if apikey else str(uuid4()),
         'userId': user if user else str(uuid4()),
@@ -39,7 +39,7 @@ def encode_catchjwt(
 
 
 def now_utc():
-    return datetime.now(pytz.utc)
+    return datetime.now(tz.tzutc())
 
 
 def validate_token(token_payload):
