@@ -84,7 +84,7 @@ DATABASES = {
         'PASSWORD': 'moria',
         'HOST': 'localhost',
         'PORT': '5432',
-        'ATOMIC_REQUESTS': True,
+        'ATOMIC_REQUESTS': False,
     },
 }
 
