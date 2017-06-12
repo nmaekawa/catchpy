@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import importlib
 import logging
-from random import randint
 
 from django.db.models import CASCADE
 from django.db.models import BooleanField
@@ -22,10 +20,11 @@ from django.conf import settings
 
 from .managers import SearchManager
 
-import pdb
+
+logger = logging.getLogger(__name__)
 
 
-#CUSTOM_MANAGER = 'hxat_plat.hxat_platform.PlatformManager'
+# CUSTOM_MANAGER = 'hxat_plat.hxat_platform.PlatformManager'
 
 # schema versions
 CURRENT_SCHEMA_VERSION = 'catch_v0.1'
@@ -172,7 +171,6 @@ class Anno(Model):
         if user in self.can_admin:
             permissions.append('can_admin')
         return permissions
-
 
     def delete(self, *args, **kwargs):
         '''

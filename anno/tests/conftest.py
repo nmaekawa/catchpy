@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
 from dateutil import tz
-import json
 import os
 import pytest
 from random import randint
@@ -81,7 +80,7 @@ def js_text():
 
 @pytest.fixture(scope='function')
 def js_video():
-    return make_annotator_object(age_in_hours=randint(20, 100), media=VIDEO)
+    return make_annotatorjs_object(age_in_hours=randint(20, 100), media=VIDEO)
 
 
 @pytest.fixture(scope='function')
@@ -91,14 +90,14 @@ def js_audio():
 
 @pytest.fixture(scope='function')
 def js_image():
-    return make_annotatorjs_object(age_in_hours=randint(20,100), media=IMAGE)
+    return make_annotatorjs_object(age_in_hours=randint(20, 100), media=IMAGE)
 
 
 def fetch_fortune():
     return os.popen('fortune').read()
 
 def get_fake_url():
-    return 'http://fake{}.com'.format(randint(100,1000))
+    return 'http://fake{}.com'.format(randint(100, 1000))
 
 def get_past_datetime(age_in_hours):
     now = datetime.now(tz.tzutc())
@@ -146,7 +145,7 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
     if media == ANNO:
         target = {
             'type': RESOURCE_TYPE_LIST,
-            'items':[{
+            'items': [{
                 'type': media,
                 'source': reply_to,
                 'format': 'text/html'
@@ -171,7 +170,7 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
                             'start': randint(10, 300),
                             'end': randint(350, 750),
                         }]
-                    },{
+                    }, {
                         'type': 'TextQuoteSelector',
                         'exact': fetch_fortune(),
                     }],
@@ -211,11 +210,11 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
                         'type': 'FragmentSelector',
                         'conformsTo': 'http:/www.w3c.org/TR/media-frags/',
                         'value': 'xywh={},{},{},{}'.format(
-                            randint(0, 100), randint(0,100),
+                            randint(0, 100), randint(0, 100),
                             randint(0, 100), randint(0, 100)),
                     }],
                 },
-            },{
+            }, {
                 'type': THUMB,
                 'source': get_fake_url(),
                 'format': 'image/jpg',
@@ -351,7 +350,6 @@ def make_json_request(
     method_to_call = getattr(factory, method.lower(), 'post')
 
     request = method_to_call('/annos/{}'.format(anno_id),
-                            data=data, content_type='application/json')
+                             data=data, content_type='application/json')
     request.catchjwt = jwt_payload if jwt_payload else make_jwt_payload()
     return request
-

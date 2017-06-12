@@ -9,6 +9,7 @@ from .models import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 
 logger = logging.getLogger(__name__)
 
+
 def anno_to_annotatorjs(anno):
     '''formats an annotation model into an annotatorjs json object.'''
 
@@ -20,10 +21,9 @@ def anno_to_annotatorjs(anno):
         uri = anno.raw['platform']['target_source_id']
     except KeyError as e:
         msg = ('anno({}) failed to format from webannotation to '
-              'annotatorjs: {}').format(anno.anno_id, str(e))
+               'annotatorjs: {}').format(anno.anno_id, str(e))
         logger.error(msg)
         raise AnnotatorJSError(msg)
-
 
     annojs = {
         'id': anno.anno_id,

@@ -1,6 +1,7 @@
 from django.db.models import Manager
 from django.db.models import Q
 
+
 class SearchManager(Manager):
     '''builds Q expression for `platform` annotation property.
 
@@ -34,4 +35,3 @@ class SearchManager(Manager):
             q = q & Q(**kwargs)
 
         return q
-

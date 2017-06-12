@@ -3,7 +3,6 @@ import dateutil
 from functools import wraps
 import json
 import logging
-from uuid import uuid4
 
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -21,6 +20,7 @@ from .crud import CRUD
 from .errors import AnnoError
 from .errors import InvalidAnnotationCreatorError
 from .errors import DuplicateAnnotationIdError
+from .errors import MethodNotAllowedError
 from .errors import MissingAnnotationError
 from .errors import MissingAnnotationInputError
 from .errors import NoPermissionForOperationError
@@ -32,7 +32,6 @@ from .search import query_target_medias
 from .search import query_target_sources
 from .models import Anno
 
-import pdb
 
 SCHEMA_VERSION = 'catch_v1.0'
 CATCH_CONTEXT_IRI = 'http://catch-dev.harvardx.harvard.edu/catch-context.jsonld'
@@ -100,12 +99,14 @@ def get_default_permissions_for_user(user):
         'can_admin': [user],
     }
 
+
 def get_input_json(request):
     if request.body:
         return json.loads(request.body)
     else:
         raise MissingAnnotationInputError(
             'missing json in body request for create/update')
+
 
 def process_create(request, anno_id):
     # throws MissingAnnotationInputError
@@ -272,7 +273,7 @@ def search_api(request):
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
     except Exception as e:
-        logger.error('anno({}): search failed:'.format(anno_id), exc_info=True)
+        logger.error('search failed; request({})'.format(request), exc_info=True)
         return JsonResponse(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
@@ -401,7 +402,7 @@ def stash(request):
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
     except (ValueError, KeyError) as e:
-        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
+        logger.error('bad input: requuest({})'.format(request), exc_info=True)
         return JsonResponse(
             status=HTTPStatus.BAD_REQUEST,
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
@@ -424,21 +425,3 @@ def process_partial_update(request, anno_id):
 
     # needs formatting?
     pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

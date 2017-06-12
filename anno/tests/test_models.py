@@ -1,16 +1,7 @@
-import json
-import pdb
 import pytest
 
-
-from django.db import IntegrityError
-from django.test import TestCase
-
 from model_mommy import mommy
-from model_mommy.recipe import Recipe, foreign_key
 
-from anno.crud import CRUD
-from anno.errors import MissingAnnotationError
 from anno.models import Anno, Tag, Target
 from anno.models import MEDIA_TYPES
 

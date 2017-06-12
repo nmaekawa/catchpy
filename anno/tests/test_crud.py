@@ -1,18 +1,11 @@
-import json
-import pdb
 import pytest
-
-
-from django.db import IntegrityError
 
 from anno.crud import CRUD
 from anno.errors import AnnoError
 from anno.errors import InvalidAnnotationTargetTypeError
 from anno.errors import InvalidInputWebAnnotationError
 from anno.errors import MissingAnnotationError
-from anno.errors import NoPermissionForOperationError
-from anno.models import Anno, Tag, Target
-from anno.models import MEDIA_TYPES
+from anno.models import Anno, Target
 from anno.models import PURPOSE_TAGGING
 
 
@@ -61,7 +54,6 @@ def test_create_anno_invalid_target(wa_video):
 
     assert x is None
     y = CRUD.get_anno(catcha['id'])
-    #print(json.dumps(y.raw, sort_keys=True, indent=4))
     assert y is None
 
 
@@ -75,7 +67,6 @@ def test_update_anno_ok(wa_text):
     original_targets = x.target_set.count()
     original_body_text = x.body_text
     original_created = x.created
-    original_modified = x.modified
 
     # add tag and target
     wa = dict(wa_text)
@@ -112,11 +103,13 @@ def test_update_anno_delete_tags_ok(wa_text):
     original_targets = x.target_set.count()
     original_body_text = x.body_text
     original_created = x.created
-    original_modified = x.modified
+
+    assert original_tags > 0
 
     # add tag and target
     wa = dict(wa_text)
-    no_tags = [x for x in wa['body']['items'] if x['purpose'] != PURPOSE_TAGGING]
+    no_tags = [x for x in wa['body']['items']
+               if x['purpose'] != PURPOSE_TAGGING]
     assert len(no_tags) == 1
     wa['body']['items'] = no_tags
 
@@ -138,7 +131,6 @@ def test_update_anno_tag_too_long(wa_text):
     original_targets = x.target_set.count()
     original_body_text = x.body_text
     original_created = x.created
-    original_modified = x.modified
 
     # add tag and target
     wa = dict(wa_text)
@@ -194,7 +186,7 @@ def test_delete_anno_ok(wa_list):
     x = annos[2]
 
     CRUD.delete_anno(x)
-    assert x.anno_deleted == True
+    assert x.anno_deleted is True
     with pytest.raises(MissingAnnotationError):
         CRUD.read_anno(x)  # this just checks current anno for deleted
 
@@ -202,5 +194,4 @@ def test_delete_anno_ok(wa_list):
 
     deleted = Anno.objects.get(pk=x.anno_id)
     assert deleted is not None
-    assert deleted.anno_deleted == True
-
+    assert deleted.anno_deleted is True

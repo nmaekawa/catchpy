@@ -1,25 +1,12 @@
-from datetime import datetime
-from dateutil import tz
 import json
-import pdb
 import pytest
-import uuid
-
 
 from django.urls import reverse
-from django.db import IntegrityError
 from django.test import Client
 from django.test import RequestFactory
 
 from anno.crud import CRUD
-from anno.errors import AnnoError
-from anno.errors import InvalidAnnotationTargetTypeError
-from anno.errors import InvalidInputWebAnnotationError
-from anno.errors import MissingAnnotationError
-from anno.errors import NoPermissionForOperationError
-from anno.models import Anno, Tag, Target
-from anno.models import MEDIA_TYPES
-from anno.models import PURPOSE_TAGGING
+from anno.models import Anno
 from anno.views import crud_api
 from anno.views import ANNOTATORJS_FORMAT
 from anno.views import CATCH_OUTPUT_FORMAT_HTTPHEADER
@@ -166,7 +153,6 @@ def test_update_invalid_input(wa_video):
     assert response.status_code == 400
     resp = json.loads(response.content)
     assert len(resp['payload']) > 0
-    #assert 'not updated' in ','.join(resp['payload'])
 
 
 @pytest.mark.usefixtures('wa_video')
@@ -231,7 +217,7 @@ def test_create_on_behalf_of_others(wa_image):
     payload = make_jwt_payload()
 
     request = make_json_request(
-        method='post', anno_id=to_be_created_id,data=json.dumps(catch))
+        method='post', anno_id=to_be_created_id, data=json.dumps(catch))
     request.catchjwt = payload
 
     assert catch['id'] != to_be_created_id
@@ -256,7 +242,7 @@ def test_create_ok(wa_image):
     catch['creator']['id'] = payload['userId']
 
     request = make_json_request(
-        method='post', anno_id=to_be_created_id,data=json.dumps(catch))
+        method='post', anno_id=to_be_created_id, data=json.dumps(catch))
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
@@ -315,7 +301,3 @@ def test_create_annojs(js_text):
 
     x = Anno._default_manager.get(pk=to_be_created_id)
     assert x.creator_id == payload['userId']
-
-
-
-

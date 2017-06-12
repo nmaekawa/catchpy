@@ -1,11 +1,9 @@
-
 import json
 import pytest
 import os
 
 from catchformats.annotatorjs_formatter import annojs_to_annotation
 from anno.crud import CRUD
-from anno.models import Anno
 from anno.annojs import anno_to_annotatorjs
 
 
@@ -40,11 +38,7 @@ def test_to_annotatorjs(js_list):
 
         original = json.dumps(js, sort_keys=True, indent=4)
         formatted = json.dumps(js_back, sort_keys=True, indent=4)
-        #print(formatted)
-        #print('-------------------------------------------------')
-        #print(original)
         assert original == formatted
-
 
 
 def readfile_into_jsonobj(filepath):
@@ -56,12 +50,9 @@ def readfile_into_jsonobj(filepath):
 @pytest.mark.django_db
 def x_test_long_annotatorjs():
     here = os.path.abspath(os.path.dirname(__file__))
-    #filename = os.path.join(here, 'annotatorjs_large_sample.json')
+    # filename = os.path.join(here, 'annotatorjs_large_sample.json')
     filename = os.path.join(here, 'annojs_third_3K_sorted.json')
     sample = readfile_into_jsonobj(filename)
-
-    # assuming this won't fail!
-    #mother_of_all = sample[0]
 
     for js in sample:
         # prep and remove insipient props
@@ -101,18 +92,7 @@ def x_test_long_annotatorjs():
 
         original = json.dumps(js, sort_keys=True, indent=4)
         formatted = json.dumps(js_back, sort_keys=True, indent=4)
-        #print(formatted)
-        #print('-------------------------------------------------')
-        #print(original
-        #try:
 
         # this assertion doesn't take in consideration lists of tags
         # that might be out-of-order
         assert original == formatted
-
-        #except AssertionError as e:
-        #    print('error for js({}): {}'.format(js['id'], str(e)))
-
-
-
-

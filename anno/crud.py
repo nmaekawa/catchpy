@@ -2,6 +2,7 @@ from datetime import datetime
 import dateutil
 import dateutil.parser
 import logging
+from uuid import uuid4
 
 from django.db import DatabaseError
 from django.db import DataError
@@ -21,11 +22,11 @@ from .errors import TargetAnnotationForReplyMissingError
 from .models import Anno, Tag, Target
 from .models import MEDIA_TYPES, ANNO
 from .models import PURPOSES, PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
-from .models import RESOURCE_TYPES, RESOURCE_TYPE_LIST
+from .models import RESOURCE_TYPES
 
-import pdb
 
 logger = logging.getLogger(__name__)
+
 
 #
 # note on nomenclature
@@ -171,13 +172,7 @@ class CRUD(object):
                 a.anno_tags = tags
 
                 if is_copy:  # keep original date if it's a copy
-                    #print('----------------- created({})'.format(
-                    #    a.created.isoformat()))
-
                     a.created = cls._get_original_created(catcha)
-
-                    #print('----------------- created({})'.format(
-                    #    a.created.isoformat()))
 
                     a.anno_deleted = catcha.get('deleted', False)
 
@@ -203,12 +198,13 @@ class CRUD(object):
             original_date = dateutil.parser.parse(catcha['created'])
         except (TypeError, OverflowError) as e:
             msg = ('error converting iso8601 `created` date in anno({}) '
-                'copy, setting a fresh date: {}').format(
-                    catcha['id'], str(e))
+                   'copy, setting a fresh date: {}').format(
+                       catcha['id'], str(e))
             logger.error(msg, exc_info=True)
             original_date = datetime.now(dateutil.tz.tzutc()).replace(
                 microsecond=0)
-        return original_date
+        else:
+            return original_date
 
 
     @classmethod
@@ -368,7 +364,8 @@ class CRUD(object):
         # check permissions to import
         if 'CAN_IMPORT' not in jwt_payload['override']:
             raise NoPermissionForOperationError(
-                'user ({}) not allowed to import'.format(jwt_payload['userId']))
+                'user ({}) not allowed to import'.format(
+                    jwt_payload['userId']))
 
         discarded = []
         imported = []
@@ -429,13 +426,3 @@ class CRUD(object):
             'failure': discarded,
         }
         return resp
-
-
-
-
-
-
-
-
-
-
