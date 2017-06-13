@@ -4,6 +4,7 @@ from functools import wraps
 import json
 import logging
 
+from django.db.models import Q
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -290,18 +291,19 @@ def _do_search_api(request):
     # TODO: check override POLICIES (override allow private reads)
     if 'CAN_READ' not in payload['override']:
         # filter out permission cannot_read
-        query = query.filter(can_read__len=0).filter(        # public
-            can_read__contains=[payload['userId']])  # allowed for user
+        q = Q(can_read__len=0) | Q(can_read__contains=[payload['userId']])
+        query = query.filter(q)
 
-    usernames = request.GET.get('username', [])
+    usernames = request.GET.getlist('username', [])
     if usernames:
+        #unames = [x.strip() for x in usernames.split(',')]
         query = query.filter(query_username(usernames))
 
-    userids = request.GET.get('userid', [])
+    userids = request.GET.getlist('userid', [])
     if userids:
         query = query.filter(query_userid(userids))
 
-    tags = request.GET.get('tags', [])
+    tags = request.GET.getlist('tag', [])
     if tags:
         query = query.filter(query_tags(tags))
 
@@ -309,15 +311,16 @@ def _do_search_api(request):
     if targets:
         query = query.filter(query_target_sources(targets))
 
-    medias = request.GET.get('media', [])
+    medias = request.GET.getlist('media', [])
     if medias:
-        query = query.filter(query_target_medias(medias))
+        mlist = [x.capitalize() for x in medias]
+        query = query.filter(query_target_medias(mlist))
 
     text = request.GET.get('text', [])
     if text:
         query = query.filter(body_text__search=text)
-
     q = Anno.custom_manager.search_expression(request.GET)
+
     if q:
         query = query.filter(q)
 

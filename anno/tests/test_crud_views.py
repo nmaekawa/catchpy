@@ -3,7 +3,6 @@ import pytest
 
 from django.urls import reverse
 from django.test import Client
-from django.test import RequestFactory
 
 from anno.crud import CRUD
 from anno.models import Anno
@@ -17,8 +16,6 @@ from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
 from .conftest import make_json_request
 from .conftest import make_request
-
-request_factory = RequestFactory()
 
 
 @pytest.mark.django_db

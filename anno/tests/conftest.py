@@ -242,6 +242,12 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
     wa['target'] = target
     return wa
 
+def make_wa_tag(tagname):
+    return {'type': 'TextualBody',
+            'purpose': PURPOSE_TAGGING,
+            'format': 'text/html',
+            'value': tagname }
+
 def make_xywh_annotator():
     return {
         'height': str(randint(0, 100)), 'width': str(randint(0, 100)),
@@ -345,11 +351,19 @@ def make_request(method='GET', jwt_payload=None, anno_id='tbd'):
 
 
 def make_json_request(
-        method='POST', jwt_payload=None, anno_id='tbd', data=None):
+        method='POST', jwt_payload=None,
+        query_string='', anno_id='tbd', data=None):
+
     factory = RequestFactory()
     method_to_call = getattr(factory, method.lower(), 'post')
 
-    request = method_to_call('/annos/{}'.format(anno_id),
-                             data=data, content_type='application/json')
+    if query_string:
+        url = '/search?{}'.format(query_string)
+    else:
+        url = '/annos/{}'.format(anno_id)
+
+    print('-------------------------------- url={}'.format(url))
+
+    request = method_to_call(url, data=data, content_type='application/json')
     request.catchjwt = jwt_payload if jwt_payload else make_jwt_payload()
     return request

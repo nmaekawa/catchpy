@@ -20,12 +20,12 @@ class SearchManager(Manager):
 
         context_id = params.get('contextId', None)
         if context_id:
-            kwargs = {'raw__platform__context_id': str(context_id)}
+            kwargs = {'raw__platform__contextId': str(context_id)}
             q = q & Q(**kwargs)
 
             collection_id = params.get('collectionId', None)
             if collection_id:
-                kwargs = {'raw__platform__collection_id': str(collection_id)}
+                kwargs = {'raw__platform__collectionId': str(collection_id)}
                 q = q & Q(**kwargs)
 
         target_source_id = params.get('sourceId', None)
