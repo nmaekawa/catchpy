@@ -104,8 +104,8 @@ def get_past_datetime(age_in_hours):
     delta = timedelta(hours=age_in_hours)
     return (now - delta).replace(microsecond=0).isoformat()
 
-def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
-    creator_id = str(uuid4())
+def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
+    creator_id = user if user else str(uuid4())
 
     if age_in_hours > 0:
         created_at = get_past_datetime(age_in_hours)
@@ -116,6 +116,11 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
             'creator': {
                 'id': creator_id,
                 'name': 'user_{}'.format(creator_id),
+            },
+            'platform': {
+                'platform_name': 'test_context',
+                'contextId': 'fake_context',
+                'target_source_id': 'internal_reference_123',
             },
         }
     else:
@@ -151,6 +156,7 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
                 'format': 'text/html'
             }]
         }
+        created['platform']['target_source_id'] = reply_to
     elif media == TEXT:
         target = {
             'type': RESOURCE_TYPE_LIST,
@@ -229,11 +235,6 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None):
             'can_update': [creator_id],
             'can_delete': [creator_id],
             'can_admin': [creator_id],
-        },
-        'platform': {
-            'platform_name': 'test_context',
-            'contextId': 'fake_context',
-            'target_source_id': 'blah',
         },
     }
 

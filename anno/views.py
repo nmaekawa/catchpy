@@ -170,12 +170,19 @@ def crud_api(request, anno_id):
     try:
         resp = _do_crud_api(request, anno_id)
         status = HTTPStatus.OK
+
         if request.method == 'POST' or request.method == 'PUT':
             status = HTTPStatus.SEE_OTHER
+
         # add response header with location for new resource
         response = JsonResponse(status=status, data=resp)
         response['Location'] = request.build_absolute_uri(
             reverse('crudapi', kwargs={'anno_id': resp['id']}))
+
+        logger.debug('*************** return response status code ({})'.format(
+            response.status_code))
+
+
         return response
 
     except AnnoError as e:
@@ -263,6 +270,7 @@ def partial_update_api(request, anno_id):
 
 
 @require_http_methods(['GET', 'HEAD'])
+@require_catchjwt
 def search_api(request):
     try:
         resp = _do_search_api(request)
