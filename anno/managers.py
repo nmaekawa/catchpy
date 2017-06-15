@@ -11,12 +11,12 @@ class SearchManager(Manager):
 
     def search_expression(self, params):
         '''builds Q expression for `platform` according to params.'''
-        platform_name = params.get('platform', None)
-        if not platform_name:
-            return None
+        q = Q()
 
-        kwargs = {'raw__platform__platform_name': str(platform_name)}
-        q = Q(**kwargs)
+        platform_name = params.get('platform', None)
+        if platform_name:
+            kwargs = {'raw__platform__platform_name': str(platform_name)}
+            q = q & Q(**kwargs)
 
         context_id = params.get('contextId', None)
         if context_id:
