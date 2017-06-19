@@ -24,7 +24,7 @@ SECRET_KEY = 'omw9oe78+qi4*!tyaityu9snpe8vg5t@jsm)+a#_im2o_cz6xl'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '10.0.2.2']
 
 
 # Application definition
@@ -79,7 +79,7 @@ WSGI_APPLICATION = PROJECT_NAME + '.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'naomi6',
+        'NAME': 'naomi7',
         'USER': 'postgres',
         'PASSWORD': 'moria',
         'HOST': 'localhost',
@@ -155,6 +155,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'anno': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'errorfile_handler'],
+            'propagate': True
+        },
         'consumer': {
             'level': 'DEBUG',
             'handlers': ['console', 'errorfile_handler'],
@@ -166,3 +171,6 @@ LOGGING = {
         },
     }
 }
+
+
+CATCH_OUTPUT_FORMAT = 'ANNOTATORJS_FORMAT'

@@ -24,8 +24,6 @@ from .managers import SearchManager
 logger = logging.getLogger(__name__)
 
 
-# CUSTOM_MANAGER = 'hxat_plat.hxat_platform.PlatformManager'
-
 # schema versions
 CURRENT_SCHEMA_VERSION = 'catch_v0.1'
 SCHEMA_VERSIONS = [CURRENT_SCHEMA_VERSION]

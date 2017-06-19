@@ -262,8 +262,9 @@ def make_ranges_annotator():
         'start': '/p[1]', 'end': '/p[2]',
     }
 
-def make_annotatorjs_object(age_in_hours=0, media=TEXT, reply_to=None):
-    creator_id = str(uuid4())
+def make_annotatorjs_object(
+        age_in_hours=0, media=TEXT, reply_to=None, user=None):
+    creator_id = user if user else str(uuid4())
 
     if age_in_hours > 0:
         created_at = get_past_datetime(age_in_hours)

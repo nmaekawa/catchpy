@@ -3,10 +3,13 @@ import dateutil
 from functools import wraps
 import json
 import logging
+from uuid import uuid4
 
 from django.db.models import Q
+from django.conf import settings
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 from http import HTTPStatus
@@ -164,6 +167,7 @@ def process_update(request, anno):
 
 
 @require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE'])
+@csrf_exempt
 @require_catchjwt
 def crud_api(request, anno_id):
     '''view to deal with crud api requests.'''
@@ -179,7 +183,7 @@ def crud_api(request, anno_id):
         response['Location'] = request.build_absolute_uri(
             reverse('crudapi', kwargs={'anno_id': resp['id']}))
 
-        logger.debug('*************** return response status code ({})'.format(
+        logrer.debug('*************** return response status code ({})'.format(
             response.status_code))
 
 
@@ -208,6 +212,39 @@ def has_permission_for_op(request, anno):
         return True
     else:
         return False
+
+
+@require_http_methods('POST')
+@csrf_exempt
+@require_catchjwt
+def c_crud(request):
+    anno_id = uuid4()
+    try:
+        r = process_create(request, anno_id)
+        resp = _response_for_single_anno(request, r)
+
+        # add response header with location for new resource
+        response = JsonResponse(status=HTTPStatus.OK, data=resp)
+        response['Location'] = request.build_absolute_uri(
+            reverse('crudapi', kwargs={'anno_id': resp['id']}))
+        return response
+
+    except AnnoError as e:
+        logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
+        return JsonResponse(status=e.status,
+                            data={'status': e.status, 'payload': [str(e)]})
+
+    except (CatchFormatsError, AnnotatorJSError) as e:
+        logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
+        return JsonResponse(
+            status=HTTPStatus.BAD_REQUEST,
+            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
+
+    except (ValueError, KeyError) as e:
+        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
+        return JsonResponse(
+            status=HTTPStatus.BAD_REQUEST,
+            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
 
 def _do_crud_api(request, anno_id):
@@ -246,8 +283,9 @@ def _do_crud_api(request, anno_id):
 
     assert r is not None
 
+    ''' to be replaced by method _response_for_single_anno){
     # prep response
-    output_format = CATCH_ANNO_FORMAT
+    output_format = settings.getattr('CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
     if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
         output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
 
@@ -263,13 +301,48 @@ def _do_crud_api(request, anno_id):
             output_format))
 
     return payload
+    '''
+    return _response_for_single_anno(request, r)
+
+
+def _response_for_single_anno(request, anno):
+    # prep response
+    output_format = getattr(settings, 'CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
+    if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
+        output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
+
+    if output_format == ANNOTATORJS_FORMAT:
+
+        logger.debug(
+            '****** about to respond in annotatorjs format({})'.format(
+                anno.anno_id))
+
+        payload = anno_to_annotatorjs(anno)
+
+    elif output_format == CATCH_ANNO_FORMAT:
+        # doesn't need formatting! SERIALIZE as webannotation
+        payload = anno.serialized
+    else:
+        # unknown format or plug custom formatters!
+        raise UnknownOutputFormatError('unknown output format({})'.format(
+            output_format))
+    return payload
 
 
 def partial_update_api(request, anno_id):
     pass
 
+@require_http_methods(['GET', 'DELETE', 'PUT', 'HEAD', 'POST'])
+@csrf_exempt
+def check(request):
+    logger.error('--- checking: method({})'.format(request.method))
+    logger.error('--- checking: request content ({})'.format(request.body))
 
-@require_http_methods(['GET', 'HEAD'])
+    return JsonResponse(status=HTTPStatus.OK, data={'status': HTTPStatus.OK})
+
+
+@require_http_methods(['GET', 'HEAD', 'POST'])
+@csrf_exempt
 @require_catchjwt
 def search_api(request):
     try:
@@ -297,7 +370,7 @@ def _do_search_api(request):
     query = Anno._default_manager.filter(anno_deleted=False)
 
     # TODO: check override POLICIES (override allow private reads)
-    if 'CAN_READ' not in payload['override']:
+    if 'CAN_READ' not in payload.get('override', []):
         # filter out permission cannot_read
         q = Q(can_read__len=0) | Q(can_read__contains=[payload['userId']])
         query = query.filter(q)
@@ -391,6 +464,7 @@ def index(request):
 
 
 @require_http_methods(['GET'])
+@csrf_exempt
 def stash(request):
     filepath = request.GET.get('filepath', None)
     if filepath:
