@@ -436,7 +436,7 @@ def _do_search_api(request):
         'rows': [],
     }
 
-    output_format = CATCH_ANNO_FORMAT
+    output_format = getattr(settings, 'CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
     if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
         output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
 
