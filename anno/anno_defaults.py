@@ -8,8 +8,8 @@ CATCH_CURRENT_SCHEMA_VERSION = getattr(settings, 'CATCH_SCHEMA_VERSION', 'catch_
 CATCH_CONTEXT_IRI = getattr(
     settings, 'CATCH_CONTEXT_IRI',
     'http://catch-dev.harvardx.harvard.edu/catch-context.jsonld')
-ANNOTATORJS_CONTEXT_IRI = getattr(
-    settings, 'ANNOTATOR_CONTEXT_IRI', 'http://annotatorjs.org')
+#ANNOTATORJS_CONTEXT_IRI = getattr(
+#    settings, 'ANNOTATOR_CONTEXT_IRI', 'http://annotatorjs.org')
 
 # json response formats
 CATCH_ANNO_FORMAT = 'CATCH_ANNO_FORMAT'

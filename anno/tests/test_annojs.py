@@ -4,7 +4,7 @@ import os
 
 from catchformats.annotatorjs_formatter import annojs_to_annotation
 from anno.crud import CRUD
-from anno.annojs import anno_to_annotatorjs
+from anno.annojs import AnnoJS
 
 
 @pytest.mark.skip('debugging fixture')
@@ -27,7 +27,7 @@ def test_to_annotatorjs(js_list):
     for js in js_list:
         catcha = annojs_to_annotation(js)
         anno = CRUD.create_anno(catcha, catcha['creator']['name'])
-        js_back = anno_to_annotatorjs(anno)
+        js_back = AnnoJS.convert_from_anno(anno)
 
         # remove what would not be the same anyway
         del(js_back['error'])
@@ -73,7 +73,7 @@ def x_test_long_annotatorjs():
 
         catcha = annojs_to_annotation(js)
         anno = CRUD.create_anno(catcha, catcha['creator']['name'])
-        js_back = anno_to_annotatorjs(anno)
+        js_back = AnnoJS.convert_from_anno(anno)
 
         # remove what would not be the same anyway
         del(js_back['error'])

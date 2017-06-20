@@ -19,7 +19,7 @@ from catchformats.catch_webannotation_validator import \
 from catchformats.errors import CatchFormatsError
 from catchformats.errors import AnnotatorJSError
 
-from .annojs import anno_to_annotatorjs
+from anno.annojs import AnnoJS
 from .crud import CRUD
 from .errors import AnnoError
 from .errors import InvalidAnnotationCreatorError
@@ -301,7 +301,7 @@ def _response_for_single_anno(request, anno):
             '****** about to respond in annotatorjs format({})'.format(
                 anno.anno_id))
 
-        payload = anno_to_annotatorjs(anno)
+        payload = AnnoJS.convert_from_anno(anno)
 
     elif response_format == CATCH_ANNO_FORMAT:
         # doesn't need formatting! SERIALIZE as webannotation
@@ -326,7 +326,7 @@ def _format_response(anno_result, response_format):
 
     if is_single:
         if response_format == ANNOTATORJS_FORMAT:
-            response = anno_to_annotatorjs(anno_result)
+            response = AnnoJS.convert_from_anno(anno_result)
         elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
             response = anno_result.serialized
@@ -340,7 +340,7 @@ def _format_response(anno_result, response_format):
         }
         if response_format == ANNOTATORJS_FORMAT:
             for anno in anno_result:
-                annojs = anno_to_annotatorjs(anno)
+                annojs = AnnoJS.convert_from_anno(anno)
                 response['rows'].append(annojs)
         elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
