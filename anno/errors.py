@@ -70,6 +70,6 @@ class RawModelOutOfSynchError(AnnoError):
     status = HTTPStatus.INTERNAL_SERVER_ERROR  # 500
 
 
-class UnknownOutputFormatError(AnnoError):
+class UnknownResponseFormatError(AnnoError):
     '''output error not catch-webannotation nor annotatorjs.'''
     status = HTTPStatus.BAD_REQUEST

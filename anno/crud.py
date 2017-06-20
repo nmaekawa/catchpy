@@ -19,10 +19,11 @@ from .errors import MissingAnnotationError
 from .errors import NoPermissionForOperationError
 from .errors import TargetAnnotationForReplyMissingError
 
+from .anno_defaults import MEDIA_TYPES, ANNO
+from .anno_defaults import PURPOSES
+from .anno_defaults import PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
+from .anno_defaults import RESOURCE_TYPES
 from .models import Anno, Tag, Target
-from .models import MEDIA_TYPES, ANNO
-from .models import PURPOSES, PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
-from .models import RESOURCE_TYPES
 
 
 logger = logging.getLogger(__name__)

@@ -4,11 +4,11 @@ import pytest
 from django.urls import reverse
 from django.test import Client
 
+from anno.anno_defaults import ANNOTATORJS_FORMAT
+from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
 from anno.models import Anno
 from anno.views import crud_api
-from anno.views import ANNOTATORJS_FORMAT
-from anno.views import CATCH_OUTPUT_FORMAT_HTTPHEADER
 
 from consumer.models import Consumer
 
@@ -282,7 +282,7 @@ def test_create_annojs(js_text):
 
     request = make_json_request(
         method='post', anno_id=to_be_created_id, data=json.dumps(js))
-    request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER] = ANNOTATORJS_FORMAT
+    request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER] = ANNOTATORJS_FORMAT
     request.catchjwt = payload
 
     assert js['id'] != to_be_created_id

@@ -28,7 +28,7 @@ from .errors import MethodNotAllowedError
 from .errors import MissingAnnotationError
 from .errors import MissingAnnotationInputError
 from .errors import NoPermissionForOperationError
-from .errors import UnknownOutputFormatError
+from .errors import UnknownResponseFormatError
 from .search import query_username
 from .search import query_userid
 from .search import query_tags
@@ -36,25 +36,25 @@ from .search import query_target_medias
 from .search import query_target_sources
 from .models import Anno
 
+from .anno_defaults import ANNOTATORJS_FORMAT
+from .anno_defaults import CATCH_ANNO_FORMAT
+from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
+from .anno_defaults import CATCH_CONTEXT_IRI
+from .anno_defaults import CATCH_RESPONSE_FORMATS
+from .anno_defaults import CATCH_EXTRA_RESPONSE_FORMATS
+from .anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 
-SCHEMA_VERSION = 'catch_v1.0'
-CATCH_CONTEXT_IRI = 'http://catch-dev.harvardx.harvard.edu/catch-context.jsonld'
-ANNOTATORJS_CONTEXT_IRI = 'http://annotatorjs.org'
 
-CATCH_ANNO_FORMAT = 'CATCH_ANNO_FORMAT'
-ANNOTATORJS_FORMAT = 'ANNOTATORJS_FORMAT'
-OUTPUT_FORMATS = [CATCH_ANNO_FORMAT, ANNOTATORJS_FORMAT]
-CATCH_OUTPUT_FORMAT_HTTPHEADER = 'HTTP_X_CATCH_OUTPUT_FORMAT'
+logger = logging.getLogger(__name__)
 
+
+# mapping for http method and annotation permission type
 METHOD_PERMISSION_MAP = {
     'GET': 'read',
     'HEAD': 'read',
     'DELETE': 'delete',
     'PUT': 'update',
 }
-
-logger = logging.getLogger(__name__)
-
 
 def require_catchjwt(view_func):
     def _decorator(request, *args, **kwargs):
@@ -124,7 +124,7 @@ def process_create(request, anno_id):
         a_input['permissions'] = get_default_permissions_for_user(
             requesting_user)
     if 'schema_version' not in a_input:
-        a_input['schema_version'] = SCHEMA_VERSION
+        a_input['schema_version'] = CATCH_CURRENT_SCHEMA_VERSION
 
     # throws CatchFormatsError, AnnotatorJSError
     catcha = validate_input(a_input)
@@ -219,6 +219,7 @@ def has_permission_for_op(request, anno):
 @csrf_exempt
 @require_catchjwt
 def c_crud(request):
+    '''back compat view for create.'''
     anno_id = uuid4()
     try:
         r = process_create(request, anno_id)
@@ -284,16 +285,17 @@ def _do_crud_api(request, anno_id):
 
     assert r is not None
 
-    return _format_response(request, r)
+    response_format = fetch_response_format(request)
+    return _format_response(r, response_format)
 
 
 def _response_for_single_anno(request, anno):
     # prep response
-    output_format = getattr(settings, 'CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
-    if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
-        output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
+    response_format = getattr(settings, 'CATCH_RESPONSE_FORMAT', CATCH_ANNO_FORMAT)
+    if CATCH_RESPONSE_FORMAT_HTTPHEADER in request.META:
+        response_format = request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER]
 
-    if output_format == ANNOTATORJS_FORMAT:
+    if response_format == ANNOTATORJS_FORMAT:
 
         logger.debug(
             '****** about to respond in annotatorjs format({})'.format(
@@ -301,57 +303,53 @@ def _response_for_single_anno(request, anno):
 
         payload = anno_to_annotatorjs(anno)
 
-    elif output_format == CATCH_ANNO_FORMAT:
+    elif response_format == CATCH_ANNO_FORMAT:
         # doesn't need formatting! SERIALIZE as webannotation
         payload = anno.serialized
     else:
         # unknown format or plug custom formatters!
-        raise UnknownOutputFormatError('unknown output format({})'.format(
-            output_format))
+        raise UnknownResponseFormatError('unknown response format({})'.format(
+            response_format))
     return payload
 
 
-def fetch_output_format(request):
-    output_format = getattr(settings, 'CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
-    if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
-        output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
-    return output_format
+def fetch_response_format(request):
+    response_format = getattr(settings, 'CATCH_RESPONSE_FORMAT', CATCH_ANNO_FORMAT)
+    if CATCH_RESPONSE_FORMAT_HTTPHEADER in request.META:
+        response_format = request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER]
+    return response_format
 
 
-def _format_response(anno_result, output_format):
+def _format_response(anno_result, response_format):
     # is it single anno or a QuerySet from search?
     is_single = isinstance(anno_result, Anno)
 
     if is_single:
-        if output_format == ANNOTATORJS_FORMAT:
+        if response_format == ANNOTATORJS_FORMAT:
             response = anno_to_annotatorjs(anno_result)
-        elif output_format == CATCH_ANNO_FORMAT:
+        elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
             response = anno_result.serialized
         else:
             # unknown format or plug custom formatters!
-            raise UnknownOutputFormatError(
-                'unknown output format({})'.format(output_format))
+            raise UnknownResponseFormatError(
+                'unknown response format({})'.format(response_format))
     else:  # assume it's a QuerySet resulting from search
         response = {
-            'total': total,
-             'size': size,
-             'limit': limit,
-             'offset': offset,
              'rows': [],
         }
-        if output_format == ANNOTATORJS_FORMAT:
+        if response_format == ANNOTATORJS_FORMAT:
             for anno in anno_result:
                 annojs = anno_to_annotatorjs(anno)
                 response['rows'].append(annojs)
-        elif output_format == CATCH_ANNO_FORMAT:
+        elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
-            for anno in q_result:
+            for anno in anno_result:
                 response['rows'].append(anno.serialized)
         else:
             # unknown format or plug custom formatters!
-            raise UnknownOutputFormatError(
-                'unknown output format({})'.format(output_format))
+            raise UnknownResponseFormatError(
+                'unknown response format({})'.format(response_format))
 
     return response
 
@@ -454,33 +452,12 @@ def _do_search_api(request):
     total = query.count()      # is it here when the querysets are evaluated?
     size = q_result.count()
 
-    # prep response
-    response = {
-        'total': total,
-        'size': size,
-        'limit': limit,
-        'offset': offset,
-        'rows': [],
-    }
-
-    output_format = getattr(settings, 'CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
-    if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
-        output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
-
-    if output_format == ANNOTATORJS_FORMAT:
-        for anno in q_result:
-            annojs = anno_to_annotatorjs(anno)
-            response['rows'].append(annojs)
-
-    elif output_format == CATCH_ANNO_FORMAT:
-        # doesn't need formatting! SERIALIZE as webannotation
-        for anno in q_result:
-            response['rows'].append(anno.serialized)
-    else:
-        # unknown format
-        raise UnknownOutputFormatError('unknown output format({})'.format(
-            output_format))
-
+    response_format = fetch_response_format(request)
+    response = _format_response(q_result, response_format)
+    response['total'] = total  # add response info
+    response['size'] = size
+    response['limit'] = limit
+    response['offset'] = offset
     return response
 
 

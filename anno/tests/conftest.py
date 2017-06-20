@@ -8,13 +8,13 @@ from uuid import uuid4
 
 from django.test import RequestFactory
 
-from anno.models import ANNO, AUDIO, TEXT, THUMB, VIDEO, IMAGE
-from anno.models import PURPOSE_COMMENTING
-from anno.models import PURPOSE_REPLYING
-from anno.models import PURPOSE_TAGGING
-from anno.models import RESOURCE_TYPE_LIST
-from anno.models import RESOURCE_TYPE_CHOICE
-from anno.views import CATCH_CONTEXT_IRI
+from anno.anno_defaults import ANNO, AUDIO, TEXT, THUMB, VIDEO, IMAGE
+from anno.anno_defaults import PURPOSE_COMMENTING
+from anno.anno_defaults import PURPOSE_REPLYING
+from anno.anno_defaults import PURPOSE_TAGGING
+from anno.anno_defaults import RESOURCE_TYPE_LIST
+from anno.anno_defaults import RESOURCE_TYPE_CHOICE
+from anno.anno_defaults import CATCH_CONTEXT_IRI
 
 from consumer.catchjwt import encode_token
 

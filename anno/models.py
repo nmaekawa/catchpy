@@ -2,6 +2,28 @@
 
 import logging
 
+from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
+from .anno_defaults import PURPOSE_COMMENTING
+from .anno_defaults import PURPOSE_REPLYING
+from .anno_defaults import PURPOSE_TAGGING
+from .anno_defaults import PURPOSE_CHOICES
+from .anno_defaults import PURPOSES
+
+from .anno_defaults import RESOURCE_TYPE_UNDEFINED
+from .anno_defaults import RESOURCE_TYPE_LIST
+from .anno_defaults import RESOURCE_TYPE_CHOICE
+from .anno_defaults import RESOURCE_TYPE_CHOICES
+from .anno_defaults import RESOURCE_TYPES
+
+from .anno_defaults import ANNO
+from .anno_defaults import AUDIO
+from .anno_defaults import IMAGE
+from .anno_defaults import TEXT
+from .anno_defaults import THUMB
+from .anno_defaults import VIDEO
+from .anno_defaults import MEDIA_TYPE_CHOICES
+from .anno_defaults import MEDIA_TYPES
+
 from django.db.models import CASCADE
 from django.db.models import BooleanField
 from django.db.models import CharField
@@ -24,55 +46,12 @@ from .managers import SearchManager
 logger = logging.getLogger(__name__)
 
 
-# schema versions
-CURRENT_SCHEMA_VERSION = 'catch_v0.1'
-SCHEMA_VERSIONS = [CURRENT_SCHEMA_VERSION]
-
-# purpose for annotation
-PURPOSE_COMMENTING = 'commenting'
-PURPOSE_REPLYING = 'replying'
-PURPOSE_TAGGING = 'tagging'
-PURPOSE_CHOICES = (
-    (PURPOSE_COMMENTING, 'regular annotation comment'),
-    (PURPOSE_REPLYING, 'reply or comment on annotation'),
-    (PURPOSE_TAGGING, 'tag'),
-)
-PURPOSES = [x[0] for x in PURPOSE_CHOICES]
-
-# type for target and body: 'List' or 'Choice'
-RESOURCE_TYPE_UNDEFINED = 'Undefined'  # placeholder for target_type
-RESOURCE_TYPE_LIST = 'List'
-RESOURCE_TYPE_CHOICE = 'Choice'
-RESOURCE_TYPE_CHOICES = (
-    (RESOURCE_TYPE_LIST, 'List of targets - may be a list of one'),
-    (RESOURCE_TYPE_CHOICE, 'List of choices'),
-)
-RESOURCE_TYPES = [x[0] for x in RESOURCE_TYPE_CHOICES]
-
-# target media = 'Audio', 'Image', 'Text', 'Video', 'Annotation', 'Thumbnail'
-ANNO = 'Annotation'
-AUDIO = 'Audio'
-IMAGE = 'Image'
-TEXT = 'Text'
-THUMB = 'Thumbnail'
-VIDEO = 'Video'
-MEDIA_TYPE_CHOICES = (
-    (ANNO, 'Annotation'),
-    (AUDIO, 'Audio'),
-    (IMAGE, 'Image'),
-    (TEXT, 'Text'),
-    (THUMB, 'Thumbnail'),
-    (VIDEO, 'Video'),
-)
-MEDIA_TYPES = [x[0] for x in MEDIA_TYPE_CHOICES]
-
-
 class Anno(Model):
     created = DateTimeField(auto_now_add=True, null=False)
     modified = DateTimeField(auto_now=True, null=False)
 
     schema_version = CharField(
-        max_length=128, null=False, default=CURRENT_SCHEMA_VERSION)
+        max_length=128, null=False, default=CATCH_CURRENT_SCHEMA_VERSION)
     creator_id = CharField(max_length=128, null=False)
     creator_name = CharField(max_length=128, null=False)
 

@@ -4,8 +4,8 @@ from .errors import AnnoError
 from .errors import AnnotatorJSError
 from .errors import RawModelOutOfSynchError
 
-from .models import ANNO, AUDIO, IMAGE, TEXT, THUMB, VIDEO
-from .models import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
+from .anno_defaults import ANNO, AUDIO, IMAGE, TEXT, THUMB, VIDEO
+from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 
 logger = logging.getLogger(__name__)
 

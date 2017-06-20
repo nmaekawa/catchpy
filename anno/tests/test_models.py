@@ -2,8 +2,9 @@ import pytest
 
 from model_mommy import mommy
 
+from anno.anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
+from anno.anno_defaults import MEDIA_TYPES
 from anno.models import Anno, Tag, Target
-from anno.models import MEDIA_TYPES
 
 
 @pytest.mark.django_db
@@ -33,7 +34,7 @@ def test_anno_ok():
     anno = mommy.make(Anno)
     assert(isinstance(anno, Anno))
     assert(anno.target_set.count() == 0)
-    assert(anno.schema_version == 'catch_v0.1')
+    assert(anno.schema_version == CATCH_CURRENT_SCHEMA_VERSION)
 
 
 @pytest.mark.django_db
