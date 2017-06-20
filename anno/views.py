@@ -114,6 +114,7 @@ def get_input_json(request):
 
 def process_create(request, anno_id):
     # throws MissingAnnotationInputError
+
     a_input = get_input_json(request)
 
     # fill info for create-anno
@@ -183,7 +184,7 @@ def crud_api(request, anno_id):
         response['Location'] = request.build_absolute_uri(
             reverse('crudapi', kwargs={'anno_id': resp['id']}))
 
-        logrer.debug('*************** return response status code ({})'.format(
+        logger.debug('*************** return response status code ({})'.format(
             response.status_code))
 
 
@@ -283,26 +284,7 @@ def _do_crud_api(request, anno_id):
 
     assert r is not None
 
-    ''' to be replaced by method _response_for_single_anno){
-    # prep response
-    output_format = settings.getattr('CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
-    if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
-        output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
-
-    if output_format == ANNOTATORJS_FORMAT:
-        payload = anno_to_annotatorjs(r)
-
-    elif output_format == CATCH_ANNO_FORMAT:
-        # doesn't need formatting! SERIALIZE as webannotation
-        payload = r.serialized
-    else:
-        # unknown format or plug custom formatters!
-        raise UnknownOutputFormatError('unknown output format({})'.format(
-            output_format))
-
-    return payload
-    '''
-    return _response_for_single_anno(request, r)
+    return _format_response(request, r)
 
 
 def _response_for_single_anno(request, anno):
@@ -327,6 +309,51 @@ def _response_for_single_anno(request, anno):
         raise UnknownOutputFormatError('unknown output format({})'.format(
             output_format))
     return payload
+
+
+def fetch_output_format(request):
+    output_format = getattr(settings, 'CATCH_OUTPUT_FORMAT', CATCH_ANNO_FORMAT)
+    if CATCH_OUTPUT_FORMAT_HTTPHEADER in request.META:
+        output_format = request.META[CATCH_OUTPUT_FORMAT_HTTPHEADER]
+    return output_format
+
+
+def _format_response(anno_result, output_format):
+    # is it single anno or a QuerySet from search?
+    is_single = isinstance(anno_result, Anno)
+
+    if is_single:
+        if output_format == ANNOTATORJS_FORMAT:
+            response = anno_to_annotatorjs(anno_result)
+        elif output_format == CATCH_ANNO_FORMAT:
+            # doesn't need formatting! SERIALIZE as webannotation
+            response = anno_result.serialized
+        else:
+            # unknown format or plug custom formatters!
+            raise UnknownOutputFormatError(
+                'unknown output format({})'.format(output_format))
+    else:  # assume it's a QuerySet resulting from search
+        response = {
+            'total': total,
+             'size': size,
+             'limit': limit,
+             'offset': offset,
+             'rows': [],
+        }
+        if output_format == ANNOTATORJS_FORMAT:
+            for anno in anno_result:
+                annojs = anno_to_annotatorjs(anno)
+                response['rows'].append(annojs)
+        elif output_format == CATCH_ANNO_FORMAT:
+            # doesn't need formatting! SERIALIZE as webannotation
+            for anno in q_result:
+                response['rows'].append(anno.serialized)
+        else:
+            # unknown format or plug custom formatters!
+            raise UnknownOutputFormatError(
+                'unknown output format({})'.format(output_format))
+
+    return response
 
 
 def partial_update_api(request, anno_id):

@@ -31,3 +31,6 @@ except ImportError:
     from .test import *
     print('the project is running with test settings')
     print('please create a local settings file')
+
+# set default output for json responses
+CATCH_OUTPUT_FORMAT = 'CATCH_ANNO_FORMAT'
