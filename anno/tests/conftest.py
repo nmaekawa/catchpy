@@ -14,7 +14,7 @@ from anno.anno_defaults import PURPOSE_REPLYING
 from anno.anno_defaults import PURPOSE_TAGGING
 from anno.anno_defaults import RESOURCE_TYPE_LIST
 from anno.anno_defaults import RESOURCE_TYPE_CHOICE
-from anno.anno_defaults import CATCH_CONTEXT_IRI
+from anno.anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 
 from consumer.catchjwt import encode_token
 
@@ -228,7 +228,7 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
             }],
         }
     wa = {
-        '@context': CATCH_CONTEXT_IRI,
+        '@context': CATCH_JSONLD_CONTEXT_IRI,
         'type': 'Annotation',
         'schema_version': 'catch v1.0',
         'permissions': {

@@ -14,12 +14,8 @@ from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 from http import HTTPStatus
 
-from catchformats.catch_webannotation_validator import \
-    validate_format_catchanno as validate_input
-from catchformats.errors import CatchFormatsError
-from catchformats.errors import AnnotatorJSError
-
-from anno.annojs import AnnoJS
+from .json_models import AnnoJS
+from .json_models import Catcha
 from .crud import CRUD
 from .errors import AnnoError
 from .errors import InvalidAnnotationCreatorError
@@ -39,7 +35,7 @@ from .models import Anno
 from .anno_defaults import ANNOTATORJS_FORMAT
 from .anno_defaults import CATCH_ANNO_FORMAT
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
-from .anno_defaults import CATCH_CONTEXT_IRI
+from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import CATCH_RESPONSE_FORMATS
 from .anno_defaults import CATCH_EXTRA_RESPONSE_FORMATS
 from .anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
@@ -114,31 +110,20 @@ def get_input_json(request):
 
 def process_create(request, anno_id):
     # throws MissingAnnotationInputError
-
     a_input = get_input_json(request)
+    requesting_user = request.catchjwt['userId']
 
     # fill info for create-anno
-    requesting_user = request.catchjwt['userId']
     a_input['id'] = anno_id
     if 'permissions' not in a_input:
         a_input['permissions'] = get_default_permissions_for_user(
             requesting_user)
-    if 'schema_version' not in a_input:
-        a_input['schema_version'] = CATCH_CURRENT_SCHEMA_VERSION
 
-    # throws CatchFormatsError, AnnotatorJSError
-    catcha = validate_input(a_input)
+    # throws InvalidInputWebAnnotationError
+    catcha = Catcha.normalize(a_input)
 
     # check for conflicts
-    if catcha['creator']['id'] != requesting_user:
-        raise InvalidAnnotationCreatorError(
-            ('anno({}) conflict in input creator_id({}) does not match '
-                'requesting_user({}) - not created').format(
-                    anno_id, catcha['creator']['id'], requesting_user))
-
-    # TODO: check if creator in permissions
-    # TODO: check if reply to itself
-    # TODO: check if annotation in targets if reply
+    Catcha.check_for_create_conflicts(catcha, requesting_user)
 
     # throws AnnoError
     anno = CRUD.create_anno(catcha)
@@ -148,12 +133,12 @@ def process_create(request, anno_id):
 def process_update(request, anno):
     # throws MissingAnnotationInputError
     a_input = get_input_json(request)
+    requesting_user = request.catchjwt['userId']
 
-    # throws CatchFormatsERror, AnnotatorJSError
-    catcha = validate_input(a_input)
+    # throws InvalidInputWebAnnotationError
+    catcha = Catcha.normalize(a_input)
 
     # check if trying to update permissions
-    requesting_user = request.catchjwt['userId']
     if not CRUD.is_identical_permissions(catcha, anno.raw):
         if requesting_user not in anno.can_admin \
                 and 'CAN_ADMIN' not in request.catchjwt['override']:
@@ -194,11 +179,6 @@ def crud_api(request, anno_id):
         return JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
 
-    except (CatchFormatsError, AnnotatorJSError) as e:
-        return JsonResponse(
-            status=HTTPStatus.BAD_REQUEST,
-            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
-
     except (ValueError, KeyError) as e:
         logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
         return JsonResponse(
@@ -235,12 +215,6 @@ def c_crud(request):
         logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
         return JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
-
-    except (CatchFormatsError, AnnotatorJSError) as e:
-        logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
-        return JsonResponse(
-            status=HTTPStatus.BAD_REQUEST,
-            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
     except (ValueError, KeyError) as e:
         logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
@@ -296,11 +270,6 @@ def _response_for_single_anno(request, anno):
         response_format = request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER]
 
     if response_format == ANNOTATORJS_FORMAT:
-
-        logger.debug(
-            '****** about to respond in annotatorjs format({})'.format(
-                anno.anno_id))
-
         payload = AnnoJS.convert_from_anno(anno)
 
     elif response_format == CATCH_ANNO_FORMAT:
@@ -374,10 +343,10 @@ def search_api(request):
         resp = _do_search_api(request)
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
-    except (CatchFormatsError, AnnotatorJSError) as e:
-        return JsonResponse(
-            status=HTTPStatus.BAD_REQUEST,
-            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
+    except AnnoError as e:
+        logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
+        return JsonResponse(status=e.status,
+                            data={'status': e.status, 'payload': [str(e)]})
 
     except Exception as e:
         logger.error('search failed; request({})'.format(request), exc_info=True)
@@ -484,11 +453,6 @@ def stash(request):
     except AnnoError as e:
         return JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
-
-    except (CatchFormatsError, AnnotatorJSError) as e:
-        return JsonResponse(
-            status=HTTPStatus.BAD_REQUEST,
-            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
     except (ValueError, KeyError) as e:
         logger.error('bad input: requuest({})'.format(request), exc_info=True)

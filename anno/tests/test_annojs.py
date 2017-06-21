@@ -2,9 +2,8 @@ import json
 import pytest
 import os
 
-from catchformats.annotatorjs_formatter import annojs_to_annotation
 from anno.crud import CRUD
-from anno.annojs import AnnoJS
+from anno.json_models import AnnoJS
 
 
 @pytest.mark.skip('debugging fixture')
@@ -25,7 +24,7 @@ def x_test_fixture_js_list(js_list):
 @pytest.mark.django_db
 def test_to_annotatorjs(js_list):
     for js in js_list:
-        catcha = annojs_to_annotation(js)
+        catcha = AnnoJS.convert_to_catcha(js)
         anno = CRUD.create_anno(catcha, catcha['creator']['name'])
         js_back = AnnoJS.convert_from_anno(anno)
 
@@ -71,7 +70,7 @@ def x_test_long_annotatorjs():
         if 'collectionId' not in js:
             js['collectionId'] = 'unknown'
 
-        catcha = annojs_to_annotation(js)
+        catcha = AnnoJS.convert_to_catcha(js)
         anno = CRUD.create_anno(catcha, catcha['creator']['name'])
         js_back = AnnoJS.convert_from_anno(anno)
 

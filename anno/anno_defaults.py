@@ -5,7 +5,7 @@ from django.conf import settings
 CATCH_CURRENT_SCHEMA_VERSION = getattr(settings, 'CATCH_SCHEMA_VERSION', 'catch_v1.0')
 
 # jsonld context
-CATCH_CONTEXT_IRI = getattr(
+CATCH_JSONLD_CONTEXT_IRI = getattr(
     settings, 'CATCH_CONTEXT_IRI',
     'http://catch-dev.harvardx.harvard.edu/catch-context.jsonld')
 #ANNOTATORJS_CONTEXT_IRI = getattr(
@@ -23,6 +23,9 @@ CATCH_RESPONSE_FORMAT_HTTPHEADER = getattr(
     settings, 'CATCH_RESPONSE_FORMAT_HTTPHEADER',
     'HTTP_X_CATCH_RESPONSE_FORMAT')
 
+# default platform for annotatorjs annotations
+CATCH_DEFAULT_PLATFORM_NAME = getattr(
+    settings, 'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')
 
 # purpose for annotation
 PURPOSE_COMMENTING = 'commenting'

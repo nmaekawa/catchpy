@@ -6,6 +6,10 @@ class AnnoError(Exception):
     '''generic exception for Annotations.'''
     status = HTTPStatus.INTERNAL_SERVER_ERROR  # 500
 
+class InconsistentAnnotationError(AnnoError):
+    '''annotation doesn't make sense; error is semantics.'''
+    status = HTTPStatus.CONFLICT  # 409
+
 class DuplicateAnnotationIdError(AnnoError):
     '''annotation already exists, cannot create.'''
     status = HTTPStatus.CONFLICT  # 409
@@ -63,13 +67,12 @@ class MethodNotAllowedError(AnnoError):
 
 class AnnotatorJSError(AnnoError):
     '''annotatorjs is malformed or not possible to format.'''
-    status = HTTPStatus.BAD_REQUEST
+    status = HTTPStatus.BAD_REQUEST  # 400
 
 class RawModelOutOfSynchError(AnnoError):
     '''raw json and model are out of synch: corrupted data!'''
     status = HTTPStatus.INTERNAL_SERVER_ERROR  # 500
 
-
 class UnknownResponseFormatError(AnnoError):
     '''output error not catch-webannotation nor annotatorjs.'''
-    status = HTTPStatus.BAD_REQUEST
+    status = HTTPStatus.BAD_REQUEST  # 400

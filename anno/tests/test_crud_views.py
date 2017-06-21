@@ -187,16 +187,21 @@ def test_update_ok(wa_text):
     original_tags = x.anno_tags.count()
     original_targets = x.total_targets
 
-    data = dict(catch)
+    data = catch.copy()
     data['body']['items'].append({'type': 'TextualBody',
                                   'purpose': 'tagging',
                                   'value': 'winsome'})
+    assert data['id'] is not None
+    assert data['creator']['id'] is not None
+    assert 'contextId' in data['platform']
+
     request = make_json_request(
         method='put', anno_id=x.anno_id, data=json.dumps(data))
     request.catchjwt = payload
 
     response = crud_api(request, x.anno_id)
     resp = json.loads(response.content)
+    print('ooooooooooooooooooooooooooooo response({})'.format(resp))
     assert response.status_code == 303
     assert 'Location' in response
     assert response['Location'] is not None
@@ -234,9 +239,8 @@ def test_create_on_behalf_of_others(wa_image):
 @pytest.mark.django_db
 def test_create_ok(wa_image):
     to_be_created_id = '1234-5678-abcd-0987'
-    payload = make_jwt_payload()
     catch = wa_image
-    catch['creator']['id'] = payload['userId']
+    payload = make_jwt_payload(user=catch['creator']['id'])
 
     request = make_json_request(
         method='post', anno_id=to_be_created_id, data=json.dumps(catch))
