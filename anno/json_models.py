@@ -613,7 +613,7 @@ class Catcha(object):
         # check if reply to itself
         self_target = cls.fetch_target_item_by_source(catcha, catcha['id'])
         if self_target is not None:
-            msg = 'cannot be a reply to itself({}}'.format(catcha['id'])
+            msg = 'cannot be a reply to itself({})'.format(catcha['id'])
             logger.error(msg)
             raise InconsistentAnnotationError(msg)
 

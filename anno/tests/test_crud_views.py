@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 from django.test import Client
 
+from anno.anno_defaults import ANNO, TEXT
 from anno.anno_defaults import ANNOTATORJS_FORMAT
 from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
@@ -16,6 +17,7 @@ from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
 from .conftest import make_json_request
 from .conftest import make_request
+from .conftest import make_wa_object
 
 
 @pytest.mark.django_db
@@ -201,7 +203,6 @@ def test_update_ok(wa_text):
 
     response = crud_api(request, x.anno_id)
     resp = json.loads(response.content)
-    print('ooooooooooooooooooooooooooooo response({})'.format(resp))
     assert response.status_code == 303
     assert 'Location' in response
     assert response['Location'] is not None
@@ -227,10 +228,6 @@ def test_create_on_behalf_of_others(wa_image):
 
     response = crud_api(request, to_be_created_id)
     resp = json.loads(response.content)
-
-    print('--------- response({})'.format(response))
-    print('--------- resp({})'.format(resp))
-
     assert response.status_code == 409
     assert 'conflict in input creator_id' in ','.join(resp['payload'])
 
@@ -302,3 +299,93 @@ def test_create_annojs(js_text):
 
     x = Anno._default_manager.get(pk=to_be_created_id)
     assert x.creator_id == payload['userId']
+
+@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.django_db
+def test_create_reply(wa_audio):
+    to_be_created_id = '1234-5678-abcd-efgh'
+    x = CRUD.create_anno(wa_audio)
+    catch = make_wa_object(age_in_hours=30, media=ANNO, reply_to=x.anno_id)
+    payload = make_jwt_payload(user=catch['creator']['id'])
+
+    request = make_json_request(
+        method='post', anno_id=to_be_created_id, data=json.dumps(catch))
+    request.catchjwt = payload
+
+    response = crud_api(request, to_be_created_id)
+    resp = json.loads(response.content)
+    assert response.status_code == 303
+    assert 'Location' in response
+    assert response['Location'] is not None
+    assert to_be_created_id in response['Location']
+    assert resp['id'] == to_be_created_id
+    assert resp['creator']['id'] == payload['userId']
+
+    x = Anno._default_manager.get(pk=to_be_created_id)
+    assert x.creator_id == payload['userId']
+
+
+@pytest.mark.django_db
+def test_create_reply_to_itself():
+    to_be_created_id = '1234-5678-abcd-efgh'
+    catch = make_wa_object(age_in_hours=30, media=ANNO,
+                           reply_to=to_be_created_id)
+    payload = make_jwt_payload(user=catch['creator']['id'])
+
+    request = make_json_request(
+        method='post', anno_id=to_be_created_id, data=json.dumps(catch))
+    request.catchjwt = payload
+
+    response = crud_api(request, to_be_created_id)
+    resp = json.loads(response.content)
+    assert response.status_code == 409
+    assert 'cannot be a reply to itself' in resp['payload'][0]
+
+
+@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.django_db
+def test_create_reply_missing_target(wa_audio):
+    to_be_created_id = '1234-5678-abcd-efgh'
+    x = CRUD.create_anno(wa_audio)
+    catch = make_wa_object(age_in_hours=30, media=ANNO, reply_to=x.anno_id)
+    payload = make_jwt_payload(user=catch['creator']['id'])
+
+    # remove target item with media type 'ANNO'
+    catch['target']['items'][0]['type'] = TEXT
+
+    request = make_json_request(
+        method='post', anno_id=to_be_created_id, data=json.dumps(catch))
+    request.catchjwt = payload
+
+    response = crud_api(request, to_be_created_id)
+    resp = json.loads(response.content)
+    assert response.status_code == 409
+    assert 'missing parent reference' in resp['payload'][0]
+
+    with pytest.raises(Anno.DoesNotExist):
+        x = Anno._default_manager.get(pk=to_be_created_id)
+
+
+@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.django_db
+def test_create_reply_missing_target(wa_audio):
+    to_be_created_id = '1234-5678-abcd-efgh'
+    x = CRUD.create_anno(wa_audio)
+    catch = make_wa_object(age_in_hours=30, media=ANNO, reply_to=x.anno_id)
+    payload = make_jwt_payload(user=catch['creator']['id'])
+
+    # replace target source
+    catch['target']['items'][0]['source'] = 'fake_parent_reference'
+
+    request = make_json_request(
+        method='post', anno_id=to_be_created_id, data=json.dumps(catch))
+    request.catchjwt = payload
+
+    response = crud_api(request, to_be_created_id)
+    resp = json.loads(response.content)
+    assert response.status_code == 409
+    assert 'conflicting target_source_id' in resp['payload'][0]
+
+    with pytest.raises(Anno.DoesNotExist):
+        x = Anno._default_manager.get(pk=to_be_created_id)
+
