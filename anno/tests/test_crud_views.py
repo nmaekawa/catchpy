@@ -203,7 +203,7 @@ def test_update_ok(wa_text):
 
     response = crud_api(request, x.anno_id)
     resp = json.loads(response.content)
-    assert response.status_code == 303
+    assert response.status_code == 200
     assert 'Location' in response
     assert response['Location'] is not None
     assert x.anno_id in response['Location']
@@ -246,7 +246,7 @@ def test_create_ok(wa_image):
     response = crud_api(request, to_be_created_id)
     resp = json.loads(response.content)
 
-    assert response.status_code == 303
+    assert response.status_code == 200
     assert 'Location' in response
     assert response['Location'] is not None
     assert to_be_created_id in response['Location']
@@ -291,7 +291,7 @@ def test_create_annojs(js_text):
     response = crud_api(request, to_be_created_id)
     resp = json.loads(response.content)
 
-    assert response.status_code == 303
+    assert response.status_code == 200
     assert resp['id'] == to_be_created_id
     assert resp['user']['id'] == payload['userId']
     assert len(resp['tags']) == len(js['tags'])
@@ -314,7 +314,7 @@ def test_create_reply(wa_audio):
 
     response = crud_api(request, to_be_created_id)
     resp = json.loads(response.content)
-    assert response.status_code == 303
+    assert response.status_code == 200
     assert 'Location' in response
     assert response['Location'] is not None
     assert to_be_created_id in response['Location']

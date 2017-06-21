@@ -160,19 +160,12 @@ def crud_api(request, anno_id):
     try:
         resp = _do_crud_api(request, anno_id)
         status = HTTPStatus.OK
+        response = JsonResponse(status=status, data=resp)
 
         if request.method == 'POST' or request.method == 'PUT':
-            status = HTTPStatus.SEE_OTHER
-
-        # add response header with location for new resource
-        response = JsonResponse(status=status, data=resp)
-        response['Location'] = request.build_absolute_uri(
-            reverse('crudapi', kwargs={'anno_id': resp['id']}))
-
-        logger.debug('*************** return response status code ({})'.format(
-            response.status_code))
-
-
+            # add response header with location for new resource
+            response['Location'] = request.build_absolute_uri(
+                reverse('crudapi', kwargs={'anno_id': resp['id']}))
         return response
 
     except AnnoError as e:
@@ -203,7 +196,7 @@ def c_crud(request):
     anno_id = uuid4()
     try:
         r = process_create(request, anno_id)
-        resp = _response_for_single_anno(request, r)
+        resp = _format_response(r, ANNOTATORJS_FORMAT)
 
         # add response header with location for new resource
         response = JsonResponse(status=HTTPStatus.OK, data=resp)
@@ -261,25 +254,6 @@ def _do_crud_api(request, anno_id):
 
     response_format = fetch_response_format(request)
     return _format_response(r, response_format)
-
-
-def _response_for_single_anno(request, anno):
-    # prep response
-    response_format = getattr(settings, 'CATCH_RESPONSE_FORMAT', CATCH_ANNO_FORMAT)
-    if CATCH_RESPONSE_FORMAT_HTTPHEADER in request.META:
-        response_format = request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER]
-
-    if response_format == ANNOTATORJS_FORMAT:
-        payload = AnnoJS.convert_from_anno(anno)
-
-    elif response_format == CATCH_ANNO_FORMAT:
-        # doesn't need formatting! SERIALIZE as webannotation
-        payload = anno.serialized
-    else:
-        # unknown format or plug custom formatters!
-        raise UnknownResponseFormatError('unknown response format({})'.format(
-            response_format))
-    return payload
 
 
 def fetch_response_format(request):
