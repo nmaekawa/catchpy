@@ -377,14 +377,10 @@ def _do_search_api(request):
     return response
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(['GET'])
 def index(request):
-    if request.method == 'POST':
-        anno_id = uuid4()
-        return crud_api(request, anno_id)
-    else:
-        # TODO: return info on the api
-        return HttpResponse('placeholder for api docs. soon.')
+    # TODO: return info on the api
+    return HttpResponse('placeholder for api docs. soon.')
 
 
 @require_http_methods(['GET'])

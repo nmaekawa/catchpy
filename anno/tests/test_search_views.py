@@ -3,12 +3,16 @@ import json
 import pytest
 
 from django.db import IntegrityError
+from django.urls import reverse
+from django.test import Client
 
 from anno.crud import CRUD
 from anno.models import Anno, Tag, Target
 from anno.models import PURPOSE_TAGGING
 from anno.views import search_api
+from consumer.models import Consumer
 
+from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
 from .conftest import make_json_request
 from .conftest import make_wa_tag
@@ -220,6 +224,40 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     assert resp['total'] == 1
     assert resp['rows'][0]['target']['items'][0]['type'] == 'Audio'
     assert resp['rows'][0]['id'] == wa['id']
+
+
+@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.django_db
+def test_search_by_username_via_client(wa_audio):
+    catcha = wa_audio
+    c = deepcopy(catcha)
+    for i in [1, 2, 3, 4, 5]:
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        c['creator']['id'] = '{}-{}'.format(catcha['creator']['id'], i)
+        c['creator']['name'] = '{}-{}'.format(catcha['creator']['name'], i)
+        x = CRUD.create_anno(c)
+
+    c = deepcopy(catcha)
+    for i in [6, 7, 8, 9]:
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        x = CRUD.create_anno(c)
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer, user=catcha['creator']['id'])
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()  # check if middleware works
+    response = client.get(
+        '/annos/?username={}'.format(catcha['creator']['name']),
+        HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
+
+    resp = json.loads(response.content.decode('utf-8'))
+    assert response.status_code == 200
+    assert resp['total'] == 4
+    assert len(resp['rows']) == 4
+
+    for a in resp['rows']:
+        assert a['creator']['name'] == catcha['creator']['name']
 
 
 def catcha_has_tag(catcha, tagname):
