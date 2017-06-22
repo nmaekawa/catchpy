@@ -20,10 +20,11 @@ from .conftest import make_request
 from .conftest import make_wa_object
 
 
-@pytest.mark.django_db
+#@pytest.mark.django_db
 def test_index():
     client = Client()
     response = client.get(reverse('index'))
+    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(response.content))
     assert response.status_code == 200
 
 

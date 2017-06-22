@@ -167,8 +167,6 @@ class CRUD(object):
         try:
             with transaction.atomic():
 
-                logger.debug('------------------- right before save; created({})'.format(catcha.get('created', 'not available')))
-
                 a.save()  # need to save before setting relationships
                 for t in target_list:
                     t.save()
@@ -192,7 +190,6 @@ class CRUD(object):
             logger.error(msg, exc_info=True)
             raise InvalidInputWebAnnotationError(msg)
         else:
-            logger.debug('------------------- right before save return; created({})'.format(catcha.get('created', 'not available')))
             return a
 
 

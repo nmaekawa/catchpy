@@ -377,14 +377,16 @@ def _do_search_api(request):
     return response
 
 
-@require_http_methods(['GET'])
+@require_http_methods('GET')
+@csrf_exempt
 def index(request):
     # TODO: return info on the api
     return HttpResponse('placeholder for api docs. soon.')
 
 
-@require_http_methods(['GET'])
+@require_http_methods('GET')
 @csrf_exempt
+@require_catchjwt
 def stash(request):
     filepath = request.GET.get('filepath', None)
     if filepath:
@@ -426,9 +428,6 @@ def process_partial_update(request, anno_id):
     # needs formatting?
     pass
 
-#
-# following views for backwards compat with grails catch v<version>
-#
 
 @require_http_methods('POST')
 @csrf_exempt
@@ -438,6 +437,14 @@ def crud_compat_create(request):
     anno_id = uuid4()
     return crud_compat(request, anno_id)
 
+
+@require_http_methods('POST')
+@csrf_exempt
+@require_catchjwt
+def crud_create(request):
+    '''view for create.'''
+    anno_id = uuid4()
+    return crud_api(request, anno_id)
 
 
 

@@ -150,7 +150,7 @@ def test_search_by_target_source_ok(wa_audio, wa_image):
         assert catcha_has_target_source(a, tsource)
 
 
-@pytest.mark.fixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
+@pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
 def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
@@ -170,7 +170,7 @@ def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
     assert resp['rows'][0]['id'] == wa_video['id']
 
 
-@pytest.mark.fixtures('wa_list')
+@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_search_by_body_text_ok(wa_list):
     for wa in wa_list:
@@ -192,7 +192,7 @@ def test_search_by_body_text_ok(wa_list):
     assert resp['rows'][0]['id'] == anno.anno_id
 
 
-@pytest.mark.fixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
+@pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
 def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
@@ -226,38 +226,28 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     assert resp['rows'][0]['id'] == wa['id']
 
 
-@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
-def test_search_by_username_via_client(wa_audio):
-    catcha = wa_audio
-    c = deepcopy(catcha)
-    for i in [1, 2, 3, 4, 5]:
-        c['id'] = '{}{}'.format(catcha['id'], i)
-        c['creator']['id'] = '{}-{}'.format(catcha['creator']['id'], i)
-        c['creator']['name'] = '{}-{}'.format(catcha['creator']['name'], i)
-        x = CRUD.create_anno(c)
+def test_search_by_username_via_client(
+    wa_text, wa_video, wa_image, wa_audio):
 
-    c = deepcopy(catcha)
-    for i in [6, 7, 8, 9]:
-        c['id'] = '{}{}'.format(catcha['id'], i)
-        x = CRUD.create_anno(c)
+    for wa in [wa_text, wa_video, wa_image, wa_audio]:
+        x = CRUD.create_anno(wa)
 
     c = Consumer._default_manager.create()
-    payload = make_jwt_payload(apikey=c.consumer, user=catcha['creator']['id'])
+    payload = make_jwt_payload(apikey=c.consumer)
     token = make_encoded_token(c.secret_key, payload)
 
     client = Client()  # check if middleware works
     response = client.get(
-        '/annos/?username={}'.format(catcha['creator']['name']),
+        '{}?media=Video'.format(reverse('search_api_clear')),
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
 
     resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
-    assert resp['total'] == 4
-    assert len(resp['rows']) == 4
-
-    for a in resp['rows']:
-        assert a['creator']['name'] == catcha['creator']['name']
+    assert resp['total'] == 1
+    assert resp['rows'][0]['target']['items'][0]['type'] == 'Video'
+    assert resp['rows'][0]['id'] == wa_video['id']
 
 
 def catcha_has_tag(catcha, tagname):
