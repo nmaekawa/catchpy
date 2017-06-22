@@ -365,8 +365,6 @@ def make_json_request(
     else:
         url = '/annos/{}'.format(anno_id)
 
-    print('-------------------------------- url={}'.format(url))
-
     request = method_to_call(url, data=data, content_type='application/json')
     request.catchjwt = jwt_payload if jwt_payload else make_jwt_payload()
     return request

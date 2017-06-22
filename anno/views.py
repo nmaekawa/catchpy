@@ -165,7 +165,7 @@ def crud_api(request, anno_id):
         if request.method == 'POST' or request.method == 'PUT':
             # add response header with location for new resource
             response['Location'] = request.build_absolute_uri(
-                reverse('crudapi', kwargs={'anno_id': resp['id']}))
+                reverse('crud_api', kwargs={'anno_id': resp['id']}))
         return response
 
     except AnnoError as e:
@@ -186,34 +186,6 @@ def has_permission_for_op(request, anno):
         return True
     else:
         return False
-
-
-@require_http_methods('POST')
-@csrf_exempt
-@require_catchjwt
-def c_crud(request):
-    '''back compat view for create.'''
-    anno_id = uuid4()
-    try:
-        r = process_create(request, anno_id)
-        resp = _format_response(r, ANNOTATORJS_FORMAT)
-
-        # add response header with location for new resource
-        response = JsonResponse(status=HTTPStatus.OK, data=resp)
-        response['Location'] = request.build_absolute_uri(
-            reverse('crudapi', kwargs={'anno_id': resp['id']}))
-        return response
-
-    except AnnoError as e:
-        logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
-        return JsonResponse(status=e.status,
-                            data={'status': e.status, 'payload': [str(e)]})
-
-    except (ValueError, KeyError) as e:
-        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
-        return JsonResponse(
-            status=HTTPStatus.BAD_REQUEST,
-            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
 
 def _do_crud_api(request, anno_id):
@@ -254,6 +226,7 @@ def _do_crud_api(request, anno_id):
 
     response_format = fetch_response_format(request)
     return _format_response(r, response_format)
+
 
 
 def fetch_response_format(request):
@@ -318,7 +291,7 @@ def search_api(request):
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
-        logger.error('c_crud({}): {}'.format(anno_id, e, exc_info=True))
+        logger.error('search failed: {}'.format(e, exc_info=True))
         return JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
 
@@ -404,10 +377,14 @@ def _do_search_api(request):
     return response
 
 
-@require_http_methods(['GET'])
+@require_http_methods(['GET', 'POST'])
 def index(request):
-    # TODO: return info on the api
-    return HttpResponse('placeholder for api docs. soon.')
+    if request.method == 'POST':
+        anno_id = uuid4()
+        return crud_api(request, anno_id)
+    else:
+        # TODO: return info on the api
+        return HttpResponse('placeholder for api docs. soon.')
 
 
 @require_http_methods(['GET'])
@@ -452,3 +429,19 @@ def process_partial_update(request, anno_id):
 
     # needs formatting?
     pass
+
+#
+# following views for backwards compat with grails catch v<version>
+#
+
+@require_http_methods('POST')
+@csrf_exempt
+@require_catchjwt
+def crud_compat_create(request):
+    '''back compat view for create.'''
+    anno_id = uuid4()
+    return crud_compat(request, anno_id)
+
+
+
+

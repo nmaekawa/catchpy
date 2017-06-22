@@ -57,7 +57,7 @@ def test_head_ok(wa_audio):
 
     client = Client()  # check if middleware works
     response = client.head(
-        reverse('crudapi', kwargs={'anno_id': x.anno_id}),
+        reverse('crud_api', kwargs={'anno_id': x.anno_id}),
         HTTP_AUTHORIZATION='token ' + token)
 
     assert response.status_code == 200
@@ -72,7 +72,7 @@ def test_read_not_found():
 
     client = Client()  # check if middleware works
     response = client.get(
-        reverse('crudapi', kwargs={'anno_id': '1234567890-fake-fake'}),
+        reverse('crud_api', kwargs={'anno_id': '1234567890-fake-fake'}),
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
     assert response.status_code == 404
 
