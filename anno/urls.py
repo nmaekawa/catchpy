@@ -11,5 +11,5 @@ urlpatterns = [
         views.crud_compat_update, name='compat_update'),
     url(r'^delete/(?P<anno_id>[0-9a-zA-z-]+)$', views.crud_api, name='compat_delete'),
     url(r'^(?P<anno_id>[0-9a-zA-z-]+)$', views.crud_api, name='crud_api'),
-    url(r'^.+$', views.search_api, name='search_api_clear'),
+    url(r'^\\?', views.search_api, name='search_api_clear'),
 ]
