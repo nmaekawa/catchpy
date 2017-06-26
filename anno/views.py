@@ -33,6 +33,7 @@ from .search import query_target_sources
 from .models import Anno
 
 from .anno_defaults import ANNOTATORJS_FORMAT
+from .anno_defaults import CATCH_ADMIN_GROUP_ID
 from .anno_defaults import CATCH_ANNO_FORMAT
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
@@ -140,8 +141,8 @@ def process_update(request, anno):
 
     # check if trying to update permissions
     if not CRUD.is_identical_permissions(catcha, anno.raw):
-        if requesting_user not in anno.can_admin \
-                and 'CAN_ADMIN' not in request.catchjwt['override']:
+        # check permissions again, but now for admin
+        if not has_permission_for_op('admin', request, anno):
             msg = 'user({}) not allowed to admin anno({})'.format(
                 requesting_user, anno.anno_id)
             logger.info(msg)
@@ -179,10 +180,13 @@ def crud_api(request, anno_id):
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
 
-def has_permission_for_op(request, anno):
-    permission = METHOD_PERMISSION_MAP[request.method]
-    if anno.has_permission_for(permission, request.catchjwt['userId']) \
-       or 'CAN_{}'.format(permission).upper() in request.catchjwt['override']:
+def has_permission_for_op(op, request, anno):
+    # backward-compat
+    if request.catchjwt['userId'] == CATCH_ADMIN_GROUP_ID:
+        return True
+
+    if anno.has_permission_for(op, request.catchjwt['userId']) \
+       or 'CAN_{}'.format(op).upper() in request.catchjwt['override']:
         return True
     else:
         return False
@@ -206,7 +210,8 @@ def _do_crud_api(request, anno_id):
                 'anno({}): already exists, failed to create'.format(
                     anno.anno_id))
 
-        if not has_permission_for_op(request, anno):
+        if not has_permission_for_op(
+                METHOD_PERMISSION_MAP[request.method], request, anno):
             raise NoPermissionForOperationError(
                 'no permission to {} anno({}) for user({})'.format(
                     METHOD_PERMISSION_MAP[request.method], anno_id,
@@ -471,7 +476,8 @@ def _do_crud_compat_update(request, anno_id):
     if anno is None:
         raise MissingAnnotationError('anno({}) not found'.format(anno_id))
 
-    if not has_permission_for_op(request, anno):
+    if not has_permission_for_op(
+            METHOD_PERMISSION_MAP[request.method], request, anno):
         raise NoPermissionForOperationError(
             'no permission to {} anno({}) for user({})'.format(
                 METHOD_PERMISSION_MAP[request.method], anno_id,

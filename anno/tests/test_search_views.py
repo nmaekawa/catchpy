@@ -15,6 +15,7 @@ from consumer.models import Consumer
 from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
 from .conftest import make_json_request
+from .conftest import make_wa_object
 from .conftest import make_wa_tag
 
 
@@ -176,8 +177,15 @@ def test_search_by_body_text_ok(wa_list):
     for wa in wa_list:
         x = CRUD.create_anno(wa)
 
-    anno = Anno._default_manager.get(pk=wa_list[2]['id'])
-    search_text = ' '.join(anno.body_text.split()[0:5])
+    wa = make_wa_object(age_in_hours=40)
+    # counting that first item in body is the actual annotation
+    wa['body']['items'][0]['value'] += '''
+        nao mais, musa, nao mais, que a lira tenho
+        destemperada e a voz enrouquecida,
+        e nao to canto, mas de ver que venho
+        cantar a gente surda e endurecida.'''
+    anno = CRUD.create_anno(wa)
+    search_text = 'enrouquecida endurecida'
 
     payload = make_jwt_payload()
     request = make_json_request(

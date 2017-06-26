@@ -27,6 +27,10 @@ CATCH_RESPONSE_FORMAT_HTTPHEADER = getattr(
 CATCH_DEFAULT_PLATFORM_NAME = getattr(
     settings, 'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')
 
+# admin id overrides all permissions, when requesting_user
+CATCH_ADMIN_GROUP_ID = getattr(
+    settings, 'CATCH_ADMIN_GROUP_ID', '__admin__')
+
 # purpose for annotation
 PURPOSE_COMMENTING = 'commenting'
 PURPOSE_REPLYING = 'replying'
