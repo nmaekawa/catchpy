@@ -22,9 +22,18 @@ from .conftest import make_wa_object
 
 #@pytest.mark.django_db
 def test_index():
+
     client = Client()
-    response = client.get(reverse('index'))
+    url = reverse('index')
+    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(url))
+    response = client.get(url)
     print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(response.content))
+
+    from django.core.urlresolvers import resolve
+    func = resolve(url).func
+    func_name = '{}.{}'.format(func.__module__, func.__name__)
+    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(func_name))
+
     assert response.status_code == 200
 
 
@@ -72,9 +81,12 @@ def test_read_not_found():
     token = make_encoded_token(c.secret_key, payload)
 
     client = Client()  # check if middleware works
+    url = reverse('crud_api', kwargs={'anno_id': '1234567890-fake-fake'})
+    print('*********** {}'.format(url))
     response = client.get(
-        reverse('crud_api', kwargs={'anno_id': '1234567890-fake-fake'}),
+        url,
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
+    print('*********** {}'.format(response.content))
     assert response.status_code == 404
 
 

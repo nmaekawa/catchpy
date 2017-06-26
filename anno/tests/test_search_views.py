@@ -239,10 +239,18 @@ def test_search_by_username_via_client(
     token = make_encoded_token(c.secret_key, payload)
 
     client = Client()  # check if middleware works
+
+    url = '{}?media=Video'.format(reverse('search_api_clear'))
+    print('-------{}'.format(url))
     response = client.get(
-        '{}?media=Video'.format(reverse('search_api_clear')),
+        url,
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
 
+    print('-------{}'.format(response.status_code))
+    print('-------{}'.format(response.content))
+    print('-------type: {}'.format(type(response.content)))
+    print('-------type decoded: {}'.format(type(response.content.decode('utf-8'))))
+    print('-------content decoded: {}'.format(response.content.decode('utf-8')))
     resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 1
