@@ -111,7 +111,7 @@ class CRUD(object):
 
 
     @classmethod
-    def _validate_targets_for_annotation(cls, anno, catcha):
+    def _create_targets_for_annotation(cls, anno, catcha):
         '''creates Target instances, expects anno saved already.'''
         t_list = []
         target = catcha['target']
@@ -161,7 +161,7 @@ class CRUD(object):
         )
 
         # validate  target objects
-        target_list = cls._validate_targets_for_annotation(a, catcha)
+        target_list = cls._create_targets_for_annotation(a, catcha)
 
         # create anno, target, and tags relationship as transaction
         try:
@@ -236,13 +236,13 @@ class CRUD(object):
         anno.raw = catcha
 
         # validate  target objects
-        target_list = cls._validate_targets_for_annotation(anno, catcha)
+        target_list = cls._create_targets_for_annotation(anno, catcha)
 
         try:
             with transaction.atomic():
                 # remove all targets
                 cls._delete_targets(anno)
-                # create target objects
+                # persist target objects
                 for t in target_list:
                     t.save()
                 # dissociate tags from annotation
@@ -316,6 +316,7 @@ class CRUD(object):
         recreates list of tags and targets every time
         '''
         if anno.anno_deleted:
+            logger.error('try to update deleted anno({})'.format(anno.anno_id))
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
         try:
@@ -364,6 +365,7 @@ class CRUD(object):
     def import_annos(cls, catcha_list, jwt_payload):
 
         # check permissions to import
+        # TODO: review where permissions check should occur
         if 'CAN_IMPORT' not in jwt_payload['override']:
             raise NoPermissionForOperationError(
                 'user ({}) not allowed to import'.format(

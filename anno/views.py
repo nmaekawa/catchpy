@@ -273,21 +273,16 @@ def _format_response(anno_result, response_format):
 def partial_update_api(request, anno_id):
     pass
 
-@require_http_methods(['GET', 'DELETE', 'PUT', 'HEAD', 'POST'])
-@csrf_exempt
-def check(request):
-    logger.error('--- checking: method({})'.format(request.method))
-    logger.error('--- checking: request content ({})'.format(request.body))
-
-    return JsonResponse(status=HTTPStatus.OK, data={'status': HTTPStatus.OK})
-
 
 @require_http_methods(['GET', 'HEAD', 'POST'])
 @csrf_exempt
 @require_catchjwt
 def search_api(request):
+    # accepts POST for backward-compat
+    logger.debug('search query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request)
+        logger.debug('search response({})'.format(resp))
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
@@ -305,7 +300,8 @@ def search_api(request):
 
 def _do_search_api(request):
 
-    payload = get_jwt_payload(request)
+    payload = request.catchjwt
+    logger.debug('_do_search payload[userid]=({})'.format(payload['userId']))
 
     # filter out the soft-deleted
     query = Anno._default_manager.filter(anno_deleted=False)
@@ -369,6 +365,10 @@ def _do_search_api(request):
     size = q_result.count()
 
     response_format = fetch_response_format(request)
+    logger.debug('default_format({})'.format(getattr(settings,
+                                                     'CATCH_RESPONSE_FORMAT',
+                                                     CATCH_ANNO_FORMAT)))
+    logger.debug('response_format({})'.format(response_format))
     response = _format_response(q_result, response_format)
     response['total'] = total  # add response info
     response['size'] = size
@@ -432,19 +432,54 @@ def process_partial_update(request, anno_id):
 @require_http_methods('POST')
 @csrf_exempt
 @require_catchjwt
-def crud_compat_create(request):
-    '''back compat view for create.'''
+def crud_create(request):
+    '''view for create, with no anno_id in querystring.'''
     anno_id = uuid4()
-    return crud_compat(request, anno_id)
+    return crud_api(request, anno_id)
 
 
 @require_http_methods('POST')
 @csrf_exempt
 @require_catchjwt
-def crud_create(request):
-    '''view for create.'''
-    anno_id = uuid4()
-    return crud_api(request, anno_id)
+def crud_compat_update(request):
+    '''back compat view for update.'''
+    try:
+        resp = _do_crud_compat_update(request, anno_id)
+        status = HTTPStatus.OK
+        response = JsonResponse(status=status, data=resp)
+
+        # add response header with location for new resource
+        response['Location'] = request.build_absolute_uri(
+            reverse('crud_api', kwargs={'anno_id': resp['id']}))
+        return response
+
+    except AnnoError as e:
+        return JsonResponse(status=e.status,
+                            data={'status': e.status, 'payload': [str(e)]})
+
+    except (ValueError, KeyError) as e:
+        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
+        return JsonResponse(
+            status=HTTPStatus.BAD_REQUEST,
+            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
 
+def _do_crud_compat_update(request, anno_id):
+    # retrieves anno
+    anno = CRUD.get_anno(anno_id)
 
+    if anno is None:
+        raise MissingAnnotationError('anno({}) not found'.format(anno_id))
+
+    if not has_permission_for_op(request, anno):
+        raise NoPermissionForOperationError(
+            'no permission to {} anno({}) for user({})'.format(
+                METHOD_PERMISSION_MAP[request.method], anno_id,
+                request.catchjwt['userId']))
+
+        r = process_update(request, anno)
+
+    assert r is not None
+
+    response_format = fetch_response_format(request)
+    return _format_response(r, response_format)

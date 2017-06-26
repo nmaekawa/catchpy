@@ -33,4 +33,4 @@ except ImportError:
     print('please create a local settings file')
 
 # set default output for json responses
-CATCH_OUTPUT_FORMAT = 'CATCH_ANNO_FORMAT'
+CATCH_RESPONSE_FORMAT = 'CATCH_ANNO_FORMAT'
