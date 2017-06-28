@@ -677,7 +677,7 @@ class Catcha(object):
         permissions = catcha['permissions']
         check_perms = ['can_delete', 'can_update']
         if permissions['can_read']:
-            check_perms += 'can_read'
+            check_perms.append('can_read')
 
         for perm in check_perms:
             if creator not in permissions[perm]:

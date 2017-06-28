@@ -442,7 +442,7 @@ def process_partial_update(request, anno_id):
 @require_catchjwt
 def crud_create(request):
     '''view for create, with no anno_id in querystring.'''
-    must_be_int = request.path.startswith('/create')  # backward-compat
+    must_be_int = '/create' in request.path  # backward-compat
     anno_id = generate_uid(must_be_int)
     return crud_api(request, anno_id)
 
