@@ -15,6 +15,7 @@ from anno.anno_defaults import PURPOSE_TAGGING
 from anno.anno_defaults import RESOURCE_TYPE_LIST
 from anno.anno_defaults import RESOURCE_TYPE_CHOICE
 from anno.anno_defaults import CATCH_JSONLD_CONTEXT_IRI
+from anno.utils import generate_uid
 
 from consumer.catchjwt import encode_token
 
@@ -105,12 +106,12 @@ def get_past_datetime(age_in_hours):
     return (now - delta).replace(microsecond=0).isoformat()
 
 def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
-    creator_id = user if user else str(uuid4())
+    creator_id = user if user else generate_uid()
 
     if age_in_hours > 0:
         created_at = get_past_datetime(age_in_hours)
         created = {
-            'id': str(uuid4()),
+            'id': generate_uid(),
             'created': created_at,
             'modified': created_at,
             'creator': {
@@ -265,12 +266,12 @@ def make_ranges_annotator():
 
 def make_annotatorjs_object(
         age_in_hours=0, media=TEXT, reply_to=None, user=None):
-    creator_id = user if user else str(uuid4())
+    creator_id = user if user else generate_uid()
 
     if age_in_hours > 0:
         created_at = get_past_datetime(age_in_hours)
         created = {
-            'id': str(uuid4()),
+            'id': generate_uid(),
             'created': created_at,
             'updated': created_at,
             'user': {

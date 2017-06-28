@@ -3,7 +3,6 @@ import dateutil
 from functools import wraps
 import json
 import logging
-from uuid import uuid4
 
 from django.db.models import Q
 from django.conf import settings
@@ -31,6 +30,7 @@ from .search import query_tags
 from .search import query_target_medias
 from .search import query_target_sources
 from .models import Anno
+from .utils import generate_uid
 
 from .anno_defaults import ANNOTATORJS_FORMAT
 from .anno_defaults import CATCH_ADMIN_GROUP_ID
@@ -330,7 +330,10 @@ def _do_search_api(request):
     if tags:
         query = query.filter(query_tags(tags))
 
-    targets = request.GET.get('target_source', [])
+    # back-compat
+    targets = request.GET.get('uri', [])
+    if not targets:
+        targets = request.GET.get('target_source', [])
     if targets:
         query = query.filter(query_target_sources(targets))
 
@@ -439,7 +442,8 @@ def process_partial_update(request, anno_id):
 @require_catchjwt
 def crud_create(request):
     '''view for create, with no anno_id in querystring.'''
-    anno_id = uuid4()
+    must_be_int = request.path.startswith('/create')  # backward-compat
+    anno_id = generate_uid(must_be_int)
     return crud_api(request, anno_id)
 
 

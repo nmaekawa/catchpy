@@ -2,7 +2,6 @@ from datetime import datetime
 import dateutil
 import dateutil.parser
 import logging
-from uuid import uuid4
 
 from django.db import DatabaseError
 from django.db import DataError
@@ -24,6 +23,7 @@ from .anno_defaults import PURPOSES
 from .anno_defaults import PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
 from .anno_defaults import RESOURCE_TYPES
 from .models import Anno, Tag, Target
+from .utils import generate_uid
 
 
 logger = logging.getLogger(__name__)
@@ -410,7 +410,8 @@ class CRUD(object):
         copied = []
         for a in anno_list:
             catcha = a.serialized
-            catcha['id'] = uuid4()  # create new id
+            # TODO: pay attention when in compat-mode: anno_id must-be-integer
+            catcha['id'] = generate_id()  # create new id
             try:
                 anno = CRUD.create_anno(catcha, is_copy=True)
             except AnnoError as e:
