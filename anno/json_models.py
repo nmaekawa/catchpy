@@ -49,8 +49,15 @@ class AnnoJS(object):
             logger.error(msg)
             raise AnnotatorJSError(msg)
 
+        try:
+            # for back-compat, annotatorjs id must be an integer
+            annojs_id = int(anno.anno_id)
+        except ValueError:
+            # but frontend has to deal with it if not integer...
+            annojs_id = anno.anno_id
+
         annojs = {
-            'id': anno.anno_id,
+            'id': annojs_id,
             'created': anno.created.isoformat(),
             'updated': anno.modified.isoformat(),
             'text': anno.body_text,
@@ -332,6 +339,9 @@ class AnnoJS(object):
 
         if media == 'comment':
             catcha['target'] = cls.convert_to_catcha_target_reply(annojs)
+            # targget_source_id points to annotation being replied to
+            catcha['platform']['target_source_id'] = \
+                catcha['target']['items'][0]['source']
         elif media == 'text':
             catcha['target'] = cls.convert_to_catcha_target_text(annojs)
         elif media == 'video' or media == 'audio':
@@ -626,6 +636,8 @@ class Catcha(object):
                       catcha['id'], catcha['platform']['target_source_id'],
                       reply_target['source'])
             logger.error(msg)
+            logger.debug(
+                'conflicting target_id in reply for catcha({})'.format(catcha))
             raise InconsistentAnnotationError(msg)
         return True
 

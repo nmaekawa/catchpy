@@ -103,6 +103,7 @@ def get_default_permissions_for_user(user):
 
 def get_input_json(request):
     if request.body:
+        logger.debug('get_input_json: ({})'.format(request.body))
         return json.loads(request.body)
     else:
         raise MissingAnnotationInputError(
@@ -115,6 +116,7 @@ def process_create(request, anno_id):
     requesting_user = request.catchjwt['userId']
 
     # fill info for create-anno
+    logger.debug('process_create() got anno_id({})'.format(anno_id))
     a_input['id'] = anno_id
     if 'permissions' not in a_input:
         a_input['permissions'] = get_default_permissions_for_user(
@@ -128,6 +130,8 @@ def process_create(request, anno_id):
 
     # throws AnnoError
     anno = CRUD.create_anno(catcha)
+    logger.debug('process_create() cREATED anno_id({})'.format(
+        anno.anno_id))
     return anno
 
 
@@ -330,15 +334,30 @@ def _do_search_api(request):
     if tags:
         query = query.filter(query_tags(tags))
 
-    # back-compat
-    targets = request.GET.get('uri', [])
-    if not targets:
-        targets = request.GET.get('target_source', [])
-    if targets:
-        query = query.filter(query_target_sources(targets))
+    # back-compat maneuvering:
+    # if parentid in querystring, should ignore target_source.
+    # target source is derived info and, in annotatorjs, points to original
+    # annotation target instead of the annotation being replied to; the
+    # combination of parentid and target_source in search querystring might
+    # result, incorrectly, in zero matches
+    parent_id = request.GET.get('parentid', None)
+    if parent_id is None:
+        targets = request.GET.get('uri', [])
+
+        if not targets:
+            targets = request.GET.get('target_source', [])
+        if targets:
+            query = query.filter(query_target_sources(targets))
+    else:
+        query = query.filter(anno_reply_to__anno_id=parent_id)
 
     medias = request.GET.getlist('media', [])
     if medias:
+        # back-compat
+        if 'comment' in medias:
+            medias.remove('comment')
+            medias.append('Annotation')
+
         mlist = [x.capitalize() for x in medias]
         query = query.filter(query_target_medias(mlist))
 
