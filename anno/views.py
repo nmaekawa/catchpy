@@ -316,14 +316,14 @@ def _do_search_api(request):
     query = Anno._default_manager.filter(anno_deleted=False)
 
     # TODO: check override POLICIES (override allow private reads)
-    if 'CAN_READ' not in payload.get('override', []):
+    if 'CAN_READ' not in payload.get('override', []) \
+       and request.catchjwt['userId'] != CATCH_ADMIN_GROUP_ID:  # back-compat
         # filter out permission cannot_read
         q = Q(can_read__len=0) | Q(can_read__contains=[payload['userId']])
         query = query.filter(q)
 
     usernames = request.GET.getlist('username', [])
     if usernames:
-        #unames = [x.strip() for x in usernames.split(',')]
         query = query.filter(query_username(usernames))
 
     userids = request.GET.getlist('userid', [])
@@ -469,7 +469,7 @@ def crud_create(request):
 @require_http_methods('POST')
 @csrf_exempt
 @require_catchjwt
-def crud_compat_update(request):
+def crud_compat_update(request, anno_id):
     '''back compat view for update.'''
     try:
         resp = _do_crud_compat_update(request, anno_id)
@@ -499,16 +499,12 @@ def _do_crud_compat_update(request, anno_id):
     if anno is None:
         raise MissingAnnotationError('anno({}) not found'.format(anno_id))
 
-    if not has_permission_for_op(
-            METHOD_PERMISSION_MAP[request.method], request, anno):
+    if not has_permission_for_op('update', request, anno):
         raise NoPermissionForOperationError(
             'no permission to {} anno({}) for user({})'.format(
                 METHOD_PERMISSION_MAP[request.method], anno_id,
                 request.catchjwt['userId']))
 
-        r = process_update(request, anno)
-
-    assert r is not None
-
+    r = process_update(request, anno)
     response_format = fetch_response_format(request)
     return _format_response(r, response_format)
