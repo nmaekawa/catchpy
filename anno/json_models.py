@@ -84,12 +84,10 @@ class AnnoJS(object):
             r = cls.convert_reply(anno)
         else:
             r = cls.convert_target(anno)
+            # if not a reply, then use the internal reference to target
+            annojs['uri'] = uri
 
         annojs.update(r)
-
-        # if not a reply, then use the internal reference to target
-        annojs['uri'] = uri
-
         return annojs
 
 
@@ -108,10 +106,10 @@ class AnnoJS(object):
         resp['media'] = 'comment'
         resp['parent'] = anno_parent.anno_id
         # find original target source(uri) in parent
-        catcha_targets = Catcha.fetch_target_item_by_not_media(
-            anno_parent.serialized, [THUMB, ANNO])
+        #catcha_parent_targets = Catcha.fetch_target_item_by_not_media(
+        #    anno_parent.serialized, [THUMB, ANNO])
         # TODO: check for more than one target
-        resp['uri'] = catcha_targets[0]['source']
+        #esp['uri'] = catcha_parent_targets[0]['source']
         return resp
 
 
@@ -129,7 +127,8 @@ class AnnoJS(object):
                     'ignoring the rest'
                 ).format(anno.anno_id)
             t = anno.targets[0]
-            t_wa = find_target_item_in_wa(anno, t.target_source)
+            t_wa = Catcha.fetch_target_item_by_source(
+                anno.serialized, t.target_source)
 
             i_resp = {}
 
@@ -556,6 +555,44 @@ class AnnoJS(object):
         }
 
 
+    @classmethod
+    def are_similar(cls, js1, js2):
+        '''check that annojs1 and annojs2 are similar.'''
+        annojs1 = js1.copy()
+        annojs2 = js2.copy()
+        for annojs in [annojs1, annojs2]:
+            for key in ['error', 'created', 'updated']:
+                try:
+                    del annojs[key]
+                except KeyError:
+                    pass  # key already not present
+            annojs['id'] = str(annojs['id'])  # to fake back-compat
+            annojs['tags'] = sorted(annojs['tags']) if 'tags' in annojs else []
+
+            if annojs['media'] == 'comment':
+                # compare only uri, remove the rest
+                for key in ['ranges', 'rangeTime', 'rangePosition',
+                            'bounds', 'quote', 'target', 'thumb']:
+                    try:
+                        del annojs[key]
+                    except KeyError:
+                        pass  # key already not present
+
+        # some old annotations don't have text!
+        # TODO: find a less dumb way to do this...
+        if 'text' not in annojs1:
+            try:
+                del annojs2['text']
+            except KeyError:
+                pass
+        else:
+            if 'text' not in annojs2:
+                del annojs1['text']
+
+        x1 = json.dumps(annojs1, sort_keys=True, indent=4)
+        x2 = json.dumps(annojs2, sort_keys=True, indent=4)
+        return x1 == x2
+
 
 class Catcha(object):
     '''class methods to handle catch webannotation json.
@@ -582,6 +619,7 @@ class Catcha(object):
             except Exception as e:
                 msg = ('failed to convert annojs({}) to catcha '
                        '- not annotatorjs?: {}').format(annotation['id'], e)
+                logger.error(msg, exc_info=True)
                 raise InvalidInputWebAnnotationError(msg)
 
         # by now we have a catcha, so check json schema
@@ -755,64 +793,40 @@ class Catcha(object):
         return False
 
 
+    @classmethod
+    def are_similar(cls, catcha1, catcha2):
+        '''check that catcha1 and catcha2 are similar.'''
+        # disregard times for created/modified
+        for key in ['@context', 'id', 'type', 'schema_version',
+                    'creator', 'platform']:
+            if catcha1[key] != catcha2[key]:
+                print('key({}) is different'.format(key))
+                return False
 
+        for key in catcha1['permissions']:
+            if set(catcha1['permissions'][key]) != set(catcha2['permissions'][key]):
+                print('permissions[{}] is different'.format(key))
+                return False
 
-
-
-
-
-
-
-
-
-
-
-
-def find_target_item_in_wa(anno, target_source):
-    t_list = anno.raw['target']['items']
-    for t in t_list:
-        if t['source'] == target_source:
-            return t
-
-    # didn't find corresponding target? raw and model out-of-sync!
-    raise RawModelOutOfSynchError(
-        'anno({}): target in model not found in raw json({})'.format(
-            anno.anno_id, target_source))
-
-
-def wa_are_similar(wa1, wa2):
-    '''check that wa1 and wa2 are similar.'''
-    # disregard times for created/modified
-    for key in ['@context', 'id', 'type', 'schema_version',
-                'creator', 'platform']:
-        if wa1[key] != wa2[key]:
-            print('key({}) is different'.format(key))
+        # body
+        if catcha1['body']['type'] != catcha2['body']['type']:
+            print('body type is different')
+            return False
+        body1 = sorted(catcha1['body']['items'], key=lambda k: k['value'])
+        body2 = sorted(catcha2['body']['items'], key=lambda k: k['value'])
+        if body1 != body2:
+            print('body items are different')
             return False
 
-    for key in wa1['permissions']:
-        if set(wa1['permissions'][key]) != set(wa2['permissions'][key]):
-            print('permissions[{}] is different'.format(key))
+        # target
+        if catcha1['target']['type'] != catcha2['target']['type']:
+            print('target type is different.')
+            return False
+        target1 = sorted(catcha1['target']['items'], key=lambda k: k['source'])
+        target2 = sorted(catcha2['target']['items'], key=lambda k: k['source'])
+        if target1 != target2:
+            print('target items are different')
             return False
 
-    # body
-    if wa1['body']['type'] != wa2['body']['type']:
-        print('body type is different')
-        return False
-    body1 = sorted(wa1['body']['items'], key=lambda k: k['value'])
-    body2 = sorted(wa2['body']['items'], key=lambda k: k['value'])
-    if body1 != body2:
-        print('body items are different')
-        return False
-
-    # target
-    if wa1['target']['type'] != wa2['target']['type']:
-        print('target type is different.')
-        return False
-    target1 = sorted(wa1['target']['items'], key=lambda k: k['source'])
-    target2 = sorted(wa2['target']['items'], key=lambda k: k['source'])
-    if target1 != target2:
-        print('target items are different')
-        return False
-
-    return True
+        return True
 

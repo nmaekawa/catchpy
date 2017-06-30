@@ -103,7 +103,7 @@ def get_default_permissions_for_user(user):
 
 def get_input_json(request):
     if request.body:
-        logger.debug('get_input_json: ({})'.format(request.body))
+        #logger.debug('get_input_json: ({})'.format(request.body))
         return json.loads(request.body)
     else:
         raise MissingAnnotationInputError(
@@ -116,7 +116,6 @@ def process_create(request, anno_id):
     requesting_user = request.catchjwt['userId']
 
     # fill info for create-anno
-    logger.debug('process_create() got anno_id({})'.format(anno_id))
     a_input['id'] = anno_id
     if 'permissions' not in a_input:
         a_input['permissions'] = get_default_permissions_for_user(
@@ -130,8 +129,6 @@ def process_create(request, anno_id):
 
     # throws AnnoError
     anno = CRUD.create_anno(catcha)
-    logger.debug('process_create() cREATED anno_id({})'.format(
-        anno.anno_id))
     return anno
 
 
@@ -291,7 +288,7 @@ def search_api(request):
     logger.debug('search query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request)
-        logger.debug('search response({})'.format(resp))
+        #logger.debug('search response({})'.format(resp))
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:

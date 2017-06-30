@@ -280,9 +280,6 @@ def test_search_replies_ok(js_list):
         x = CRUD.create_anno(wa)
         anno_list.append(x)
 
-    # set default response format to be annotatorjs
-    settings.CATCHPY_RESPONSE_FORMAT = ANNOTATORJS_FORMAT
-
     c = Consumer._default_manager.create()
     payload = make_jwt_payload(apikey=c.consumer)
     token = make_encoded_token(c.secret_key, payload)
@@ -325,7 +322,6 @@ def test_search_replies_ok(js_list):
         assert annojs['media'] == 'comment'
         assert annojs['parent'] == reply_to.anno_id
         assert annojs['user']['id'] == payload['userId']
-
 
 
 # include

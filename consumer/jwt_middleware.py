@@ -58,10 +58,10 @@ def jwt_middleware(get_response):
                                 # valid, replace info in request
                                 payload['consumer'] = consumer
                                 request.catchjwt = payload
-                                logger.error(
-                                    'found profile({}) for consumer({})'.format(
-                                        consumer.parent_profile,
-                                        consumer.consumer))
+                                #logger.debug(
+                                #    'found profile({}) for consumer({})'.format(
+                                #        consumer.parent_profile,
+                                #        consumer.consumer))
                             else:
                                 msg = error
                         else:

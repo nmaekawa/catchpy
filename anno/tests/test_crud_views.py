@@ -8,6 +8,8 @@ from anno.anno_defaults import ANNO, TEXT
 from anno.anno_defaults import ANNOTATORJS_FORMAT
 from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
+from anno.json_models import AnnoJS
+from anno.json_models import Catcha
 from anno.models import Anno
 from anno.views import crud_api
 
@@ -375,7 +377,7 @@ def test_create_reply_missing_target(wa_audio):
 
 @pytest.mark.usefixtures('wa_audio')
 @pytest.mark.django_db
-def test_create_reply_missing_target(wa_audio):
+def test_create_reply_conflicting_target(wa_audio):
     to_be_created_id = '1234-5678-abcd-efgh'
     x = CRUD.create_anno(wa_audio)
     catch = make_wa_object(age_in_hours=30, media=ANNO, reply_to=x.anno_id)
@@ -395,4 +397,35 @@ def test_create_reply_missing_target(wa_audio):
 
     with pytest.raises(Anno.DoesNotExist):
         x = Anno._default_manager.get(pk=to_be_created_id)
+
+
+@pytest.mark.usefixtures('js_text')
+@pytest.mark.django_db
+def test_create_compat_annojs(js_text):
+    js = js_text
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(
+        apikey=c.consumer, user=js['user']['id'])
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+    compat_create_url = reverse('compat_create')
+    response = client.post(
+            compat_create_url, data=json.dumps(js),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT,
+            content_type='application/json')
+
+    assert response.status_code == 200
+    resp = json.loads(response.content)
+    assert resp['id'] != js['id']  # should not conserver `id` in input annojs
+    assert resp['user']['id'] == payload['userId']
+    assert set(resp['tags']) == set(js['tags'])
+    assert resp['contextId'] == js['contextId']
+
+    x = Anno._default_manager.get(pk=resp['id'])
+    assert x.creator_id == payload['userId']
+    catcha = AnnoJS.convert_to_catcha(resp)
+    assert Catcha.are_similar(catcha, x.serialized)
 

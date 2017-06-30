@@ -2,8 +2,19 @@ import json
 import pytest
 import os
 
+from django.urls import reverse
+from django.test import Client
+
+from anno.anno_defaults import ANNOTATORJS_FORMAT
+from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
 from anno.json_models import AnnoJS
+from anno.json_models import Catcha
+from anno.models import Anno
+from consumer.models import Consumer
+
+from .conftest import make_encoded_token
+from .conftest import make_jwt_payload
 
 
 @pytest.mark.skip('debugging fixture')
@@ -27,18 +38,7 @@ def test_to_annotatorjs(js_list):
         catcha = AnnoJS.convert_to_catcha(js)
         anno = CRUD.create_anno(catcha, catcha['creator']['name'])
         js_back = AnnoJS.convert_from_anno(anno)
-
-        # remove what would not be the same anyway
-        del(js_back['error'])
-        del(js_back['created'])
-        del(js_back['updated'])
-        del(js['created'])
-        del(js['updated'])
-
-        js_back['id'] = str(js_back['id'])  # to fake back-compat
-        formatted = json.dumps(js_back, sort_keys=True, indent=4)
-        original = json.dumps(js, sort_keys=True, indent=4)
-        assert original == formatted
+        assert AnnoJS.are_similar(js, js_back)
 
 
 def readfile_into_jsonobj(filepath):
@@ -47,52 +47,3 @@ def readfile_into_jsonobj(filepath):
     return json.loads(context)
 
 
-@pytest.mark.django_db
-def x_test_long_annotatorjs():
-    here = os.path.abspath(os.path.dirname(__file__))
-    # filename = os.path.join(here, 'annotatorjs_large_sample.json')
-    filename = os.path.join(here, 'annojs_third_3K_sorted.json')
-    sample = readfile_into_jsonobj(filename)
-
-    for js in sample:
-        # prep and remove insipient props
-        js['id'] = str(js['id'])
-        js['uri'] = str(js['uri'])
-        del(js['archived'])
-        del(js['deleted'])
-        if 'citation' in js:
-            del(js['citation'])
-        if 'quote' in js and not js['quote']:
-            del(js['quote'])
-        if 'parent' not in js:
-            js['parent'] = '0'
-        if 'contextId' not in js:
-            js['contextId'] = 'unknown'
-        if 'collectionId' not in js:
-            js['collectionId'] = 'unknown'
-
-        catcha = AnnoJS.convert_to_catcha(js)
-        anno = CRUD.create_anno(catcha, catcha['creator']['name'])
-        js_back = AnnoJS.convert_from_anno(anno)
-
-        # remove what would not be the same anyway
-        del(js_back['error'])
-        del(js_back['created'])
-        del(js_back['updated'])
-        del(js_back['totalComments'])
-        del(js['created'])
-        del(js['updated'])
-        del(js['totalComments'])
-
-        # besides the above, if it's a reply, the formatted annotatorjs
-        # will have ranges for the original target that are not present
-        # in the input annotatorjs
-        if js['media'] == 'comment' and not js['ranges']:
-            js_back['ranges'] = []
-
-        original = json.dumps(js, sort_keys=True, indent=4)
-        formatted = json.dumps(js_back, sort_keys=True, indent=4)
-
-        # this assertion doesn't take in consideration lists of tags
-        # that might be out-of-order
-        assert original == formatted
