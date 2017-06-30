@@ -13,6 +13,7 @@ from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
+from .anno_defaults import PURPOSE_TAGGING
 from .catch_json_schema import CATCH_JSON_SCHEMA
 from .errors import RawModelOutOfSynchError
 from .errors import InconsistentAnnotationError
@@ -102,11 +103,15 @@ class AnnoJS(object):
 
     @classmethod
     def convert_reply(cls, anno):
-        # get uri and ranges from original target
         anno_parent = anno.anno_reply_to
         resp = cls.convert_target(anno_parent)
         resp['media'] = 'comment'
         resp['parent'] = anno_parent.anno_id
+        # find original target source(uri) in parent
+        catcha_targets = Catcha.fetch_target_item_by_not_media(
+            anno_parent.serialized, [THUMB, ANNO])
+        # TODO: check for more than one target
+        resp['uri'] = catcha_targets[0]['source']
         return resp
 
 
@@ -715,6 +720,39 @@ class Catcha(object):
                 return target
         return None
 
+
+    @classmethod
+    def fetch_target_item_by_not_media(cls, catcha, media_types):
+        '''media_types is a list of typew we DO NOT want.'''
+        target_items = catcha['target']['items']
+        result = []
+        for target in target_items:
+            if target['type'] not in media_types:
+                result.append(target)
+        return result
+
+
+    @classmethod
+    def has_tag(cls, catcha, tagname):
+        for b in catcha['body']['items']:
+            if b['purpose'] == PURPOSE_TAGGING:
+                if b['value'] == tagname:
+                    return True
+        return False
+
+
+    @classmethod
+    def has_target_source(cls, catcha, target_source, target_type=None):
+        # TODO: might be able to merge with fetch_target_item_by_source
+        for t in catcha['target']['items']:
+            if t['source'] == target_source:
+                if target_type is not None:
+                    if t['type'] == target_type:
+                        return True
+                    else:
+                        return False
+                return True
+        return False
 
 
 

@@ -15,7 +15,7 @@ def string_to_number(text):
 
 
 def generate_uid(must_be_int=False):
-    ''' for backward-compat, generate id as integer.'''
+    ''' for back-compat, generate id as integer.'''
     # originally shifted by 64 to keep number within max integer value
     # but javascript in the frontend support integers with 52bits.
     # https://stackoverflow.com/a/3530326

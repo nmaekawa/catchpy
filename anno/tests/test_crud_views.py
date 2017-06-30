@@ -20,20 +20,14 @@ from .conftest import make_request
 from .conftest import make_wa_object
 
 
-#@pytest.mark.django_db
 def test_index():
-
     client = Client()
     url = reverse('index')
-    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(url))
     response = client.get(url)
-    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(response.content))
 
     from django.core.urlresolvers import resolve
     func = resolve(url).func
     func_name = '{}.{}'.format(func.__module__, func.__name__)
-    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(func_name))
-
     assert response.status_code == 200
 
 

@@ -185,7 +185,7 @@ def crud_api(request, anno_id):
 
 
 def has_permission_for_op(op, request, anno):
-    # backward-compat
+    # back-compat
     if request.catchjwt['userId'] == CATCH_ADMIN_GROUP_ID:
         return True
 
@@ -287,7 +287,7 @@ def partial_update_api(request, anno_id):
 @csrf_exempt
 @require_catchjwt
 def search_api(request):
-    # accepts POST for backward-compat
+    # accepts POST for back-compat
     logger.debug('search query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request)
@@ -461,7 +461,7 @@ def process_partial_update(request, anno_id):
 @require_catchjwt
 def crud_create(request):
     '''view for create, with no anno_id in querystring.'''
-    must_be_int = '/create' in request.path  # backward-compat
+    must_be_int = '/create' in request.path  # back-compat
     anno_id = generate_uid(must_be_int)
     return crud_api(request, anno_id)
 

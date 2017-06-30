@@ -2,16 +2,21 @@ from copy import deepcopy
 import json
 import pytest
 
+from django.conf import settings
 from django.db import IntegrityError
-from django.urls import reverse
 from django.test import Client
+from django.urls import reverse
 
+from anno.anno_defaults import ANNOTATORJS_FORMAT
+from anno.anno_defaults import AUDIO, IMAGE, TEXT, VIDEO, THUMB, ANNO
 from anno.crud import CRUD
 from anno.models import Anno, Tag, Target
 from anno.models import PURPOSE_TAGGING
+from anno.json_models import Catcha
 from anno.views import search_api
 from consumer.models import Consumer
 
+from .conftest import make_annotatorjs_object
 from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
 from .conftest import make_json_request
@@ -115,10 +120,10 @@ def test_search_by_tags_ok(wa_video):
     assert len(resp['rows']) == 2
 
     for a in resp['rows']:
-        assert catcha_has_tag(a, common_tag_value) is True
-        assert catcha_has_tag(a, 'testing_tag1') is False
-        assert catcha_has_tag(a, 'testing_tag3') is False
-        assert catcha_has_tag(a, 'testing_tag5') is False
+        assert Catcha.has_tag(a, common_tag_value) is True
+        assert Catcha.has_tag(a, 'testing_tag1') is False
+        assert Catcha.has_tag(a, 'testing_tag3') is False
+        assert Catcha.has_tag(a, 'testing_tag5') is False
 
 
 @pytest.mark.usefixtures('wa_audio', 'wa_image')
@@ -147,8 +152,8 @@ def test_search_by_target_source_ok(wa_audio, wa_image):
     assert response.status_code == 200
     assert resp['total'] == 4
     for a in resp['rows']:
-        assert catcha_has_target_source(a, tsource, ttype)
-        assert catcha_has_target_source(a, tsource)
+        assert Catcha.has_target_source(a, tsource, ttype)
+        assert Catcha.has_target_source(a, tsource)
 
 
 @pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
@@ -266,24 +271,63 @@ def test_search_by_username_via_client(
     assert resp['rows'][0]['id'] == wa_video['id']
 
 
-def catcha_has_tag(catcha, tagname):
-    for b in catcha['body']['items']:
-        if b['purpose'] == PURPOSE_TAGGING:
-            if b['value'] == tagname:
-                return True
-    return False
+@pytest.mark.usefixtures('js_list')
+@pytest.mark.django_db
+def test_search_replies_ok(js_list):
+    anno_list = []
+    for js in js_list:
+        wa = Catcha.normalize(js)
+        x = CRUD.create_anno(wa)
+        anno_list.append(x)
 
+    # set default response format to be annotatorjs
+    settings.CATCHPY_RESPONSE_FORMAT = ANNOTATORJS_FORMAT
 
-def catcha_has_target_source(catcha, target_source, target_type=None):
-    for t in catcha['target']['items']:
-        if t['source'] == target_source:
-            if target_type is not None:
-                if t['type'] == target_type:
-                    return True
-                else:
-                    return False
-            return True
-    return False
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer)
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+
+    # create some replies
+    reply_to = anno_list[0]
+    js_replies = []
+    compat_create_url = reverse('compat_create')
+    for i in range(1, 5):
+        js = make_annotatorjs_object(
+            age_in_hours=1, media=ANNO,
+            reply_to=reply_to.anno_id, user=payload['userId'])
+        js_replies.append(js)
+        response = client.post(
+            compat_create_url, data=json.dumps(js),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            content_type='application/json')
+        assert response.status_code == 200
+
+    # search for the replies
+    catcha_targets = Catcha.fetch_target_item_by_not_media(
+        reply_to.serialized, [THUMB, ANNO])
+    uri = 'fake_cause_parentid_has_precedence_and_this_must_be_ignored'
+    compat_search_url = ('{}?context_id={}&collectionId={}&media=comment&'
+                         'uri={}&limit=-1&parentid={}').format(
+                             reverse('search_api'),
+                             reply_to.raw['platform']['contextId'],
+                             reply_to.raw['platform']['collectionId'],
+                             target_source,
+                             reply_to.anno_id)
+    response = client.post(
+        compat_search_url,
+        HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+        HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == 4
+    for annojs in resp['rows']:
+        assert annojs['media'] == 'comment'
+        assert annojs['parent'] == reply_to.anno_id
+        assert annojs['user']['id'] == payload['userId']
+
 
 
 # include

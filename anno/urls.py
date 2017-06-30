@@ -3,7 +3,7 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    # these are for backward-compat
+    # these are for back-compat
     url(r'^search', views.search_api, name='search_api'),
     url(r'^create$', views.crud_create, name='compat_create'),
     url(r'^update/(?P<anno_id>[0-9a-zA-z-]+)$',

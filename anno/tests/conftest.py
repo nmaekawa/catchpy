@@ -271,7 +271,7 @@ def make_annotatorjs_object(
     if age_in_hours > 0:
         created_at = get_past_datetime(age_in_hours)
         created = {
-            'id': generate_uid(),
+            'id': generate_uid(must_be_int=True),
             'created': created_at,
             'updated': created_at,
             'user': {
@@ -293,7 +293,7 @@ def make_annotatorjs_object(
         },
         'text': fetch_fortune(),
         'totalComments': 0,
-        'media': media.lower(),
+        'media': 'comment' if media == ANNO else media.lower(),
         'tags': [],
         'ranges': [],
         'uri': get_fake_url(),
