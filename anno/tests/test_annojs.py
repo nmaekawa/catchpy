@@ -35,8 +35,9 @@ def test_to_annotatorjs(js_list):
         del(js['created'])
         del(js['updated'])
 
-        original = json.dumps(js, sort_keys=True, indent=4)
+        js_back['id'] = str(js_back['id'])  # to fake back-compat
         formatted = json.dumps(js_back, sort_keys=True, indent=4)
+        original = json.dumps(js, sort_keys=True, indent=4)
         assert original == formatted
 
 

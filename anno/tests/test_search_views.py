@@ -305,15 +305,13 @@ def test_search_replies_ok(js_list):
         assert response.status_code == 200
 
     # search for the replies
-    catcha_targets = Catcha.fetch_target_item_by_not_media(
-        reply_to.serialized, [THUMB, ANNO])
     uri = 'fake_cause_parentid_has_precedence_and_this_must_be_ignored'
     compat_search_url = ('{}?context_id={}&collectionId={}&media=comment&'
                          'uri={}&limit=-1&parentid={}').format(
                              reverse('search_api'),
                              reply_to.raw['platform']['contextId'],
                              reply_to.raw['platform']['collectionId'],
-                             target_source,
+                             uri,
                              reply_to.anno_id)
     response = client.post(
         compat_search_url,
