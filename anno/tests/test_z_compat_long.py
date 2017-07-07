@@ -27,8 +27,8 @@ def test_long_annotatorjs():
     #
     here = os.path.abspath(os.path.dirname(__file__))
     #filename = os.path.join(here, 'annojs_3K_sorted.json')
-    #filename = os.path.join(here, 'annojs_HxAT101.json')
-    filename = os.path.join(here, 'annojs_sample_1.json')
+    filename = os.path.join(here, 'annojs_HxAT101.json')
+    #filename = os.path.join(here, 'annojs_sample_1.json')
     sample = readfile_into_jsonobj(filename)
 
     created_list = []
@@ -71,7 +71,7 @@ def test_long_annotatorjs():
             HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT,
             content_type='application/json')
 
-       
+        '''
         if response.status_code != 200:
             print('failed to create js({}): {}\n{}'.format(
                 js['id'], response.content,
@@ -82,9 +82,9 @@ def test_long_annotatorjs():
 
         else:
             resp = json.loads(response.content)
-        
-        #assert response.status_code == 200
-        #resp = json.loads(response.content)
+        '''
+        assert response.status_code == 200
+        resp = json.loads(response.content)
 
     how_many = len(no_media)
     if how_many > 0:
@@ -103,6 +103,7 @@ def test_long_annotatorjs():
         created_anno = Anno._default_manager.get(pk=js['id'])
         pulled_from_db += 1
         created_js = AnnoJS.convert_from_anno(created_anno)
+
         if AnnoJS.are_similar(js, created_js):
             catcha = AnnoJS.convert_to_catcha(js)
             assert Catcha.are_similar(catcha, created_anno.serialized)
@@ -114,6 +115,7 @@ def test_long_annotatorjs():
                 print('---------- AnnoJS similar({}), after tags sorted:'.format(js['id']))
             else:
                 counter += 1
+                '''
                 print('---------- AnnoJS not similar({}):'.format(js['id']))
                 print('---------- (->) {}'.format(json.dumps(js,
                                                              sort_keys=True,
@@ -121,7 +123,7 @@ def test_long_annotatorjs():
                 print('---------- (<-) {}'.format(json.dumps(created_js,
                                                              sort_keys=True,
                                                              indent=4)))
-
+                '''
     assert counter == 0
 
 

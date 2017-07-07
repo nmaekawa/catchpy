@@ -176,6 +176,11 @@ class AnnoJS(object):
             'uri': catcha_target_item['source']
         }
         for s in catcha_target_item['selector']['items']:
+            if '@type' in s:
+                # this is a oa specificResource, preserve as is
+                resp['rangePosition'].append(s)
+                continue
+
             if s['type'] == 'FragmentSelector':
                 (x, y, w, h) = s['value'].split('=')[1].split(',')
                 resp['rangePosition'].append({
@@ -196,8 +201,12 @@ class AnnoJS(object):
                  'selectors found for image'
                 ).format(anno.anno_id))
         if selector_no == 1:
-            # if not dual strategy, frontend expects single object
-            resp['rangePosition'] = resp['rangePosition'][0]
+            # if oa strategy, keep list
+            if '@type' in resp['rangePosition'][0]:
+                pass
+            else:
+                # if not dual strategy, frontend expects single object
+                resp['rangePosition'] = resp['rangePosition'][0]
 
         if 'scope' in catcha_target_item:
             s = catcha_target_item['scope']['value']
@@ -496,10 +505,12 @@ class AnnoJS(object):
         selector = {'type': 'List', 'items': []}
         for pos in rangePositionList:
             if isinstance(pos, dict):
-                # legacy strategy
-                selector['items'].append(
-                    cls.strategy_legacy_for_target_selector(annojs)
-                )
+                if '@type' in pos:  # try oa strategy
+                    selector['items'].append(pos)
+                else:  # try legacy strategy
+                    selector['items'].append(
+                        cls.strategy_legacy_for_target_selector(annojs)
+                    )
             else:  # 2.1 strategy
                 selector['items'].append(
                     cls.strategy_2_1_for_target_selector(annojs)
@@ -576,6 +587,9 @@ class AnnoJS(object):
                         del annojs[key]
                     except KeyError:
                         pass  # key already not present
+            if annojs['media'] == 'image':
+                # not comparing bounds for now
+                del annojs['bounds']
 
         # some old annotations don't have text!
         # TODO: find a less dumb way to do this...
