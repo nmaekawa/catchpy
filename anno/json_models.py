@@ -237,7 +237,9 @@ class AnnoJS(object):
 
     @classmethod
     def convert_target_video(cls, anno, catcha_target_item):
-        resp = {'error': [], 'uri': catcha_target_item['source']}
+        # TODO: uri is the internal reference, and target.src is the original link?
+        #resp = {'error': [], 'uri': catcha_target_item['source']}
+        resp = {'error': []}
         if len(catcha_target_item['selector']['items']) > 1:
             resp['error'].append(
                 ('anno({}) INCOMPLETE FORMATTING into annotatorjs: multiple '
@@ -262,36 +264,32 @@ class AnnoJS(object):
     @classmethod
     def convert_target_text(cls, anno, catcha_target_item):
         resp = {'error': [], 'uri': catcha_target_item['source']}
-        if catcha_target_item['selector']['type'] == RESOURCE_TYPE_CHOICE:
-            for s in catcha_target_item['selector']['items']:
-                if s['type'] == 'RangeSelector':
-                    resp['ranges'] = cls.convert_rangeSelector_to_ranges(s)
-                elif s['type'] == 'TextQuoteSelector':
-                    resp['quote'] = s['exact']
-                else:
-                    resp['error'].append((
-                        'anno({}) INCOMPLETE FORMATTING into annotatorjs: '
-                        'unknown selector({})').format(anno.anno_id, s['type']))
-        else:
-            # it must be a LIST of 1 target!
-            if len(catcha_target_item['selector']['items']) > 1:
+
+        resp['ranges'] = []
+        for s in catcha_target_item['selector']['items']:
+            if s['type'] == 'RangeSelector':
+                #resp['ranges'] = cls.convert_rangeSelector_to_ranges(s)
+                resp['ranges'].append(cls.convert_rangeSelector_to_ranges(s))
+            elif s['type'] == 'TextQuoteSelector':
+                # ATTENTION! counts that there's quoteSelector then single
+                # RangeSelector!
+                resp['quote'] = s['exact']
+            else:
                 resp['error'].append((
                     'anno({}) INCOMPLETE FORMATTING into annotatorjs: '
-                    'multiple selectors for `text` not supported').format(
-                        anno.anno_id))
-            resp['ranges'] = cls.convert_rangeSelector_to_ranges(
-                catcha_target_item['selector']['items'][0])
+                    'unknown selector({}) for `text` target').format(
+                        anno.anno_id, s['type']))
         return resp
 
 
     @classmethod
     def convert_rangeSelector_to_ranges(cls, rangeSelector):
-        return [{
+        return {
             'start': str(rangeSelector['startSelector']['value']),
             'end': str(rangeSelector['endSelector']['value']),
             'startOffset': string_to_number(rangeSelector['refinedBy'][0]['start']),
             'endOffset': string_to_number(rangeSelector['refinedBy'][0]['end']),
-        }]
+        }
 
 
 
@@ -412,6 +410,7 @@ class AnnoJS(object):
                 'type': 'Text',
                 'format': 'text/html',
                 'source': str(annojs['uri']),
+                'selector': {'type': RESOURCE_TYPE_LIST, 'items': []},
             }]}
 
         # can have multiple selectors, ex: non-consecutive parts of text!
@@ -591,6 +590,10 @@ class AnnoJS(object):
 
         x1 = json.dumps(annojs1, sort_keys=True, indent=4)
         x2 = json.dumps(annojs2, sort_keys=True, indent=4)
+
+        #if x1 != x2:  # naomi naomi naomi naomi naomi debug debug debug
+        #    logger.debug('AnnoJS.are-similar FALSE: {}\n{}'.format(x1, x2))
+
         return x1 == x2
 
 

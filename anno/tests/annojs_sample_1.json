@@ -1,0 +1,36 @@
+  [
+  {
+    "tags": [],
+    "citation": "https://en.wikisource.org/wiki/The_Canterbury_Tales",
+    "text": "\n\t        <p>many couplets compose of this poem, like stoote, roote in the first pair.</p><p><br></p><p>parralell between Aprille and March&nbsp;</p><p>&nbsp;&nbsp;</p>\n\t    ",
+    "totalComments": 0,
+    "collectionId": "d4e0e26f-cbb9-4983-ac1d-f7c9950a2ae6",
+    "ranges": [],
+    "parent": "0",
+    "deleted": false,
+    "uri": 138,
+    "id": 360165,
+    "contextId": "course-v1:HarvardX+AmPoX.6+2T2016",
+    "archived": false,
+    "created": "2017-01-28T12:58:26 UTC",
+    "updated": "2017-01-28T13:00:46 UTC",
+    "quote": "",
+    "permissions": {
+      "update": [
+        "77f7f0635653415b8c91d92acb890682"
+      ],
+      "admin": [
+        "77f7f0635653415b8c91d92acb890682"
+      ],
+      "delete": [
+        "77f7f0635653415b8c91d92acb890682"
+      ],
+      "read": []
+    },
+    "media": "text",
+    "user": {
+      "id": "77f7f0635653415b8c91d92acb890682",
+      "name": "Kanko"
+    }
+  }
+  ]

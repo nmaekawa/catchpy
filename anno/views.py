@@ -339,13 +339,17 @@ def _do_search_api(request):
     # result, incorrectly, in zero matches
     parent_id = request.GET.get('parentid', None)
     if parent_id is None:
-        targets = request.GET.get('uri', [])
-
+        # try to get target_source
+        targets = request.GET.get('target_source', [])
+        # try to get uri
         if not targets:
-            targets = request.GET.get('target_source', [])
+            # uri is a back-compat term
+            targets = request.GET.get('uri', [])
+        # if anything that would resemble target was in querystring
         if targets:
             query = query.filter(query_target_sources(targets))
     else:
+        # parentid is a back-compat term
         query = query.filter(anno_reply_to__anno_id=parent_id)
 
     medias = request.GET.getlist('media', [])
