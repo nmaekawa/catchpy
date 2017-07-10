@@ -6,6 +6,7 @@ SECRET_KEY = 'super-secret'
 # set default output for json responses
 CATCH_RESPONSE_FORMAT = 'CATCH_ANNO_FORMAT'
 #CATCH_RESPONSE_FORMAT = 'ANNOTATORJS_FORMAT'
+CATCH_RESPONSE_LIMIT = 200
 
 # Logging config
 LOGGING = {

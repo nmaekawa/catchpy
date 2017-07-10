@@ -23,6 +23,9 @@ CATCH_RESPONSE_FORMAT_HTTPHEADER = getattr(
     settings, 'CATCH_RESPONSE_FORMAT_HTTPHEADER',
     'HTTP_X_CATCH_RESPONSE_FORMAT')
 
+CATCH_MAX_RESPONSE_LIMIT = getattr(
+    settings, 'CATCH_RESPONSE_LIMIT', 200)
+
 # default platform for annotatorjs annotations
 CATCH_DEFAULT_PLATFORM_NAME = getattr(
     settings, 'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')

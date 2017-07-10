@@ -37,6 +37,7 @@ from .anno_defaults import CATCH_ADMIN_GROUP_ID
 from .anno_defaults import CATCH_ANNO_FORMAT
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
+from .anno_defaults import CATCH_MAX_RESPONSE_LIMIT
 from .anno_defaults import CATCH_RESPONSE_FORMATS
 from .anno_defaults import CATCH_EXTRA_RESPONSE_FORMATS
 from .anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
@@ -52,6 +53,7 @@ METHOD_PERMISSION_MAP = {
     'DELETE': 'delete',
     'PUT': 'update',
 }
+
 
 def require_catchjwt(view_func):
     def _decorator(request, *args, **kwargs):
@@ -391,6 +393,11 @@ def _do_search_api(request):
         q_result = query[offset:(offset+limit)]
     total = query.count()      # is it here when the querysets are evaluated?
     size = q_result.count()
+
+    # hard limit for response; to avoid out-of-memory errors
+    if size > CATCH_MAX_RESPONSE_LIMIT:
+        q_result = q_result[:CATCH_MAX_RESPONSE_LIMIT]
+        size = q_result.count()
 
     response_format = fetch_response_format(request)
     logger.debug('default_format({})'.format(getattr(settings,
