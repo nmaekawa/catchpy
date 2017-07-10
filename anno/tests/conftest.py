@@ -121,7 +121,7 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
             'platform': {
                 'platform_name': 'hxat_edx',
                 'contextId': 'fake_context',
-                'collectionId': 'fake_context',
+                'collectionId': 'fake_collection',
                 'target_source_id': 'internal_reference_123',
             },
         }

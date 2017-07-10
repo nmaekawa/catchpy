@@ -7,9 +7,10 @@ from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
 
-from anno.anno_defaults import ANNOTATORJS_FORMAT
+from anno.anno_defaults import ANNOTATORJS_FORMAT, CATCH_ANNO_FORMAT
 from anno.anno_defaults import AUDIO, IMAGE, TEXT, VIDEO, THUMB, ANNO
 from anno.crud import CRUD
+from anno.json_models import Catcha
 from anno.models import Anno, Tag, Target
 from anno.models import PURPOSE_TAGGING
 from anno.json_models import Catcha
@@ -273,7 +274,7 @@ def test_search_by_username_via_client(
 
 @pytest.mark.usefixtures('js_list')
 @pytest.mark.django_db
-def test_search_replies_ok(js_list):
+def test_search_replies_js_ok(js_list):
     anno_list = []
     for js in js_list:
         wa = Catcha.normalize(js)
@@ -302,15 +303,13 @@ def test_search_replies_ok(js_list):
         assert response.status_code == 200
 
     # search for the replies
-    uri = 'fake_cause_parentid_has_precedence_and_this_must_be_ignored'
-    compat_search_url = ('{}?context_id={}&collectionId={}&media=comment&'
-                         'uri={}&limit=-1&parentid={}').format(
-                             reverse('search_api'),
+    compat_search_url = ('{}?context_id={}&collectionId={}&media=Annotation&'
+                         'limit=-1&target_source_id={}').format(
+                             reverse('search_api_clear'),
                              reply_to.raw['platform']['contextId'],
                              reply_to.raw['platform']['collectionId'],
-                             uri,
                              reply_to.anno_id)
-    response = client.post(
+    response = client.get(
         compat_search_url,
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
         HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
@@ -324,8 +323,172 @@ def test_search_replies_ok(js_list):
         assert annojs['user']['id'] == payload['userId']
 
 
-# include
-#
-# . private records
-# . deleted records
-#
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_search_replies_catcha_ok(wa_list):
+    anno_list = []
+    for wa in wa_list:
+        x = CRUD.create_anno(wa)
+        anno_list.append(x)
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer)
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+
+    # create some replies
+    reply_to = anno_list[0]
+    wa_replies = []
+    crud_create_url = reverse('crud_create')
+    for i in range(1, 5):
+        wa = make_wa_object(
+            age_in_hours=1, media=ANNO,
+            reply_to=reply_to.anno_id, user=payload['userId'])
+        wa_replies.append(wa)
+        response = client.post(
+            crud_create_url, data=json.dumps(wa),
+            HTTP_AUTHORIZATION='Token {}'.format(token),
+            content_type='application/json')
+        assert response.status_code == 200
+
+    # search for the replies
+    compat_search_url = ('{}?context_id={}&collectionId={}&media=Annotation&'
+                         'limit=-1&target_source_id={}').format(
+                             reverse('search_api_clear'),
+                             reply_to.raw['platform']['contextId'],
+                             reply_to.raw['platform']['collectionId'],
+                             reply_to.anno_id)
+    response = client.get(
+        compat_search_url,
+        HTTP_AUTHORIZATION='token {}'.format(token),
+        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == 4
+    for catcha in resp['rows']:
+        assert catcha['creator']['id'] == payload['userId']
+        # find target with media type Annotation
+        target_item = Catcha.fetch_target_item_by_media(catcha, ANNO)
+        assert target_item is not None
+        assert target_item['source'] == reply_to.anno_id
+
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_search_deleted_catcha_ok(wa_list):
+    anno_list = []
+    for wa in wa_list:
+        wa['creator']['id'] = 'bilbo_baggings'
+        wa['permissions'] = {
+            'can_read': [],
+            'can_update': [wa['creator']['id']],
+            'can_delete': [wa['creator']['id']],
+            'can_admin': [wa['creator']['id']],
+        }
+        x = CRUD.create_anno(wa)
+        anno_list.append(x)
+    total_annotations = len(anno_list)
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer, user='bilbo_baggings')
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+
+    # delete some annotations
+    for i in range(1, total_annotations):
+        crud_url = reverse('crud_api',
+                           kwargs={'anno_id': anno_list[i].anno_id})
+        response = client.delete(
+            crud_url,
+            HTTP_AUTHORIZATION='Token {}'.format(token),
+            content_type='application/json')
+        assert response.status_code == 200
+
+    # search for the replies
+    search_url = (
+        '{}?context_id={}&collectionId={}&limit=-1').format(
+            reverse('search_api_clear'),
+            anno_list[0].raw['platform']['contextId'],
+            anno_list[0].raw['platform']['collectionId'])
+    response = client.get(
+        search_url,
+        HTTP_AUTHORIZATION='token {}'.format(token),
+        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == 1
+    # check that it was a soft delete, annotations are still in db
+    for i in range(1, total_annotations):
+        a = Anno._default_manager.get(pk=anno_list[i].anno_id)
+        assert a is not None
+        assert a.anno_deleted is True
+
+
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_search_private_catcha_ok(wa_list):
+    anno_list = []
+    for wa in wa_list:
+        wa['creator']['id'] = 'bilbo_baggings'
+        wa['permissions'] = {
+            'can_read': [wa['creator']['id']],  # private annotation
+            'can_update': [wa['creator']['id']],
+            'can_delete': [wa['creator']['id']],
+            'can_admin': [wa['creator']['id']],
+        }
+        x = CRUD.create_anno(wa)
+        anno_list.append(x)
+    total_annotations = len(anno_list)
+
+    c = Consumer._default_manager.create()
+    payload_creator = make_jwt_payload(apikey=c.consumer, user='bilbo_baggings')
+    token_creator= make_encoded_token(c.secret_key, payload_creator)
+
+    payload_admin = make_jwt_payload(apikey=c.consumer, user='__admin__')
+    token_admin= make_encoded_token(c.secret_key, payload_admin)
+
+    payload_peasant = make_jwt_payload(apikey=c.consumer, user='peasant')
+    token_peasant= make_encoded_token(c.secret_key, payload_peasant)
+
+    client = Client()
+
+    # search for annotations creator
+    search_url = (
+        '{}?context_id={}&collectionId={}&limit=-1').format(
+            reverse('search_api_clear'),
+            anno_list[0].raw['platform']['contextId'],
+            anno_list[0].raw['platform']['collectionId'])
+    response = client.get(
+        search_url,
+        HTTP_AUTHORIZATION='token {}'.format(token_creator),
+        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == total_annotations
+
+    # search for annotations peasant
+    response = client.get(
+        search_url,
+        HTTP_AUTHORIZATION='token {}'.format(token_peasant),
+        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == 0
+
+    # search for annotations admin
+    response = client.get(
+        search_url,
+        HTTP_AUTHORIZATION='token {}'.format(token_admin),
+        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == total_annotations
+

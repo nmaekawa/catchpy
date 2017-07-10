@@ -282,11 +282,10 @@ def partial_update_api(request, anno_id):
     pass
 
 
-@require_http_methods(['GET', 'HEAD', 'POST'])
+@require_http_methods(['GET', 'HEAD'])
 @csrf_exempt
 @require_catchjwt
 def search_api(request):
-    # accepts POST for back-compat
     logger.debug('search query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request)
@@ -305,8 +304,29 @@ def search_api(request):
             data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
 
 
+@require_http_methods(['GET', 'HEAD', 'POST'])
+@csrf_exempt
+@require_catchjwt
+def search_back_compat_api(request):
+    logger.debug('search_back_compat query=({})'.format(request.GET))
+    try:
+        resp = _do_search_api(request, back_compat=True)
+        #logger.debug('search response({})'.format(resp))
+        return JsonResponse(status=HTTPStatus.OK, data=resp)
 
-def _do_search_api(request):
+    except AnnoError as e:
+        logger.error('search failed: {}'.format(e, exc_info=True))
+        return JsonResponse(status=e.status,
+                            data={'status': e.status, 'payload': [str(e)]})
+
+    except Exception as e:
+        logger.error('search failed; request({})'.format(request), exc_info=True)
+        return JsonResponse(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
+
+
+def _do_search_api(request, back_compat=False):
 
     payload = request.catchjwt
     logger.debug('_do_search payload[userid]=({})'.format(payload['userId']))
@@ -321,59 +341,13 @@ def _do_search_api(request):
         q = Q(can_read__len=0) | Q(can_read__contains=[payload['userId']])
         query = query.filter(q)
 
-    usernames = request.GET.getlist('username', [])
-    if usernames:
-        query = query.filter(query_username(usernames))
-
-    userids = request.GET.getlist('userid', [])
-    if userids:
-        query = query.filter(query_userid(userids))
-
-    tags = request.GET.getlist('tag', [])
-    if tags:
-        query = query.filter(query_tags(tags))
-
-    # back-compat maneuvering:
-    # if parentid in querystring, should ignore target_source.
-    # target source is derived info and, in annotatorjs, points to original
-    # annotation target instead of the annotation being replied to; the
-    # combination of parentid and target_source in search querystring might
-    # result, incorrectly, in zero matches
-    parent_id = request.GET.get('parentid', None)
-    if parent_id is None:
-        # try to get target_source
-        targets = request.GET.get('target_source', [])
-        # try to get uri
-        if not targets:
-            # uri is a back-compat term
-            targets = request.GET.get('uri', [])
-        # if anything that would resemble target was in querystring
-        if targets:
-            query = query.filter(query_target_sources(targets))
+    if back_compat:
+        query = process_search_back_compat_params(request, query)
     else:
-        # parentid is a back-compat term
-        query = query.filter(anno_reply_to__anno_id=parent_id)
+        query = process_search_params(request, query)
 
-    medias = request.GET.getlist('media', [])
-    if medias:
-        # back-compat
-        if 'comment' in medias:
-            medias.remove('comment')
-            medias.append('Annotation')
-
-        mlist = [x.capitalize() for x in medias]
-        query = query.filter(query_target_medias(mlist))
-
-    text = request.GET.get('text', [])
-    if text:
-        query = query.filter(body_text__search=text)
-    q = Anno.custom_manager.search_expression(request.GET)
-
-    if q:
-        query = query.filter(q)
-
-    # sort by created date
-    query = query.order_by('created')
+    # sort by created date, descending (more recent first)
+    query = query.order_by('-created')
 
     # max results and offset
     try:
@@ -410,6 +384,93 @@ def _do_search_api(request):
     response['limit'] = limit
     response['offset'] = offset
     return response
+
+
+def process_search_params(request, query):
+    usernames = request.GET.getlist('username', [])
+    if usernames:
+        query = query.filter(query_username(usernames))
+
+    userids = request.GET.getlist('userid', [])
+    if userids:
+        query = query.filter(query_userid(userids))
+
+    tags = request.GET.getlist('tag', [])
+    if tags:
+        query = query.filter(query_tags(tags))
+
+    targets = request.GET.get('target_source', [])
+    if targets:
+        query = query.filter(query_target_sources(targets))
+
+    medias = request.GET.getlist('media', [])
+    if medias:
+        mlist = [x.capitalize() for x in medias]
+        query = query.filter(query_target_medias(mlist))
+
+    text = request.GET.get('text', [])
+    if text:
+        query = query.filter(body_text__search=text)
+
+    # custom searches for platform params
+    q = Anno.custom_manager.search_expression(request.GET)
+
+    if q:
+        query = query.filter(q)
+
+    return query
+
+
+def process_search_back_compat_params(request, query):
+    target = request.GET.get('uri', None)
+    if target:
+        query = query.filter(anno_raw__platform__target_source_id=target)
+
+    medias = request.GET.getlist('media', [])
+    if medias:
+        if 'comment' in medias:
+            medias.remove('comment')
+            medias.append('Annotation')
+
+        mlist = [x.capitalize() for x in medias]
+        query = query.filter(query_target_medias(mlist))
+
+    # search by quote?
+
+    text = request.GET.get('text', [])
+    if text:
+        query = query.filter(body_text__search=text)
+
+    userids = request.GET.getlist('userid', [])
+    if userids:
+        query = query.filter(query_userid(userids))
+
+    usernames = request.GET.getlist('username', [])
+    if usernames:
+        query = query.filter(query_username(usernames))
+
+    source = request.GET.get('source', None)
+    if source:
+        query = query.filter(query_target_sources([source]))
+
+    context_id = request.GET.get('contextId', None)
+    if context_id:
+        query = query.filter(anno_raw__platform__context_id=context_id)
+
+    collection_id = request.GET.get('collectionId', None)
+    if collection_id:
+        query = query.filter(anno_raw__platform__ccollectionId=collection_id)
+
+    parent_id = request.GET.get('parentid', None)
+    if parent_id:
+        query = query.filter(anno_reply_to__anno_id=parent_id)
+
+    tags = request.GET.getlist('tag', [])
+    if tags:
+        query = query.filter(query_tags(tags))
+
+    return query
+
 
 
 @require_http_methods('GET')
@@ -469,8 +530,25 @@ def process_partial_update(request, anno_id):
 @require_catchjwt
 def crud_create(request):
     '''view for create, with no anno_id in querystring.'''
-    must_be_int = '/create' in request.path  # back-compat
+    anno_id = generate_uid()
+    return crud_api(request, anno_id)
+
+
+@require_http_methods('POST')
+@csrf_exempt
+@require_catchjwt
+def crud_compat_create(request):
+    '''view for create, with no anno_id in querystring.'''
+    must_be_int = True
     anno_id = generate_uid(must_be_int)
+    return crud_api(request, anno_id)
+
+
+@require_http_methods('DELETE')
+@csrf_exempt
+@require_catchjwt
+def crud_compat_delete(request, anno_id):
+    '''back compat view for delete.'''
     return crud_api(request, anno_id)
 
 

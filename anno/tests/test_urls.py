@@ -10,16 +10,31 @@ def match_func_for_url(url):
 def test_urls():
 
     urlconf = [
-        {'url': reverse('index'), 'view_func': 'anno.views.index'},
-        {'url': reverse('crud_create'), 'view_func': 'anno.views.crud_create'},
-        {'url': '{}?contextId=fake-contextId'.format(reverse('search_api')),
-         'view_func': 'anno.views.search_api'},
-        {'url': reverse('compat_update', kwargs={'anno_id': '123-456-789'}),
-         'view_func': 'anno.views.crud_compat_update'},
-        {'url': '/annos/?contextId=fake-contextID',
-         'view_func': 'anno.views.search_api'},
-        {'url': '/annos/create', 'view_func': 'anno.views.crud_create'},
-        {'url': '/annos/123-456-789', 'view_func': 'anno.views.crud_api'},
+        {
+            'url': reverse('index'),
+            'view_func': 'anno.views.index'},
+        {
+            'url': '{}?contextId=fake-contextId'.format(
+                reverse('compat_search')),
+            'view_func': 'anno.views.search_back_compat_api'},
+        {
+            'url': reverse('compat_create'),
+            'view_func': 'anno.views.crud_compat_create'},
+        {
+            'url': reverse('compat_update', kwargs={'anno_id': '123-456-789'}),
+            'view_func': 'anno.views.crud_compat_update'},
+        {
+            'url': reverse('compat_delete', kwargs={'anno_id': '123-456-789'}),
+            'view_func': 'anno.views.crud_compat_delete'},
+        {
+            'url': reverse('crud_create'),
+            'view_func': 'anno.views.crud_create'},
+        {
+            'url': '/annos/?contextId=fake-contextID',
+            'view_func': 'anno.views.search_api'},
+        {
+            'url': '/annos/123-456-789',
+            'view_func': 'anno.views.crud_api'},
     ]
 
     for cfg in urlconf:
