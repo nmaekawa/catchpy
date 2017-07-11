@@ -37,25 +37,24 @@ class AnnoJS(object):
     @classmethod
     def convert_from_anno(cls, anno):
         '''formats an annotation model into an annotatorjs json object.'''
-        # TODO: check that platform is HxAT; what to do if not? fail? try?
+        try:
+            # for back-compat, annotatorjs id must be an integer
+            annojs_id = int(anno.anno_id)
+        except ValueError:
+            msg = 'anno({}) failed catcha2annojs: id is not a number'.format(
+                anno.anno_id)
+            logger.error(msg)
+            raise AnnotatorJSError(msg)
 
-        # annotatorjs for hxat must have contextId
         try:
             context_id = anno.raw['platform']['contextId']
             collection_id = anno.raw['platform']['collectionId']
             uri = anno.raw['platform']['target_source_id']
         except KeyError as e:
-            msg = ('anno({}) failed to format from catcha to '
-                   'annotatorjs: {}').format(anno.anno_id, str(e))
+            msg = 'anno({}) missing platform property: {}'.format(
+                    anno.anno_id, str(e))
             logger.error(msg)
             raise AnnotatorJSError(msg)
-
-        try:
-            # for back-compat, annotatorjs id must be an integer
-            annojs_id = int(anno.anno_id)
-        except ValueError:
-            # but frontend has to deal with it if not integer...
-            annojs_id = anno.anno_id
 
         annojs = {
             'id': annojs_id,
@@ -74,10 +73,11 @@ class AnnoJS(object):
             },
             'totalComments': anno.total_replies,
             'tags': cls.convert_tags(anno),
-            'contextId': context_id,
-            'collectionId': collection_id,
             'parent': '0',
             'ranges': [],
+            'contextId': context_id,
+            'collectionId': collection_id,
+            'uri': uri,
         }
 
         if anno.anno_reply_to:
@@ -102,30 +102,30 @@ class AnnoJS(object):
     @classmethod
     def convert_reply(cls, anno):
         anno_parent = anno.anno_reply_to
-        resp = cls.convert_target(anno_parent)
+        # will raise exc if multiple targets in parent annotation
+        try:
+            resp = cls.convert_target(anno_parent)
+        except AnnotatorJSError as e:
+            msg = 'anno({}) parent error: {}'.format(anno.anno_id, e)
+            logger.error(msg)
+            raise AnnotatorJSError(msg)
         resp['media'] = 'comment'
         resp['parent'] = anno_parent.anno_id
-        # find original target source(uri) in parent
-        #catcha_parent_targets = Catcha.fetch_target_item_by_not_media(
-        #    anno_parent.serialized, [THUMB, ANNO])
-        # TODO: check for more than one target
-        #esp['uri'] = catcha_parent_targets[0]['source']
         return resp
 
 
     @classmethod
     def convert_target(cls, anno):
-        # list of strings with error message, if any error ocurred
-        resp = {'error': []}
+        resp = {}
 
         if anno.target_type == RESOURCE_TYPE_LIST:
             if anno.total_targets > 1:
-                # flag error: multiple targets supported by annotatorjs
-                resp['error'] += (
-                    'anno({}) INCOMPLETE FORMATTING into annotatorjs: '
-                    'multiple targets not supported. Picking one target and '
-                    'ignoring the rest'
-                ).format(anno.anno_id)
+                # flag error: multiple targets not supported by annotatorjs
+                msg = ('anno({}) multiple targets not supported by '
+                       'annotatorjs').format(anno.anno_id)
+                logger.error(msg)
+                raise AnnotatorJSError(msg)
+
             t = anno.targets[0]
             t_wa = Catcha.fetch_target_item_by_source(
                 anno.serialized, t.target_source)
@@ -142,16 +142,19 @@ class AnnoJS(object):
                 i_resp = cls.convert_target_single_image(anno, t_wa)
 
             elif t.target_media == ANNO:
-                i_resp = {'error': []}  # able to get parent from model
+                # this is a reply to a reply... not supported in annotatorjs
+                msg = ('anno({}) is a reply to a reply({}): not '
+                       'supported!').format(anno.anno_id,
+                                            anno.anno_reply_to.anno_id)
+                logger.error(msg)
+                raise AnnotatorJSError(msg)
 
             else:
-                i_resp = {
-                    'error': [
-                        ('anno({}) INCOMPLETE FORMATTING into annotatorjs: '
-                         'do not know how to treat media type({})'
-                        ).format(anno.anno_id, t.target_media),
-                    ]
-                }
+                msg = ('anno({}) media type({}) not supported by '
+                       'annotatorjs').format(anno.anno_id, t.target_media)
+                logger.error(msg)
+                raise AnnotatorJSError(msg)
+
             i_resp['media'] = t.target_media.lower()
 
         elif anno.target_type == RESOURCE_TYPE_CHOICE:
@@ -159,19 +162,18 @@ class AnnoJS(object):
             i_resp = cls.convert_target_choice_image(anno)
         else:
             # not supposed to happen!
-            raise AnnoError(
-                'anno({}): unknown target type ({})'.format(
-                    anno.anno_id, t.target_type))
-        i_resp['error'] += resp['error']
+            msg = 'anno({}) has unknown target type({})'.format(
+                    anno.anno_id, t.target_type)
+            logger.error(msg)
+            raise AnnoError(msg)
 
-        resp.update(i_resp)
-        return resp
+        #resp.update(i_resp)
+        return i_resp
 
 
     @classmethod
     def convert_target_single_image(cls, anno, catcha_target_item):
         resp = {
-            'error': [],
             'rangePosition': [],
             'uri': catcha_target_item['source']
         }
@@ -190,16 +192,18 @@ class AnnoJS(object):
             elif s['type'] == 'SvgSelector':
                 resp['rangePosition'].append(s['value'])
             else:
-                resp['error'].append(
-                    ('anno({}): INCOMPLETE FORMATTING into annotatorjs: '
-                     'unknown selector type ({})'
-                    ).format(anno.anno_id, s['type']))
+                # TODO: review to return proper exception
+                msg = 'anno({}): unknown selector type ({})'.format(
+                    anno.anno_id, s['type'])
+                logger.error(msg)
+                raise AnnotatorJSError(msg)
         selector_no = len(resp['rangePosition'])
         if selector_no < 1:
-            resp['error'].append(
-                ('anno({}): INCOMPLETE FORMATTING into annotatorjs: no '
-                 'selectors found for image'
-                ).format(anno.anno_id))
+            # TODO: review to return proper exception
+            msg = 'anno({}): no selectors found for image'.format(anno.anno_id)
+            logger.error(msg)
+            raise AnnotatorJSError(msg)
+
         if selector_no == 1:
             # if oa strategy, keep list
             if '@type' in resp['rangePosition'][0]:
@@ -221,39 +225,39 @@ class AnnoJS(object):
     @classmethod
     def convert_target_choice_image(cls, anno):
         i_resp = None
-        resp = {'error': [], 'media': 'image'}
+        resp = {'media': 'image'}
         for t in anno.raw['target']['items']:
             if t['type'] == IMAGE:
                 i_resp = cls.convert_target_single_image(anno, t)
             elif t['type'] == THUMB:
                 resp['thumb'] = t['source']
             else:
-                resp['error'].append(
-                    ('anno({}): INCOMPLETE FORMATTING into annotatorjs: do '
-                     'not know how to treat target CHOICE for target type({})'
-                    ).format(anno.anno_id, t['type']))
-
+                # TODO: review to return proper exception
+                msg = ('anno({}): do not know how to treat target CHOICE for '
+                       'target type({})').format(anno.anno_id, t['type'])
+                logger.error(msg)
+                raise AnnotatorJSError(msg)
         if i_resp is None:
-            resp['error'].append(
-                ('anno({}): INCOMPLETE FORMATTING into '
-                 'annotatorjs: expected target media image, but none found!'
-                ).format(anno.anno_id))
+            # TODO: review to return proper exception
+            msg = ('anno({}): expected target media image, but none '
+                   'found!').format(anno.anno_id)
+            logger.error(msg)
+            raise AnnotatorJSError(msg)
         else:
-            i_resp['error'] += resp['error']
             resp.update(i_resp)
         return resp
 
 
     @classmethod
     def convert_target_video(cls, anno, catcha_target_item):
-        # TODO: uri is the internal reference, and target.src is the original link?
-        #resp = {'error': [], 'uri': catcha_target_item['source']}
-        resp = {'error': []}
+        resp = {}
         if len(catcha_target_item['selector']['items']) > 1:
-            resp['error'].append(
-                ('anno({}) INCOMPLETE FORMATTING into annotatorjs: multiple '
-                 'selectors for `{}` not supported'
-                ).format(anno.anno_id, catcha_target_item['type']))
+            msg = ('anno({}) multiple selectors for target_type `{}` '
+                   'not supported in annotatorjs').format(
+                       anno.anno_id, catcha_target_item['type'])
+            logger.error(msg)
+            raise AnnotatorJSError(msg)
+
 
         # treat first target, ignore rest
         selector_item = catcha_target_item['selector']['items'][0]
@@ -272,7 +276,7 @@ class AnnoJS(object):
 
     @classmethod
     def convert_target_text(cls, anno, catcha_target_item):
-        resp = {'error': [], 'uri': catcha_target_item['source']}
+        resp = {'uri': catcha_target_item['source']}
 
         resp['ranges'] = []
         for s in catcha_target_item['selector']['items']:
@@ -280,14 +284,14 @@ class AnnoJS(object):
                 #resp['ranges'] = cls.convert_rangeSelector_to_ranges(s)
                 resp['ranges'].append(cls.convert_rangeSelector_to_ranges(s))
             elif s['type'] == 'TextQuoteSelector':
-                # ATTENTION! counts that there's quoteSelector then single
+                # ATTENTION! trusts that there's quoteSelector then single
                 # RangeSelector!
                 resp['quote'] = s['exact']
             else:
-                resp['error'].append((
-                    'anno({}) INCOMPLETE FORMATTING into annotatorjs: '
-                    'unknown selector({}) for `text` target').format(
-                        anno.anno_id, s['type']))
+                msg = 'anno({}) unknown selector({}) for `text` target'.format(
+                    anno.anno_id, s['type'])
+                logger.error(msg)
+                raise AnnotatorJSError(msg)
         return resp
 
 

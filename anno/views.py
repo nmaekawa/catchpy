@@ -17,6 +17,7 @@ from .json_models import AnnoJS
 from .json_models import Catcha
 from .crud import CRUD
 from .errors import AnnoError
+from .errors import AnnotatorJSError
 from .errors import InvalidAnnotationCreatorError
 from .errors import DuplicateAnnotationIdError
 from .errors import MethodNotAllowedError
@@ -255,7 +256,7 @@ def _format_response(anno_result, response_format):
             # doesn't need formatting! SERIALIZE as webannotation
             response = anno_result.serialized
         else:
-            # unknown format or plug custom formatters!
+            # worked hard and have nothing to show: format UNKNOWN
             raise UnknownResponseFormatError(
                 'unknown response format({})'.format(response_format))
     else:  # assume it's a QuerySet resulting from search
@@ -263,15 +264,22 @@ def _format_response(anno_result, response_format):
              'rows': [],
         }
         if response_format == ANNOTATORJS_FORMAT:
+            failed = []
             for anno in anno_result:
-                annojs = AnnoJS.convert_from_anno(anno)
-                response['rows'].append(annojs)
+                try:
+                    annojs = AnnoJS.convert_from_anno(anno)
+                except AnnotatorJSError as e:
+                    failed.append({'id': anno.anno_id, 'msg': str(e)})
+                else:
+                    response['rows'].append(annojs)
+            response['failed'] = failed
+            response['size_failed'] = len(failed)
         elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
             for anno in anno_result:
                 response['rows'].append(anno.serialized)
         else:
-            # unknown format or plug custom formatters!
+            # worked hard and have nothing to show: format UNKNOWN
             raise UnknownResponseFormatError(
                 'unknown response format({})'.format(response_format))
 

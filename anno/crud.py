@@ -411,7 +411,7 @@ class CRUD(object):
         for a in anno_list:
             catcha = a.serialized
             # TODO: pay attention when in compat-mode: anno_id must-be-integer
-            catcha['id'] = generate_id()  # create new id
+            catcha['id'] = generate_uid()  # create new id
             try:
                 anno = CRUD.create_anno(catcha, is_copy=True)
             except AnnoError as e:

@@ -8,10 +8,12 @@ from anno.anno_defaults import ANNO, TEXT
 from anno.anno_defaults import ANNOTATORJS_FORMAT
 from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
+from anno.errors import AnnotatorJSError
 from anno.json_models import AnnoJS
 from anno.json_models import Catcha
 from anno.models import Anno
 from anno.views import crud_api
+from anno.views import _format_response
 
 from consumer.models import Consumer
 
@@ -287,7 +289,7 @@ def test_create_duplicate(wa_audio):
 @pytest.mark.django_db
 def test_create_annojs(js_text):
     js = js_text
-    to_be_created_id = '1234-5678-0987-6543'
+    to_be_created_id = '1234567809876543'
     payload = make_jwt_payload(user=js['user']['id'])
 
     request = make_json_request(
@@ -301,7 +303,7 @@ def test_create_annojs(js_text):
     resp = json.loads(response.content)
 
     assert response.status_code == 200
-    assert resp['id'] == to_be_created_id
+    assert resp['id'] == int(to_be_created_id)
     assert resp['user']['id'] == payload['userId']
     assert len(resp['tags']) == len(js['tags'])
     assert resp['contextId'] == js['contextId']
@@ -428,4 +430,71 @@ def test_create_compat_annojs(js_text):
     assert x.creator_id == payload['userId']
     catcha = AnnoJS.convert_to_catcha(resp)
     assert Catcha.are_similar(catcha, x.serialized)
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_format_response_id_nan(wa_text):
+    wa = wa_text
+    x = CRUD.create_anno(wa)
+    assert x is not None
+
+    query_set = Anno._default_manager.all()
+    resp = _format_response(query_set, 'ANNOTATORJS_FORMAT')
+    assert 'failed' in resp
+    assert resp['failed'][0]['id'] == x.anno_id
+    assert 'id is not a number' in resp['failed'][0]['msg']
+    assert resp['size_failed'] == 1
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_format_response_multitarget(wa_text):
+    wa = wa_text
+    target_item = {
+        'source': 'target_source_blah',
+        'type': 'Text',
+        'format': 'text/plain',
+        'selector': {
+            'type': 'TextQuoteSelector',
+            'exact': 'Quote selector exact blah',
+        }
+    }
+    wa['target']['items'].append(target_item)
+    wa['id'] = '666'
+    x = CRUD.create_anno(wa)
+    assert x is not None
+
+    query_set = Anno._default_manager.all()
+    resp = _format_response(query_set, 'ANNOTATORJS_FORMAT')
+    assert 'failed' in resp
+    assert resp['failed'][0]['id'] == x.anno_id
+    assert 'multiple targets not supported' in resp['failed'][0]['msg']
+    assert resp['size_failed'] == 1
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_format_response_reply_to_reply(wa_text):
+    wa = wa_text
+    wa['id'] = '1'
+    x = CRUD.create_anno(wa)
+
+    wa1 = make_wa_object(1, media='Annotation', reply_to=x.anno_id)
+    wa1['id'] = '2'
+    x1 = CRUD.create_anno(wa1)
+
+    wa2 = make_wa_object(1, media='Annotation', reply_to=x1.anno_id)
+    wa2['id'] = '3'
+    x2 = CRUD.create_anno(wa2)
+
+    query_set = Anno._default_manager.all()
+    resp = _format_response(query_set, 'ANNOTATORJS_FORMAT')
+    assert 'failed' in resp
+    assert resp['size_failed'] == 1
+    assert resp['failed'][0]['id'] == x2.anno_id
+    assert 'reply to a reply' in resp['failed'][0]['msg']
+    assert 'rows' in resp
+    assert len(resp['rows']) == 2
+
 
