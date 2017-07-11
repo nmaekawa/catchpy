@@ -68,8 +68,12 @@ class Anno(Model):
     can_admin = ArrayField(CharField(max_length=128), null=True, default=list)
 
     # support for only one _text_ body
+    # max length for body_text is restricted in django request
+    # in settings.DATA_UPLOAD_MAX_MEMORY_SIZE (default is 2.5Mb)
     body_text = TextField(null=True)
-    # body_format is a mime type, 'text/html' or 'text/plain'
+    # body_format is a mime type, like 'text/html', 'text/richtext',
+    # 'application/rtf', 'application/x-rtf', etc
+    # note that rich text can have binaries embedded (like images)
     body_format = CharField(max_length=128, null=False, default='text/html')
 
     target_type = CharField(
@@ -184,7 +188,10 @@ class Target(Model):
     modified = DateTimeField(auto_now=True, null=False)
 
     # source might be a reference in client internals only
-    target_source = CharField(max_length=256, null=True)
+    # if url, max length is 2k, see
+    # - https://boutell.com/newfaq/misc/urllength.html
+    # - https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+    target_source = CharField(max_length=2048, null=True)
 
     target_media = CharField(
         max_length=56,

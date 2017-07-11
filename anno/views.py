@@ -424,7 +424,7 @@ def process_search_params(request, query):
 def process_search_back_compat_params(request, query):
     target = request.GET.get('uri', None)
     if target:
-        query = query.filter(anno_raw__platform__target_source_id=target)
+        query = query.filter(anno__raw__platform__target_source_id=target)
 
     medias = request.GET.getlist('media', [])
     if medias:
@@ -455,11 +455,11 @@ def process_search_back_compat_params(request, query):
 
     context_id = request.GET.get('contextId', None)
     if context_id:
-        query = query.filter(anno_raw__platform__context_id=context_id)
+        query = query.filter(anno__raw__platform__context_id=context_id)
 
     collection_id = request.GET.get('collectionId', None)
     if collection_id:
-        query = query.filter(anno_raw__platform__ccollectionId=collection_id)
+        query = query.filter(anno__raw__platform__ccollectionId=collection_id)
 
     parent_id = request.GET.get('parentid', None)
     if parent_id:
