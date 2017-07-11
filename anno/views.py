@@ -82,7 +82,7 @@ def get_jwt_payload(request):
     try:
         return request.catchjwt
     except Exception:
-        raise NoPermissionForOperationError('missing jwt token'):
+        raise NoPermissionForOperationError('missing jwt token')
 
 def get_default_permissions_for_user(user):
     return {
