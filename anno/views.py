@@ -82,18 +82,7 @@ def get_jwt_payload(request):
     try:
         return request.catchjwt
     except Exception:
-        # TODO: REMOVE FAKE
-        return {
-            'userId': '123456789',
-            'consumerKey': 'abc',
-            'issuedAt': datetime.now(dateutil.tz.tzutc).replace(
-                microsecond=0).isoformat(),
-            'ttl': 60,
-            'override': [],
-            'error': '',
-            'consumer': None,
-        }
-
+        raise NoPermissionForOperationError('missing jwt token'):
 
 def get_default_permissions_for_user(user):
     return {
