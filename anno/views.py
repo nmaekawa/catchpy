@@ -286,7 +286,6 @@ def search_api(request):
     logger.debug('search query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request)
-        #logger.debug('search response({})'.format(resp))
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
@@ -308,7 +307,6 @@ def search_back_compat_api(request):
     logger.debug('search_back_compat query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request, back_compat=True)
-        #logger.debug('search response({})'.format(resp))
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
@@ -333,7 +331,7 @@ def _do_search_api(request, back_compat=False):
 
     # TODO: check override POLICIES (override allow private reads)
     if 'CAN_READ' not in payload.get('override', []) \
-       and request.catchjwt['userId'] != CATCH_ADMIN_GROUP_ID:  # back-compat
+       and request.catchjwt['userId'] != CATCH_ADMIN_GROUP_ID:
         # filter out permission cannot_read
         q = Q(can_read__len=0) | Q(can_read__contains=[payload['userId']])
         query = query.filter(q)

@@ -35,6 +35,45 @@
                             "$ref": "#/definitions/Annotation"
                         }
                     },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "schema": {
@@ -68,6 +107,45 @@
                             "$ref": "#/definitions/Annotation"
                         }
                     },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "schema": {
@@ -99,6 +177,45 @@
                             "$ref": "#/definitions/Annotation"
                         }
                     },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "schema": {
@@ -127,6 +244,45 @@
                     "200": {
                         "description": "Successful response"
                     },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "schema": {
@@ -141,7 +297,7 @@
                 ]
             }
         },
-        "/anno/?": {
+        "/anno?": {
             "get": {
                 "description": "Returns list of `Annotation` objects resulting from the given search",
                 "parameters": [
@@ -155,7 +311,7 @@
                         "name": "offset",
                         "in": "query",
                         "description": "where the slice of returned `Annotation` objects should start; default is `0`",
-                        "type": "string"
+                        "type": "integer"
                     },
                     {
                         "name": "userid",
@@ -164,13 +320,13 @@
                         "type": "string"
                     },
                     {
-                        "name": "usernames",
+                        "name": "username",
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
                         "type": "string"
                     },
                     {
-                        "name": "source",
+                        "name": "target_source",
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we",
                         "type": "string"
@@ -182,15 +338,15 @@
                         "type": "string"
                     },
                     {
-                        "name": "tag",
+                        "name": "media",
                         "in": "query",
-                        "description": "repeat if you want a _AND_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
+                        "description": "repeat if you want a _OR_ list; ex: ?media=video&media=annotation",
                         "type": "string"
                     },
                     {
-                        "name": "parent_id",
+                        "name": "tag",
                         "in": "query",
-                        "description": "return replies to the annotation with `parent_id`",
+                        "description": "repeat if you want a _AND_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
                         "type": "string"
                     },
                     {
@@ -223,6 +379,45 @@
                         "description": "Successful response",
                         "schema": {
                             "$ref": "#/definitions/SearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
                         }
                     },
                     "default": {
@@ -368,9 +563,9 @@
     },
     "securityDefinitions": {
         "jwt": {
-            "description": "jwt token with consumer signature",
+            "description": "jwt token with consumer signature; format of token must be `token <jwt_token>`",
             "type": "apiKey",
-            "name": "x-annotation-auth-token",
+            "name": "authorization",
             "in": "header"
         }
     },
