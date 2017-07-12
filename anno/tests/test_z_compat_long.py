@@ -20,15 +20,10 @@ from .conftest import make_jwt_payload
 
 @pytest.mark.django_db
 def test_long_annotatorjs():
-
-    #
-    # TODO: have to insert all before comparing because of totalComments
-    # maybe separate into its own test file
-    #
     here = os.path.abspath(os.path.dirname(__file__))
     #filename = os.path.join(here, 'annojs_3K_sorted.json')
-    filename = os.path.join(here, 'annojs_HxAT101.json')
-    #filename = os.path.join(here, 'annojs_sample_1.json')
+    #filename = os.path.join(here, 'annojs_HxAT101.json')
+    filename = os.path.join(here, 'annojs_sample_1.json')
     sample = readfile_into_jsonobj(filename)
 
     created_list = []

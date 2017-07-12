@@ -240,6 +240,45 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     assert resp['rows'][0]['id'] == wa['id']
 
 
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_search_back_compat_by_context_id_ok(wa_list):
+    for wa in wa_list:
+        x = CRUD.create_anno(wa)
+
+    wa = deepcopy(wa_list[0])
+    search_context_id = 'not_the_normal_context_id'
+    wa['id'] = '12345678901234567890'
+    wa['platform']['context_id'] = search_context_id
+    x = CRUD.create_anno(wa)
+
+    tudo = Anno._default_manager.all()
+    for z in tudo:
+        print('id({}), platform({}), context_id({}), collection_id({})'.format(
+            z.anno_id, z.raw['platform'].get('platform_name', 'na'),
+            z.raw['platform'].get('context_id', 'na'),
+            z.raw['platform'].get('collection_id', 'na')))
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer)
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()  # check if middleware works
+
+    query_string='contextId={}&context_id={}&platform={}'.format(
+        search_context_id, 'contextId_that_should_be_ignored',
+        wa['platform']['platform_name'])
+    url = '{}?{}'.format(reverse('compat_search'), query_string)
+
+    response = client.get(url, HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
+    resp = json.loads(response.content)
+
+    assert response.status_code == 200
+    assert resp['total'] == 1
+    assert resp['rows'][0]['media'] == 'text'
+    assert str(resp['rows'][0]['id']) == wa['id']
+
+
 @pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
 def test_search_by_username_via_client(
@@ -313,6 +352,52 @@ def test_search_replies_js_ok(js_list):
         search_url,
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
         HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == 4
+    for annojs in resp['rows']:
+        assert annojs['media'] == 'comment'
+        assert annojs['parent'] == reply_to.anno_id
+        assert annojs['user']['id'] == payload['userId']
+
+
+@pytest.mark.usefixtures('js_list')
+@pytest.mark.django_db
+def test_search_back_compat_replies_ok(js_list):
+    anno_list = []
+    for js in js_list:
+        wa = Catcha.normalize(js)
+        x = CRUD.create_anno(wa)
+        anno_list.append(x)
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer)
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+
+    # create some replies
+    reply_to = anno_list[0]
+    js_replies = []
+    compat_create_url = reverse('compat_create')
+    for i in range(1, 5):
+        js = make_annotatorjs_object(
+            age_in_hours=1, media=ANNO,
+            reply_to=reply_to.anno_id, user=payload['userId'])
+        js_replies.append(js)
+        response = client.post(
+            compat_create_url, data=json.dumps(js),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            content_type='application/json')
+        assert response.status_code == 200
+
+    # search for the replies
+    search_url = ('{}?limit=-1&parentid={}').format(
+                             reverse('compat_search'), reply_to.anno_id)
+    response = client.get(
+        search_url,
+        HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
 
     assert response.status_code == 200
     resp = response.json()

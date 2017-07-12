@@ -324,7 +324,8 @@ def search_back_compat_api(request):
 def _do_search_api(request, back_compat=False):
 
     payload = request.catchjwt
-    logger.debug('_do_search payload[userid]=({})'.format(payload['userId']))
+    logger.debug('_do_search payload[userid]=({}) | back_compat={}'.format(
+        payload['userId'], back_compat))
 
     # filter out the soft-deleted
     query = Anno._default_manager.filter(anno_deleted=False)
@@ -368,11 +369,11 @@ def _do_search_api(request, back_compat=False):
         q_result = q_result[:CATCH_MAX_RESPONSE_LIMIT]
         size = q_result.count()
 
-    response_format = fetch_response_format(request)
-    logger.debug('default_format({})'.format(getattr(settings,
-                                                     'CATCH_RESPONSE_FORMAT',
-                                                     CATCH_ANNO_FORMAT)))
-    logger.debug('response_format({})'.format(response_format))
+    if back_compat:
+        response_format = ANNOTATORJS_FORMAT
+    else:
+        response_format = fetch_response_format(request)
+
     response = _format_response(q_result, response_format)
     response['total'] = total  # add response info
     response['size'] = size
@@ -450,11 +451,11 @@ def process_search_back_compat_params(request, query):
 
     context_id = request.GET.get('contextId', None)
     if context_id:
-        query = query.filter(anno__raw__platform__context_id=context_id)
+        query = query.filter(raw__platform__context_id=context_id)
 
     collection_id = request.GET.get('collectionId', None)
     if collection_id:
-        query = query.filter(anno__raw__platform__collection_id=collection_id)
+        query = query.filter(raw__platform__collection_id=collection_id)
 
     parent_id = request.GET.get('parentid', None)
     if parent_id:
