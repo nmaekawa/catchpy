@@ -215,22 +215,22 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     wa = deepcopy(wa_audio)
     search_context_id = 'not_the_normal_context_id'
     wa['id'] = '12345678'
-    wa['platform']['contextId'] = search_context_id
+    wa['platform']['context_id'] = search_context_id
     x = CRUD.create_anno(wa)
 
     payload = make_jwt_payload()
     request = make_json_request(
         method='get',
-        query_string='contextId={}&platform={}'.format(
+        query_string='context_id={}&platform={}'.format(
             search_context_id, wa['platform']['platform_name']))
     request.catchjwt = payload
 
     tudo = Anno._default_manager.all()
     for z in tudo:
-        print('id({}), platform({}), contextId({}), collectionId({})'.format(
+        print('id({}), platform({}), context_id({}), collection_id({})'.format(
             z.anno_id, z.raw['platform'].get('platform_name', 'na'),
-            z.raw['platform'].get('contextId', 'na'),
-            z.raw['platform'].get('collectionId', 'na')))
+            z.raw['platform'].get('context_id', 'na'),
+            z.raw['platform'].get('collection_id', 'na')))
 
     response = search_api(request)
     resp = json.loads(response.content)
@@ -303,14 +303,14 @@ def test_search_replies_js_ok(js_list):
         assert response.status_code == 200
 
     # search for the replies
-    compat_search_url = ('{}?context_id={}&collectionId={}&media=Annotation&'
+    search_url = ('{}?context_id={}&collection_id={}&media=Annotation&'
                          'limit=-1&target_source_id={}').format(
                              reverse('search_api_clear'),
-                             reply_to.raw['platform']['contextId'],
-                             reply_to.raw['platform']['collectionId'],
+                             reply_to.raw['platform']['context_id'],
+                             reply_to.raw['platform']['collection_id'],
                              reply_to.anno_id)
     response = client.get(
-        compat_search_url,
+        search_url,
         HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
         HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
 
@@ -353,14 +353,14 @@ def test_search_replies_catcha_ok(wa_list):
         assert response.status_code == 200
 
     # search for the replies
-    compat_search_url = ('{}?context_id={}&collectionId={}&media=Annotation&'
+    search_url = ('{}?context_id={}&collection_id={}&media=Annotation&'
                          'limit=-1&target_source_id={}').format(
                              reverse('search_api_clear'),
-                             reply_to.raw['platform']['contextId'],
-                             reply_to.raw['platform']['collectionId'],
+                             reply_to.raw['platform']['context_id'],
+                             reply_to.raw['platform']['collection_id'],
                              reply_to.anno_id)
     response = client.get(
-        compat_search_url,
+        search_url,
         HTTP_AUTHORIZATION='token {}'.format(token),
         HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
 
@@ -409,10 +409,10 @@ def test_search_deleted_catcha_ok(wa_list):
 
     # search for the replies
     search_url = (
-        '{}?context_id={}&collectionId={}&limit=-1').format(
+        '{}?context_id={}&collection_id={}&limit=-1').format(
             reverse('search_api_clear'),
-            anno_list[0].raw['platform']['contextId'],
-            anno_list[0].raw['platform']['collectionId'])
+            anno_list[0].raw['platform']['context_id'],
+            anno_list[0].raw['platform']['collection_id'])
     response = client.get(
         search_url,
         HTTP_AUTHORIZATION='token {}'.format(token),
@@ -459,10 +459,11 @@ def test_search_private_catcha_ok(wa_list):
 
     # search for annotations creator
     search_url = (
-        '{}?context_id={}&collectionId={}&limit=-1').format(
+        '{}context_id={}&collection_id={}&limit=-1').format(
             reverse('search_api_clear'),
-            anno_list[0].raw['platform']['contextId'],
-            anno_list[0].raw['platform']['collectionId'])
+            anno_list[0].raw['platform']['context_id'],
+            anno_list[0].raw['platform']['collection_id'])
+
     response = client.get(
         search_url,
         HTTP_AUTHORIZATION='token {}'.format(token_creator),

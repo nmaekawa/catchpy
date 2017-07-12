@@ -182,6 +182,9 @@ def test_update_denied_can_admin(wa_video):
         method='put', anno_id=x.anno_id, data=json.dumps(data))
     request.catchjwt = payload
 
+    print('-------------- {}'.format(json.dumps(catch, sort_keys=True,
+                                                indent=4)))
+
     response = crud_api(request, x.anno_id)
     resp = json.loads(response.content)
     assert response.status_code == 403
@@ -207,7 +210,7 @@ def test_update_ok(wa_text):
                                   'value': 'winsome'})
     assert data['id'] is not None
     assert data['creator']['id'] is not None
-    assert 'contextId' in data['platform']
+    assert 'context_id' in data['platform']
 
     request = make_json_request(
         method='put', anno_id=x.anno_id, data=json.dumps(data))
@@ -422,7 +425,7 @@ def test_create_compat_annojs(js_text):
 
     assert response.status_code == 200
     resp = json.loads(response.content)
-    assert resp['id'] != js['id']  # should not conserver `id` in input annojs
+    assert resp['id'] != js['id']  # should not preserve `id` in input annojs
     assert resp['user']['id'] == payload['userId']
     assert set(resp['tags']) == set(js['tags'])
     assert resp['contextId'] == js['contextId']

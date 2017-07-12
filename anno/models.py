@@ -213,8 +213,8 @@ class Target(Model):
 
 platform = {
     'platform_name': 'name identifier for the lti platform; ex: hxat-edx, hxat-canvas',
-    'contextId': 'lti context/course',
-    'collectionId': 'assignment id within the contextId',
+    'context_id': 'lti context/course',
+    'collection_id': 'assignment id within the context_id',
     'target_source_id': 'frontend internal reference for the target source',
 }
 

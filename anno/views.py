@@ -456,7 +456,7 @@ def process_search_back_compat_params(request, query):
 
     collection_id = request.GET.get('collectionId', None)
     if collection_id:
-        query = query.filter(anno__raw__platform__ccollectionId=collection_id)
+        query = query.filter(anno__raw__platform__collection_id=collection_id)
 
     parent_id = request.GET.get('parentid', None)
     if parent_id:

@@ -141,9 +141,107 @@
                 ]
             }
         },
+        "/anno/?": {
+            "get": {
+                "description": "Returns list of `Annotation` objects resulting from the given search",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "max number of annotations in response; `-1` means all results, default is `10`, max is `200` but configurable",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "where the slice of returned `Annotation` objects should start; default is `0`",
+                        "type": "string"
+                    },
+                    {
+                        "name": "userid",
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?userid=jsnow&userid=rstark&userid=tgreyjoy",
+                        "type": "string"
+                    },
+                    {
+                        "name": "usernames",
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
+                        "type": "string"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we",
+                        "type": "string"
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "fulltext search in body of annotation; note that this is _NOT_ an exact search",
+                        "type": "string"
+                    },
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "description": "repeat if you want a _AND_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
+                        "type": "string"
+                    },
+                    {
+                        "name": "parent_id",
+                        "in": "query",
+                        "description": "return replies to the annotation with `parent_id`",
+                        "type": "string"
+                    },
+                    {
+                        "name": "platform",
+                        "in": "query",
+                        "description": "lti platform name",
+                        "type": "string"
+                    },
+                    {
+                        "name": "source_id",
+                        "in": "query",
+                        "description": "source_id is the internal reference for a target, property of annotation `platform`",
+                        "type": "string"
+                    },
+                    {
+                        "name": "context_id",
+                        "in": "query",
+                        "description": "context_id with the given platform",
+                        "type": "string"
+                    },
+                    {
+                        "name": "collection_id",
+                        "in": "query",
+                        "description": "collection_id within the given context_id; ignored if context_id not present",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResult"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ]
+            }
+        },
         "/anno/update_tags": {
             "put": {
-                "description": "Replaces the list of tags in the given `Annotation` object;; the requesting user must permission to update the Annnotation",
+                "description": "TO BE IMPLEMENTED! Replaces the list of tags in the given `Annotation` object;; the requesting user must permission to update the Annnotation",
                 "parameters": [
                     {
                         "name": "id",
@@ -185,7 +283,7 @@
         },
         "/anno/update_text": {
             "put": {
-                "description": "Replaces the textual body of given `Annotation` object; the requesting user must have permission to update the Annotation",
+                "description": "TO BE IMPLEMENTED! Replaces the textual body of given `Annotation` object; the requesting user must have permission to update the Annotation",
                 "parameters": [
                     {
                         "name": "id",
@@ -227,7 +325,7 @@
         },
         "/anno/update_target": {
             "put": {
-                "description": "Replaces the list of targets of given `Annotation` object; the requesting user must have permission to update the Annotation",
+                "description": "TO BE IMPLEMENTED! Replaces the list of targets of given `Annotation` object; the requesting user must have permission to update the Annotation",
                 "parameters": [
                     {
                         "name": "id",
@@ -244,104 +342,6 @@
                         "schema": {
                             "$ref": "#/definitions/Target"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful response",
-                        "schema": {
-                            "$ref": "#/definitions/Annotation"
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "jwt": []
-                    }
-                ]
-            }
-        },
-        "/anno/search": {
-            "get": {
-                "description": "Returns list of `Annotation` objects resulting from the given search",
-                "parameters": [
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "max number of annotations in response; `-1` means all results, default is `10`",
-                        "type": "integer"
-                    },
-                    {
-                        "name": "offset",
-                        "in": "query",
-                        "description": "where the slice of returned `Annotation` objects should start; default is `0`",
-                        "type": "string"
-                    },
-                    {
-                        "name": "userids",
-                        "in": "query",
-                        "description": "comma separated list of userids",
-                        "type": "string"
-                    },
-                    {
-                        "name": "usernames",
-                        "in": "query",
-                        "description": "comma separated list of usernames",
-                        "type": "string"
-                    },
-                    {
-                        "name": "source",
-                        "in": "query",
-                        "description": "comma separated list of target source uris",
-                        "type": "string"
-                    },
-                    {
-                        "name": "text",
-                        "in": "query",
-                        "description": "fulltext search in body of annotation",
-                        "type": "string"
-                    },
-                    {
-                        "name": "tags",
-                        "in": "query",
-                        "description": "comma separated list of tags; this is an exact search",
-                        "type": "string"
-                    },
-                    {
-                        "name": "parentid",
-                        "in": "query",
-                        "description": "return comments on the annotation with `parentid`",
-                        "type": "string"
-                    },
-                    {
-                        "name": "sourceid",
-                        "in": "query",
-                        "description": "commas separated list of sourceids(internal reference for a target)",
-                        "type": "string"
-                    },
-                    {
-                        "name": "platform",
-                        "in": "query",
-                        "description": "lti platform name",
-                        "type": "string"
-                    },
-                    {
-                        "name": "contextid",
-                        "in": "query",
-                        "description": "contextid with the given platform; ignored if platform not present",
-                        "type": "string"
-                    },
-                    {
-                        "name": "collectionid",
-                        "in": "query",
-                        "description": "collectionid with the given contextid; ignored if platform and contextid not present",
-                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -613,15 +613,15 @@
         },
         "Platform": {
             "type": "object",
-            "required": ["platform_name", "contextId"],
+            "required": ["platform_name", "context_id"],
             "properties": {
                 "platform_name": {
                     "type": "string"
                 },
-                "contextId": {
+                "context_id": {
                     "type": "string"
                 },
-                "collectionId": {
+                "collection_id": {
                     "type": "string"
                 },
                 "target_source_id": {
@@ -667,15 +667,18 @@
         "Error": {
             "type": "object",
             "properties": {
-                "code": {
+                "status": {
                     "type": "integer",
-                    "format": "int32"
+                    "format": "int32",
+                    "description": "http status code"
+
                 },
-                "message": {
-                    "type": "string"
-                },
-                "fields": {
-                    "type": "string"
+                "payload": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }

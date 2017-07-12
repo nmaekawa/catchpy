@@ -30,7 +30,7 @@ def test_urls():
             'url': reverse('crud_create'),
             'view_func': 'anno.views.crud_create'},
         {
-            'url': '/annos/?contextId=fake-contextID',
+            'url': '/annos/?context_id=fake-contextID',
             'view_func': 'anno.views.search_api'},
         {
             'url': '/annos/123-456-789',

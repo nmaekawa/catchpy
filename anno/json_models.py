@@ -12,7 +12,6 @@ from .anno_defaults import ANNO, AUDIO, IMAGE, TEXT, THUMB, VIDEO
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import PURPOSE_TAGGING
 from .catch_json_schema import CATCH_JSON_SCHEMA
 from .errors import RawModelOutOfSynchError
@@ -47,8 +46,8 @@ class AnnoJS(object):
             raise AnnotatorJSError(msg)
 
         try:
-            context_id = anno.raw['platform']['contextId']
-            collection_id = anno.raw['platform']['collectionId']
+            context_id = anno.raw['platform']['context_id']
+            collection_id = anno.raw['platform']['collection_id']
             uri = anno.raw['platform']['target_source_id']
         except KeyError as e:
             msg = 'anno({}) missing platform property: {}'.format(
@@ -344,8 +343,8 @@ class AnnoJS(object):
             },
             'platform': {
                 'platform_name': CATCH_DEFAULT_PLATFORM_NAME,
-                'contextId': annojs.get('contextId', 'unknown'),
-                'collectionId': annojs.get('collectionId', 'unknown'),
+                'context_id': annojs.get('contextId', 'unknown'),
+                'collection_id': annojs.get('collectionId', 'unknown'),
                 'target_source_id': target_source,
             },
         }
@@ -630,6 +629,7 @@ class Catcha(object):
             try:
                 norm = cls.expand_compact_for_context(
                     annotation, CATCH_JSONLD_CONTEXT_IRI)
+
             except Exception as e:
                 msg = ('failed to translate input annotation({}) to catcha '
                        'jsonld context: {}').format(annotation['id'], e)

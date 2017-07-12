@@ -18,17 +18,17 @@ class SearchManager(Manager):
             kwargs = {'raw__platform__platform_name': str(platform_name)}
             q = q & Q(**kwargs)
 
-        context_id = params.get('contextId', None)
+        context_id = params.get('context_id', None)
         if context_id:
-            kwargs = {'raw__platform__contextId': str(context_id)}
+            kwargs = {'raw__platform__context_id': str(context_id)}
             q = q & Q(**kwargs)
 
-            collection_id = params.get('collectionId', None)
+            collection_id = params.get('collection_id', None)
             if collection_id:
-                kwargs = {'raw__platform__collectionId': str(collection_id)}
+                kwargs = {'raw__platform__collection_id': str(collection_id)}
                 q = q & Q(**kwargs)
 
-        target_source_id = params.get('sourceId', None)
+        target_source_id = params.get('source_id', None)
         if target_source_id:
             kwargs = {
                 'raw__platform__target_source_id': str(target_source_id)}
