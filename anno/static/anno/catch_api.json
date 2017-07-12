@@ -16,9 +16,10 @@
         "application/json"
     ],
     "paths": {
-        "/anno": {
+        "/annos": {
             "get": {
-                "description": "Gets the `Annotation` object for the given id; the requesting user must have permission to read the Annotation",
+                "summary": "Gets the `Annotation` object for the given id",
+                "description": "The requesting user must have permission to read the Annotation",
                 "parameters": [
                     {
                         "name": "id",
@@ -26,6 +27,14 @@
                         "description": "annotation id",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "X-CATCH-RESPONSE-FORMAT",
+                        "in": "header",
+                        "required": false,
+                        "type": "string",
+                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
+                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
                     }
                 ],
                 "responses": {
@@ -88,8 +97,24 @@
                 ]
             },
             "post": {
-                "description": "Creates an `Annotation` object; omit the `id` property of the annotation input parameter object, and a new one will be created and returned in the response. If an `id` is included in the annotation input parameter, it will try to be honored but the create action will fail if already present in storage.",
+                "summary": "Creates an `Annotation` object",
+                "description": "Omit the `id` property of the annotation input parameter object, and a new one will be created and returned in the response. If an `id` is included in the annotation input parameter, it will try to be honored but the create action will fail if already present in storage.",
                 "parameters": [
+                    {
+                        "name": "X-CATCH-RESPONSE-FORMAT",
+                        "in": "header",
+                        "required": false,
+                        "type": "string",
+                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
+                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "annotation id",
+                        "required": false,
+                        "type": "string"
+                    },
                     {
                         "name": "anno",
                         "in": "body",
@@ -160,8 +185,16 @@
                 ]
             },
             "put": {
-                "description": "Replaces an `Annotation` object",
+                "summary": "Replaces an `Annotation` object",
                 "parameters": [
+                    {
+                        "name": "X-CATCH-RESPONSE-FORMAT",
+                        "in": "header",
+                        "required": false,
+                        "type": "string",
+                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
+                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                    },
                     {
                         "name": "id",
                         "in": "query",
@@ -230,7 +263,8 @@
                 ]
             },
             "delete": {
-                "description": "Deletes an `Annotation` object; the requesting user must have permission to delete the Annotation",
+                "summary": "Deletes an `Annotation` object",
+                "description": "The requesting user must have permission to delete the Annotation",
                 "parameters": [
                     {
                         "name": "id",
@@ -299,8 +333,16 @@
         },
         "/anno?": {
             "get": {
-                "description": "Returns list of `Annotation` objects resulting from the given search",
+                "summary": "Returns list of `Annotation` objects resulting from the given search",
                 "parameters": [
+                    {
+                        "name": "X-CATCH-RESPONSE-FORMAT",
+                        "in": "header",
+                        "required": false,
+                        "type": "string",
+                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
+                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                    },
                     {
                         "name": "limit",
                         "in": "query",
@@ -434,8 +476,38 @@
                 ]
             }
         },
-        "/anno/update_tags": {
+        "/annos/create": {
+            "post": {
+                "tags": ["catch-annotator"],
+                "summary": "create"
+            }
+        },
+        "/annos/update": {
+            "post": {
+                "tags": ["catch-annotator"],
+                "summary": "update"
+            }
+        },
+        "/annos/delete": {
+            "delete": {
+                "tags": ["catch-annotator"],
+                "summary": "delete"
+            }
+        },
+        "/annos/search": {
+            "get": {
+                "tags": ["catch-annotator"],
+                "summary": "search"
+            },
+            "post": {
+                "tags": ["catch-annotator"],
+                "summary": "search"
+            },
+        },
+        "/annos/update_tags": {
             "put": {
+                "tags": ["not available"],
+                "summary": "TO BE IMPLEMENTED",
                 "description": "TO BE IMPLEMENTED! Replaces the list of tags in the given `Annotation` object;; the requesting user must permission to update the Annnotation",
                 "parameters": [
                     {
@@ -476,8 +548,10 @@
                 ]
             }
         },
-        "/anno/update_text": {
+        "/annos/update_text": {
             "put": {
+                "tags": ["not available"],
+                "summary": "TO BE IMPLEMENTED",
                 "description": "TO BE IMPLEMENTED! Replaces the textual body of given `Annotation` object; the requesting user must have permission to update the Annotation",
                 "parameters": [
                     {
@@ -518,8 +592,10 @@
                 ]
             }
         },
-        "/anno/update_target": {
+        "/annos/update_target": {
             "put": {
+                "tags": ["not available"],
+                "summary": "TO BE IMPLEMENTED",
                 "description": "TO BE IMPLEMENTED! Replaces the list of targets of given `Annotation` object; the requesting user must have permission to update the Annotation",
                 "parameters": [
                     {
@@ -555,18 +631,26 @@
                 },
                 "security": [
                     {
-                        "jwt": []
+                        "jwt_catchpy2": []
                     }
                 ]
             }
         }
     },
     "securityDefinitions": {
-        "jwt": {
-            "description": "jwt token with consumer signature; format of token must be `token <jwt_token>`",
+        "jwt_catchpy2": {
+            "description": "jwt token; the jwt token must be prefixed with a 'token ' string; ex: Authorization: 'token <encoded_jwt_token>'",
             "type": "apiKey",
             "name": "authorization",
-            "in": "header"
+            "in": "header",
+            "example": "token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+        },
+        "jwt_annotator": {
+            "description": "jwt token for backward-compatibility",
+            "type": "apiKey",
+            "name": "x-annotator-auth-token",
+            "in": "header",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
         }
     },
     "definitions": {
