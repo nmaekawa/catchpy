@@ -479,8 +479,78 @@
         "/annos/create": {
             "post": {
                 "tags": ["catch-annotator"],
-                "summary": "create"
-            }
+                "summary": "Creates an `Annotation` object",
+                "description": "The annotation 'id' in the request body is ignored, and a new 'id' is created and returned in the response",
+                "parameters": [
+                    {
+                        "name": "anno",
+                        "in": "body",
+                        "description": "annotation object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Annotator"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/Annotator"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ]
+            },
         },
         "/annos/update": {
             "post": {
@@ -506,7 +576,7 @@
         },
         "/annos/update_tags": {
             "put": {
-                "tags": ["not available"],
+                "tags": ["not yet available"],
                 "summary": "TO BE IMPLEMENTED",
                 "description": "TO BE IMPLEMENTED! Replaces the list of tags in the given `Annotation` object;; the requesting user must permission to update the Annnotation",
                 "parameters": [
@@ -550,7 +620,7 @@
         },
         "/annos/update_text": {
             "put": {
-                "tags": ["not available"],
+                "tags": ["not yet available"],
                 "summary": "TO BE IMPLEMENTED",
                 "description": "TO BE IMPLEMENTED! Replaces the textual body of given `Annotation` object; the requesting user must have permission to update the Annotation",
                 "parameters": [
@@ -594,7 +664,7 @@
         },
         "/annos/update_target": {
             "put": {
-                "tags": ["not available"],
+                "tags": ["not yet available"],
                 "summary": "TO BE IMPLEMENTED",
                 "description": "TO BE IMPLEMENTED! Replaces the list of targets of given `Annotation` object; the requesting user must have permission to update the Annotation",
                 "parameters": [
@@ -960,6 +1030,130 @@
                     }
                 }
             }
+        },
+        "Annotator": {
+            "description": "The AnnotatorJS object as catchpy v2 understands it. Some properties like 'deleted', or 'archived', were considered insipid, thus removed. Other properties like 'uri' are always 'strings' (while catch v1.2 would, at times, return integers, other times, strings.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "created": {
+                    "type": "string",
+                    "format": "dateTime"
+                },
+                "updated": {
+                    "type": "string",
+                    "format": "dateTime"
+                },
+                "contextId": {"type": "string"},
+                "collectionId": {"type": "string"},
+                "user": {
+                    "$ref": "#/definitions/Creator"
+                },
+                "permissions": {
+                    "$ref": "#/definitions/AnnotatorPermissions"
+                },
+                "parent": {
+                    "type": "string",
+                    "format": "int32"
+                },
+                "media": {
+                    "type": "string",
+                    "enum": ["text", "image", "video", "audio", "comment"]
+                },
+                "text": {"type": "string"},
+                "quote": {"type": "string"},
+                "uri": {"type": "string"},
+                "ranges": {
+                    "type": "object",
+                    "properties": {
+                        "start": {"type": "string"},
+                        "end": {"type": "string"},
+                        "startOffset": {"type": "integer"},
+                        "endOffset": {"type": "integer"}
+                    }
+                },
+                "rangePosition": {
+                    "description": "target selector when target is 'image'. Note that this property can be also a list of strings, or a WebAnnotation FragmentSelector, depending on the mood of mirador.",
+                    "type": "object",
+                    "properties": {
+                        "height": {"type": "string"},
+                        "width": {"type": "string"},
+                        "x": {"type": "string"},
+                        "y": {"type": "string"}
+                    }
+                },
+                "thumb": {
+                    "description": "alternate target source, when target is 'image'; target source is givenas an url for a thumbnail to the original image",
+                    "type": "string"
+                },
+                "bounds": {
+                    "description": "target selector when target is 'image'",
+                    "type": "object",
+                    "properties": {
+                        "height": {"type": "string"},
+                        "width": {"type": "string"},
+                        "x": {"type": "string"},
+                        "y": {"type": "string"}
+                    }
+                },
+                "rangeTime": {
+                    "description": "target selector when target is 'video' or 'audio'",
+                    "type": "object",
+                    "properties": {
+                        "start": {"type": "integer"},
+                        "end": {"type": "integer"}
+                    }
+                },
+                "target": {
+                    "description": "target selector when target is 'video' or 'audio'",
+                    "type": "object",
+                    "properties": {
+                        "container": {"type": "string"},
+                        "src": {"type": "string"},
+                        "ext": {"type": "string"}
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {"type": "string"}
+                },
+                "totalComments": {"type": "integer"}
+            }
+        },
+        "AnnotatorPermissions": {
+            "type": "object",
+            "required": ["read", "update", "delete", "admin"],
+            "properties": {
+                "read": {
+                    "$ref": "#/definitions/AnnotatorPermission"
+                },
+                "update": {
+                    "$ref": "#/definitions/AnnotatorPermission"
+                },
+                "delete": {
+                    "$ref": "#/definitions/AnnotatorPermission"
+                },
+                "admin": {
+                    "$ref": "#/definitions/AnnotatorPermission"
+                }
+            }
+        },
+        "AnnotatorPermission": {
+            "type": "array",
+            "minItems": 0,
+            "items": {"type": "string"},
+            "uniqueItems": true
+        },
+    },
+    "tags": [
+        {
+            "name": "catch-annotator",
+            "description": "API for backwards-compatibility to catch v1.2 backend.",
+            "externalDocs": "not available"
         }
-    }
+    ]
 }
