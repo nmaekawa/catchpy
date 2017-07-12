@@ -24,6 +24,7 @@ from .conftest import make_request
 from .conftest import make_wa_object
 
 
+@pytest.mark.skip('not implemented yet')
 def test_index():
     client = Client()
     url = reverse('index')

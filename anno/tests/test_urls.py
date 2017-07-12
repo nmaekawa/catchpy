@@ -10,9 +10,9 @@ def match_func_for_url(url):
 def test_urls():
 
     urlconf = [
-        {
-            'url': reverse('index'),
-            'view_func': 'anno.views.index'},
+        #{
+        #    'url': reverse('index'),
+        #    'view_func': 'anno.views.index'},
         {
             'url': '{}?contextId=fake-contextId'.format(
                 reverse('compat_search')),

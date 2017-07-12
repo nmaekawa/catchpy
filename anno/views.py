@@ -469,14 +469,6 @@ def process_search_back_compat_params(request, query):
     return query
 
 
-
-@require_http_methods('GET')
-@csrf_exempt
-def index(request):
-    # TODO: return info on the api
-    return HttpResponse('placeholder for api docs. soon.')
-
-
 @require_http_methods('GET')
 @csrf_exempt
 @require_catchjwt
