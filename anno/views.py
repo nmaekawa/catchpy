@@ -153,24 +153,36 @@ def crud_api(request, anno_id):
     '''view to deal with crud api requests.'''
     try:
         resp = _do_crud_api(request, anno_id)
-        status = HTTPStatus.OK
-        response = JsonResponse(status=status, data=resp)
-
-        if request.method == 'POST' or request.method == 'PUT':
-            # add response header with location for new resource
-            response['Location'] = request.build_absolute_uri(
-                reverse('crud_api', kwargs={'anno_id': resp['id']}))
-        return response
-
     except AnnoError as e:
         return JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
-
     except (ValueError, KeyError) as e:
         logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
         return JsonResponse(
             status=HTTPStatus.BAD_REQUEST,
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
+    # no crud errors, try to convert to requested format
+    else:
+        response_format = fetch_response_format(request)
+        try:
+            formatted_response = _format_response(resp, response_format)
+        except (AnnotatorJSError,
+                UnknownResponseFormatError) as e:
+            # at this point, the requested operation is completed successfully
+            # returns 203 to say op was done, but can't return proper anno json
+            status = HTTPStatus.NON_AUTHORITATIVE_INFORMATION  # 203
+            error_response = {'id': resp.anno_id,
+                              'msg': str(e)}
+            response = JsonResponse(status=status, data=error_response)
+        else:
+            status = HTTPStatus.OK
+            response = JsonResponse(status=status, data=formatted_response)
+            if request.method == 'POST' or request.method == 'PUT':
+                # add response header with location for new resource
+                response['Location'] = request.build_absolute_uri(
+                    reverse('crud_api', kwargs={'anno_id': resp.anno_id}))
+
+        return response
 
 
 def has_permission_for_op(op, request, anno):
@@ -221,10 +233,7 @@ def _do_crud_api(request, anno_id):
                 'method ({}) not allowed'.format(request.method))
 
     assert r is not None
-
-    response_format = fetch_response_format(request)
-    return _format_response(r, response_format)
-
+    return r
 
 
 def fetch_response_format(request):

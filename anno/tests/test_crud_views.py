@@ -6,6 +6,7 @@ from django.test import Client
 
 from anno.anno_defaults import ANNO, TEXT
 from anno.anno_defaults import ANNOTATORJS_FORMAT
+from anno.anno_defaults import CATCH_ANNO_FORMAT
 from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
 from anno.errors import AnnotatorJSError
@@ -500,5 +501,41 @@ def test_format_response_reply_to_reply(wa_text):
     assert 'reply to a reply' in resp['failed'][0]['msg']
     assert 'rows' in resp
     assert len(resp['rows']) == 2
+
+
+@pytest.mark.usefixtures('wa_image')
+@pytest.mark.django_db
+def test_read_203(wa_image):
+    wa = wa_image
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(
+        apikey=c.consumer, user=wa['creator']['id'])
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+    create_url = reverse('create_or_search')
+    response = client.post(
+            create_url, data=json.dumps(wa),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT,
+            content_type='application/json')
+
+    assert response.status_code == 200
+    resp = json.loads(response.content)
+    created_id = resp['id']  # created with id as uuid
+
+    read_url = reverse('crud_api', kwargs={'anno_id': created_id})
+    response = client.get(
+            read_url,
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
+
+    assert response.status_code == 203
+    resp = json.loads(response.content)
+    assert 'id' in resp
+    assert resp['id'] == created_id
+    assert 'msg' in resp
+    assert 'id is not a number' in resp['msg']
 
 

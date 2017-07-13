@@ -15,14 +15,14 @@
         "application/json"
     ],
     "paths": {
-        "/annos": {
+        "/annos/{id}": {
             "get": {
                 "summary": "Gets the `Annotation` object for the given id",
                 "description": "The requesting user must have permission to read the Annotation",
                 "parameters": [
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "annotation id",
                         "required": true,
                         "type": "string"
@@ -42,6 +42,12 @@
                         "description": "Successful response",
                         "schema": {
                             "$ref": "#/definitions/Annotation"
+                        }
+                    },
+                    "203": {
+                        "description": "Successful but unable to convert to requested format (usually AnnotatorJS)",
+                        "schema": {
+                            "$ref": "#/definitions/FailedItem"
                         }
                     },
                     "400": {
@@ -110,7 +116,7 @@
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "annotation id",
                         "required": false,
                         "type": "string"
@@ -136,6 +142,18 @@
                         },
                         "schema": {
                             "$ref": "#/definitions/Annotation"
+                        }
+                    },
+                    "203": {
+                        "description": "Successful but unable to convert to requested format (usually AnnotatorJS)",
+                        "headers": {
+                            "Location": {
+                                "description": "url for the created annotation",
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "$ref": "#/definitions/FailedItem"
                         }
                     },
                     "400": {
@@ -204,7 +222,7 @@
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "annotation id",
                         "required": true,
                         "type": "string"
@@ -221,6 +239,18 @@
                         },
                         "schema": {
                             "$ref": "#/definitions/Annotation"
+                        }
+                    },
+                    "203": {
+                        "description": "Successful but unable to convert to requested format (usually AnnotatorJS)",
+                        "headers": {
+                            "Location": {
+                                "description": "url for the created annotation",
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "$ref": "#/definitions/FailedItem"
                         }
                     },
                     "400": {
@@ -281,7 +311,7 @@
                 "parameters": [
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "annotation id",
                         "required": true,
                         "type": "string"
@@ -290,6 +320,12 @@
                 "responses": {
                     "200": {
                         "description": "Successful response"
+                    },
+                    "203": {
+                        "description": "Successful but unable to convert to requested format (usually AnnotatorJS)",
+                        "schema": {
+                            "$ref": "#/definitions/FailedItem"
+                        }
                     },
                     "400": {
                         "description": "bad request: invalid input format",
@@ -344,7 +380,7 @@
                 ]
             }
         },
-        "/annos?": {
+        "/annos/": {
             "get": {
                 "summary": "Returns list of `Annotation` objects resulting from the given search",
                 "parameters": [
@@ -450,35 +486,11 @@
                             "$ref": "#/definitions/SearchResult"
                         }
                     },
-                    "400": {
-                        "description": "bad request: invalid input format",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
                     "401": {
                         "description": "unauthorized: missing or invalid jwt token"
                     },
                     "403": {
                         "description": "forbidden: request was understood but user is not authorized to perform operation requested",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
-                    "409": {
-                        "description": "conflict: usually, conflicting references or dependencies",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
-                    "422": {
-                        "description": "unprocessable entity: unknown or missing type/value in input",
                         "schema": {
                             "$ref": "#/definitions/Error"
                         }
@@ -761,27 +773,21 @@
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?userid=jsnow&userid=rstark&userid=tgreyjoy",
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "collectionformat": "multi"
+                        "type": "string"
                     },
                     {
                         "name": "username",
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "collectionformat": "multi"
+                        "type": "string"
                     },
                     {
                         "name": "source",
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we. Corresponds to catchpy v2 search paramenter `target_source`",
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "collectionformat": "multi"
+                        "type": "string"
                     },
                     {
                         "name": "text",
@@ -795,18 +801,14 @@
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?media=video&media=comment",
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "collectionformat": "multi"
+                        "type": "string"
                     },
                     {
                         "name": "tag",
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "collectionformat": "multi"
+                        "type": "string"
                     },
                     {
                         "name": "uri",
@@ -819,8 +821,10 @@
                         "name": "parentid",
                         "required": false,
                         "in": "query",
-                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy v2 do: ?media=Annotation&source_id=<parent_annotation_id>",
-                        "type": "integer"
+                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy v2 do: ?media=Annotation&source_id=(parent_annotation_id)",
+                        "allowEmptyValue": true,
+                        "type": "string",
+                        "format": "int32"
                     },
                     {
                         "name": "contextId",
@@ -844,35 +848,11 @@
                             "$ref": "#/definitions/SearchResult"
                         }
                     },
-                    "400": {
-                        "description": "bad request: invalid input format",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
                     "401": {
                         "description": "unauthorized: missing or invalid jwt token"
                     },
                     "403": {
                         "description": "forbidden: request was understood but user is not authorized to perform operation requested",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
-                    "409": {
-                        "description": "conflict: usually, conflicting references or dependencies",
-                        "schema": {
-                            "$ref": "#/definitions/Error"
-                        }
-                    },
-                    "422": {
-                        "description": "unprocessable entity: unknown or missing type/value in input",
                         "schema": {
                             "$ref": "#/definitions/Error"
                         }
@@ -1336,6 +1316,17 @@
                     "type": "integer",
                     "description": "requested offset"
                 },
+                "size_failed": {
+                    "type": "integer",
+                    "description": "number of objects that failed to be formatted"
+                },
+                "failed": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "$ref": "#/definitions/FailedItem"
+                    }
+                },
                 "rows": {
                     "type": "array",
                     "minItems": 0,
@@ -1343,6 +1334,14 @@
                         "$ref": "#/definitions/Annotation"
                     }
                 }
+            }
+        },
+        "FailedItem": {
+            "type": "object",
+            "required": ["id", "msg"],
+            "properties": {
+                "id": {"type": "string"},
+                "msg": {"type": "string", "description": "error message"}
             }
         },
         "Error": {
