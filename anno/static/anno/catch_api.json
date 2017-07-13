@@ -550,7 +550,7 @@
                         "jwt": []
                     }
                 ]
-            },
+            }
         },
         "/annos/update": {
             "post": {
@@ -572,7 +572,7 @@
             "post": {
                 "tags": ["catch-annotator"],
                 "summary": "search"
-            },
+            }
         },
         "/annos/update_tags": {
             "put": {
@@ -1147,7 +1147,7 @@
             "minItems": 0,
             "items": {"type": "string"},
             "uniqueItems": true
-        },
+        }
     },
     "tags": [
         {
