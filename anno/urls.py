@@ -12,7 +12,7 @@ urlpatterns = [
         views.crud_compat_delete, name='compat_delete'),
 
     # these are for catchpy v2
-    url(r'^$', views.crud_create, name='crud_create'),
-    url(r'^\?', views.search_api, name='search_api_clear'),
     url(r'^(?P<anno_id>[0-9a-zA-z-]+)$', views.crud_api, name='crud_api'),
+    #url(r'^(.?)', views.search_api, name='search_api_clear'),
+    url(r'^$', views.crud_create_or_search, name='crud_create_or_search'),
 ]

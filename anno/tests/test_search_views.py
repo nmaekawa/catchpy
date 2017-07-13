@@ -127,6 +127,41 @@ def test_search_by_tags_ok(wa_video):
         assert Catcha.has_tag(a, 'testing_tag5') is False
 
 
+@pytest.mark.usefixtures('wa_video')
+@pytest.mark.django_db
+def test_search_by_tag_or_tag(wa_video):
+    catcha = wa_video
+
+    common_tag_value = 'testing_tag_even'
+    common_tag = make_wa_tag(common_tag_value)
+
+    for i in [1, 2, 3, 4, 5]:
+        c = deepcopy(catcha)
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        tag = make_wa_tag(tagname='testing_tag{}'.format(i))
+        c['body']['items'].append(tag)
+        if i%2 == 0:
+            c['body']['items'].append(common_tag)
+        x = CRUD.create_anno(c)
+
+    payload = make_jwt_payload(user=catcha['creator']['id'])
+    request = make_json_request(
+        method='get',
+        # to send a list of userids
+        query_string='tag={}&tag={}'.format(common_tag_value, 'testing_tag3'))
+    request.catchjwt = payload
+
+    response = search_api(request)
+    resp = json.loads(response.content)
+    assert response.status_code == 200
+    assert resp['total'] == 3
+    assert len(resp['rows']) == 3
+
+    for a in resp['rows']:
+        if not Catcha.has_tag(a, 'testing_tag3'):
+            assert Catcha.has_tag(a, common_tag_value) is True
+
+
 @pytest.mark.usefixtures('wa_audio', 'wa_image')
 @pytest.mark.django_db
 def test_search_by_target_source_ok(wa_audio, wa_image):

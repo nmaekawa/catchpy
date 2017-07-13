@@ -279,9 +279,6 @@ def partial_update_api(request, anno_id):
     pass
 
 
-@require_http_methods(['GET', 'HEAD'])
-@csrf_exempt
-@require_catchjwt
 def search_api(request):
     logger.debug('search query=({})'.format(request.GET))
     try:
@@ -420,7 +417,7 @@ def process_search_params(request, query):
 def process_search_back_compat_params(request, query):
     target = request.GET.get('uri', None)
     if target:
-        query = query.filter(anno__raw__platform__target_source_id=target)
+        query = query.filter(raw__platform__target_source_id=target)
 
     medias = request.GET.getlist('media', [])
     if medias:
@@ -513,13 +510,16 @@ def process_partial_update(request, anno_id):
     pass
 
 
-@require_http_methods('POST')
+@require_http_methods(['POST', 'GET'])
 @csrf_exempt
 @require_catchjwt
-def crud_create(request):
+def crud_create_or_search(request):
     '''view for create, with no anno_id in querystring.'''
-    anno_id = generate_uid()
-    return crud_api(request, anno_id)
+    if request.method == 'POST':
+        anno_id = generate_uid()
+        return crud_api(request, anno_id)
+    else:  # it's a GET
+        return search_api(request)
 
 
 @require_http_methods('POST')
