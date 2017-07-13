@@ -11,8 +11,11 @@ def test_urls():
 
     urlconf = [
         #{
-        #    'url': reverse('index'),
-        #    'view_func': 'anno.views.index'},
+        #    'url': '{}?limit=-1'.format(reverse('create_or_search')),
+        #    'view_func': 'anno.views.crud_create'},
+        #{
+        #    'url': '/annos/?context_id=fake-contextID',
+        #    'view_func': 'anno.views.create_or_search'},
         {
             'url': '{}?contextId=fake-contextId'.format(
                 reverse('compat_search')),
@@ -27,11 +30,8 @@ def test_urls():
             'url': reverse('compat_delete', kwargs={'anno_id': '123-456-789'}),
             'view_func': 'anno.views.crud_compat_delete'},
         {
-            'url': reverse('crud_create'),
-            'view_func': 'anno.views.crud_create'},
-        {
-            'url': '/annos/?context_id=fake-contextID',
-            'view_func': 'anno.views.search_api'},
+            'url': reverse('create_or_search'),
+            'view_func': 'anno.views.create_or_search'},
         {
             'url': '/annos/123-456-789',
             'view_func': 'anno.views.crud_api'},

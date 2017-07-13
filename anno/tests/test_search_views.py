@@ -328,7 +328,7 @@ def test_search_by_username_via_client(
 
     client = Client()  # check if middleware works
 
-    url = '{}?media=Video'.format(reverse('search_api_clear'))
+    url = '{}?media=Video'.format(reverse('create_or_search'))
     print('-------{}'.format(url))
     response = client.get(
         url,
@@ -379,7 +379,7 @@ def test_search_replies_js_ok(js_list):
     # search for the replies
     search_url = ('{}?context_id={}&collection_id={}&media=Annotation&'
                          'limit=-1&target_source_id={}').format(
-                             reverse('search_api_clear'),
+                             reverse('create_or_search'),
                              reply_to.raw['platform']['context_id'],
                              reply_to.raw['platform']['collection_id'],
                              reply_to.anno_id)
@@ -460,14 +460,14 @@ def test_search_replies_catcha_ok(wa_list):
     # create some replies
     reply_to = anno_list[0]
     wa_replies = []
-    crud_create_url = reverse('crud_create')
     for i in range(1, 5):
         wa = make_wa_object(
             age_in_hours=1, media=ANNO,
             reply_to=reply_to.anno_id, user=payload['userId'])
         wa_replies.append(wa)
         response = client.post(
-            crud_create_url, data=json.dumps(wa),
+            '{}'.format(reverse('crud_api', kwargs={'anno_id': wa['id']})),
+            data=json.dumps(wa),
             HTTP_AUTHORIZATION='Token {}'.format(token),
             content_type='application/json')
         assert response.status_code == 200
@@ -475,7 +475,7 @@ def test_search_replies_catcha_ok(wa_list):
     # search for the replies
     search_url = ('{}?context_id={}&collection_id={}&media=Annotation&'
                          'limit=-1&target_source_id={}').format(
-                             reverse('search_api_clear'),
+                             reverse('create_or_search'),
                              reply_to.raw['platform']['context_id'],
                              reply_to.raw['platform']['collection_id'],
                              reply_to.anno_id)
@@ -530,7 +530,7 @@ def test_search_deleted_catcha_ok(wa_list):
     # search for the replies
     search_url = (
         '{}?context_id={}&collection_id={}&limit=-1').format(
-            reverse('search_api_clear'),
+            reverse('create_or_search'),
             anno_list[0].raw['platform']['context_id'],
             anno_list[0].raw['platform']['collection_id'])
     response = client.get(
@@ -579,8 +579,8 @@ def test_search_private_catcha_ok(wa_list):
 
     # search for annotations creator
     search_url = (
-        '{}context_id={}&collection_id={}&limit=-1').format(
-            reverse('search_api_clear'),
+        '{}?context_id={}&collection_id={}&limit=-1').format(
+            reverse('create_or_search'),
             anno_list[0].raw['platform']['context_id'],
             anno_list[0].raw['platform']['collection_id'])
 

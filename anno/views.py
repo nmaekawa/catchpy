@@ -513,7 +513,7 @@ def process_partial_update(request, anno_id):
 @require_http_methods(['POST', 'GET'])
 @csrf_exempt
 @require_catchjwt
-def crud_create_or_search(request):
+def create_or_search(request):
     '''view for create, with no anno_id in querystring.'''
     if request.method == 'POST':
         anno_id = generate_uid()
