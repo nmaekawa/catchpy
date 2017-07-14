@@ -33,8 +33,7 @@
                         "in": "header",
                         "type": "string",
                         "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "default": "CATCH_ANNO_FORMAT",
-                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                        "default": "CATCH_ANNO_FORMAT"
                     }
                 ],
                 "responses": {
@@ -104,7 +103,7 @@
             },
             "post": {
                 "summary": "Creates an `Annotation` object",
-                "description": "Omit the `id` property of the annotation input parameter object, and a new one will be created and returned in the response. If an `id` is included in the annotation input parameter, it will try to be honored but the create action will fail if already present in storage.",
+                "description": "`id` values in the input annotation json will be ignored; the `id` specified at the path is always used.",
                 "parameters": [
                     {
                         "name": "X-CATCH-RESPONSE-FORMAT",
@@ -112,13 +111,13 @@
                         "in": "header",
                         "type": "string",
                         "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                        "default": "CATCH_ANNO_FORMAT"
                     },
                     {
                         "name": "id",
                         "in": "path",
                         "description": "annotation id",
-                        "required": false,
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -218,7 +217,7 @@
                         "in": "header",
                         "type": "string",
                         "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                        "default": "CATCH_ANNO_FORMAT"
                     },
                     {
                         "name": "id",
@@ -226,6 +225,15 @@
                         "description": "annotation id",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "anno",
+                        "in": "body",
+                        "description": "annotation object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Annotation"
+                        }
                     }
                 ],
                 "responses": {
@@ -390,7 +398,7 @@
                         "in": "header",
                         "type": "string",
                         "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "example": "CATCH_ANNO_FORMAT or ANNOTATORJS_FORMAT"
+                        "default": "CATCH_ANNO_FORMAT"
                     },
                     {
                         "name": "limit",
@@ -413,21 +421,24 @@
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?userid=jsnow&userid=rstark&userid=tgreyjoy",
-                        "type": "string"
+                        "type": "array",
+                        "items": {"type": "string"}
                     },
                     {
                         "name": "username",
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
-                        "type": "string"
+                        "type": "array",
+                        "items": {"type": "string"}
                     },
                     {
                         "name": "target_source",
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we",
-                        "type": "string"
+                        "type": "array",
+                        "items": {"type": "string"}
                     },
                     {
                         "name": "text",
@@ -441,14 +452,16 @@
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?media=Video&media=Annotation. Note that media type changed for replies: for catchpy v2 use `Annotation` instead of `comment`",
-                        "type": "string"
+                        "type": "array",
+                        "items": {"type": "string"}
                     },
                     {
                         "name": "tag",
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _AND_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
-                        "type": "string"
+                        "type": "array",
+                        "items": {"type": "string"}
                     },
                     {
                         "name": "platform",
@@ -491,6 +504,105 @@
                     },
                     "403": {
                         "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "jwt_catchpy2": []
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Creates an `Annotation` object",
+                "description": "If an `id` is included in the annotation input parameter, it will try to be honored but the create action will fail if already present in storage.",
+                "parameters": [
+                    {
+                        "name": "X-CATCH-RESPONSE-FORMAT",
+                        "required": false,
+                        "in": "header",
+                        "type": "string",
+                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
+                        "default": "CATCH_ANNO_FORMAT"
+                    },
+                    {
+                        "name": "anno",
+                        "in": "body",
+                        "description": "annotation object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Annotation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "headers": {
+                            "Location": {
+                                "description": "url for the created annotation",
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "$ref": "#/definitions/Annotation"
+                        }
+                    },
+                    "203": {
+                        "description": "Successful but unable to convert to requested format (usually AnnotatorJS)",
+                        "headers": {
+                            "Location": {
+                                "description": "url for the created annotation",
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "$ref": "#/definitions/FailedItem"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
                         "schema": {
                             "$ref": "#/definitions/Error"
                         }
@@ -668,7 +780,72 @@
             },
             "post": {
                 "tags": ["catch-annotator"],
-                "summary": "see `PUT`",
+                "summary": "SAME AS PUT: Updates an `Annotation` object",
+                "description": "This operation will replace the list of tags and targets with the ones sent as input",
+                "parameters": [
+                    {
+                        "name": "anno",
+                        "in": "body",
+                        "description": "annotation object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Annotator"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/Annotator"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
                 "security": [
                     {
                         "jwt_annotator": []
@@ -823,8 +1000,7 @@
                         "in": "query",
                         "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy v2 do: ?media=Annotation&source_id=(parent_annotation_id)",
                         "allowEmptyValue": true,
-                        "type": "string",
-                        "format": "int32"
+                        "type": "integer"
                     },
                     {
                         "name": "contextId",
@@ -878,7 +1054,125 @@
             },
             "post": {
                 "tags": ["catch-annotator"],
-                "summary": "see `GET`",
+                "summary": "SAME AS GET: Returns list of `Annotation` objects resulting from the given search",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "max number of annotations in response; `-1` means all results, default is `10`, max is `200` but configurable",
+                        "type": "integer",
+                        "allowEmptyValue": true
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "where the slice of returned `Annotation` objects should start; default is `0`",
+                        "type": "integer",
+                        "default": "0"
+                    },
+                    {
+                        "name": "userid",
+                        "required": false,
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?userid=jsnow&userid=rstark&userid=tgreyjoy",
+                        "type": "string"
+                    },
+                    {
+                        "name": "username",
+                        "required": false,
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
+                        "type": "string"
+                    },
+                    {
+                        "name": "source",
+                        "required": false,
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we. Corresponds to catchpy v2 search paramenter `target_source`",
+                        "type": "string"
+                    },
+                    {
+                        "name": "text",
+                        "required": false,
+                        "in": "query",
+                        "description": "fulltext search in body of annotation. Note that the behavior changed and this is _NOT_ an exact search and might bring more results that in catch v1.2",
+                        "type": "string"
+                    },
+                    {
+                        "name": "media",
+                        "required": false,
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?media=video&media=comment",
+                        "type": "string"
+                    },
+                    {
+                        "name": "tag",
+                        "required": false,
+                        "in": "query",
+                        "description": "repeat if you want a _OR_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
+                        "type": "string"
+                    },
+                    {
+                        "name": "uri",
+                        "required": false,
+                        "in": "query",
+                        "description": "exact match for property `uri`; corresponds to search parameter `source_id` in catchpy v2",
+                        "type": "string"
+                    },
+                    {
+                        "name": "parentid",
+                        "required": false,
+                        "in": "query",
+                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy v2 do: ?media=Annotation&source_id=(parent_annotation_id)",
+                        "allowEmptyValue": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "contextId",
+                        "required": false,
+                        "in": "query",
+                        "description": "exact match for property `contextId`. Note that, in catchpy v2, `contextId` search parameter changed to `context_id`",
+                        "type": "string"
+                    },
+                    {
+                        "name": "collectionId",
+                        "required": false,
+                        "in": "query",
+                        "description": "exact match for property `collectionId`. Note that, in catchpy v2, `collectionId` search parameter changed to `collection_id`",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResult"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
                 "security": [
                     {
                         "jwt_annotator": []
@@ -1024,15 +1318,13 @@
             "description": "jwt token; the jwt token must be prefixed with a 'token ' string; ex: Authorization: 'token <encoded_jwt_token>'",
             "type": "apiKey",
             "name": "authorization",
-            "in": "header",
-            "example": "token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+            "in": "header"
         },
         "jwt_annotator": {
             "description": "jwt token for backward-compatibility",
             "type": "apiKey",
             "name": "x-annotator-auth-token",
-            "in": "header",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+            "in": "header"
         }
     },
     "definitions": {
@@ -1483,8 +1775,7 @@
     "tags": [
         {
             "name": "catch-annotator",
-            "description": "API for backwards-compatibility to catch v1.2 backend.",
-            "externalDocs": "not available"
+            "description": "API for backwards-compatibility to catch v1.2 backend."
         }
     ]
 }
