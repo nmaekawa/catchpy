@@ -4,3 +4,4 @@ mock
 model-mommy
 pytest
 pytest-django
+yaml

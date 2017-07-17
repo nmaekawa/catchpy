@@ -1,8 +1,9 @@
 Django
+iso8601
+jsonschema
+psycopg2
+PyJWT
 PyLD
 python-dotenv
 python-dateutil
-psycopg2
-PyJWT
-iso8601
 
