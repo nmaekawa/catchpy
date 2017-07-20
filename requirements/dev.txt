@@ -1,6 +1,6 @@
 -r test.txt
 
-tox
-flake8
-django-debug-toolbar
-django-extensions
+flake8==3.3.0
+django-debug-toolbar==1.8
+django-extensions==1.8.1
+

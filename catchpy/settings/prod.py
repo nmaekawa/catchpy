@@ -19,12 +19,13 @@ PROJECT_NAME = 'catchpy'
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'omw9oe78+qi4*!tyaityu9snpe8vg5t@jsm)+a#_im2o_cz6xl'
+SECRET_KEY = os.environ.get('CATCHPY_SECRET_KEY', 'CHANGE_ME')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '10.0.2.2']
+ALLOWED_HOSTS = os.environ.get(
+    'CATCHPY_ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
 
 
 # Application definition
@@ -79,11 +80,11 @@ WSGI_APPLICATION = PROJECT_NAME + '.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'naomi7',
-        'USER': 'postgres',
-        'PASSWORD': 'moria',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('CATCHPY_DB_NAME', 'catchpy'),
+        'USER': os.environ.get('CATCHPY_DB_USER', 'catchpy'),
+        'PASSWORD': os.environ.get('CATCHPY_DB_PASSWORD', 'catchpy'),
+        'HOST': os.environ.get('CATCHPY_DB_HOST', 'localhost'),
+        'PORT': os.environ.get('CATCHPY_DB_PORT', '5432'),
         'ATOMIC_REQUESTS': False,
     },
 }
@@ -126,6 +127,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.environ.get('CATCHPY_STATIC_ROOT', os.path.join(BASE_DIR, 'static/'))
 
 
 # Logging config
@@ -157,12 +159,12 @@ LOGGING = {
     'loggers': {
         'anno': {
             'level': 'DEBUG',
-            'handlers': ['console', 'errorfile_handler'],
+            'handlers': ['console'],
             'propagate': True
         },
         'consumer': {
             'level': 'DEBUG',
-            'handlers': ['console', 'errorfile_handler'],
+            'handlers': ['console'],
             'propagate': True
         },
         'root': {
@@ -172,6 +174,11 @@ LOGGING = {
     }
 }
 
+compat_mode = os.environ.get('CATCHPY_COMPAT_MODE', 'false')
+if compat_mode.lower() == 'true':
+    CATCH_RESPONSE_FORMAT = 'ANNOTATORJS_FORMAT'
+else:
+    CATCH_RESPONSE_FORMAT = 'CATCH_ANNO_FORMAT'
 
-CATCH_RESPONSE_FORMAT = 'ANNOTATORJS_FORMAT'
+# max number of rows to be returned in a search request
 CATCH_RESPONSE_LIMIT = 200

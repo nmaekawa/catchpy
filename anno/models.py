@@ -131,8 +131,8 @@ class Anno(Model):
     def serialized(self):
         s = self.raw.copy()
         s['totalReplies'] = self.total_replies
-        s['created'] = self.created.isoformat(timespec='seconds')
-        s['modified'] = self.modified.isoformat(timespec='seconds')
+        s['created'] = self.created.replace(microsecond=0).isoformat()
+        s['modified'] = self.modified.replace(microsecond=0).isoformat()
         s['id'] = self.anno_id
         return s
 

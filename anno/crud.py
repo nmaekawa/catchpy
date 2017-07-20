@@ -178,7 +178,7 @@ class CRUD(object):
 
                     a.anno_deleted = catcha.get('deleted', False)
 
-                a.raw['created'] = a.created.isoformat(timespec='seconds')
+                a.raw['created'] = a.created.replace(microsecond=0).isoformat()
                 a.save()
         except IntegrityError as e:
             msg = 'integrity error creating anno({}): {}'.format(

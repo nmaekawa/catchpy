@@ -95,8 +95,7 @@ def get_default_permissions_for_user(user):
 
 def get_input_json(request):
     if request.body:
-        #logger.debug('get_input_json: ({})'.format(request.body))
-        return json.loads(request.body)
+        return json.loads(request.body.decode('utf-8'))
     else:
         raise MissingAnnotationInputError(
             'missing json in body request for create/update')

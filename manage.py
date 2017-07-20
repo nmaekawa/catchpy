@@ -1,9 +1,15 @@
 #!/usr/bin/env python
+from dotenv import load_dotenv
 import os
 import sys
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
+    # if dotenv file, load it
+    dotenv_path = os.environ.get('CATCHPY_DOTENV_PATH', None)
+    if dotenv_path:
+        load_dotenv(dotenv_path)
+
+    #os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
     try:
         from django.core.management import execute_from_command_line
     except ImportError:
