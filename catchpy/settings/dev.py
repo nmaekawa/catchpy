@@ -78,17 +78,17 @@ LOGGING = {
     'loggers': {
         'django.db': {
             'level': 'INFO',
-            'handlers': ['console', 'errorfile_handler'],
+            'handlers': ['console'],
             'propagate': True
         },
         'anno': {
             'level': 'DEBUG',
-            'handlers': ['console', 'errorfile_handler'],
+            'handlers': ['console'],
             'propagate': True
         },
         'consumer': {
             'level': 'DEBUG',
-            'handlers': ['console', 'errorfile_handler'],
+            'handlers': ['console'],
             'propagate': True
         },
         'root': {
