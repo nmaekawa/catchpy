@@ -471,10 +471,10 @@
                         "type": "string"
                     },
                     {
-                        "name": "source_id",
+                        "name": "target_source_id",
                         "required": false,
                         "in": "query",
-                        "description": "source_id is the internal reference for a target, property of annotation `platform`",
+                        "description": "source_id is the parent annotation `id` property of annotation `platform`",
                         "type": "string"
                     },
                     {

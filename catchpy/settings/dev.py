@@ -1,7 +1,6 @@
 from .prod import *
 
 DEBUG = True
-SECRET_KEY = 'tremendous'
 
 # Django Extensions
 # http://django-extensions.readthedocs.org/en/latest/
