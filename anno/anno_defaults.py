@@ -1,38 +1,38 @@
-from django.conf import settings
+import os
 
 
 # schema versions
-CATCH_CURRENT_SCHEMA_VERSION = getattr(settings, 'CATCH_SCHEMA_VERSION', 'catch_v1.0')
+CATCH_CURRENT_SCHEMA_VERSION = 'catch_v2.0'
 
 # jsonld context
-CATCH_JSONLD_CONTEXT_IRI = getattr(
-    settings, 'CATCH_CONTEXT_IRI',
-    'http://catch-dev.harvardx.harvard.edu/catch-context.jsonld')
-#ANNOTATORJS_CONTEXT_IRI = getattr(
-#    settings, 'ANNOTATOR_CONTEXT_IRI', 'http://annotatorjs.org')
+CATCH_JSONLD_CONTEXT_IRI = os.environ.get(
+    'CATCH_CONTEXT_IRI',
+    'http://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json')
 
 # json response formats
 CATCH_ANNO_FORMAT = 'CATCH_ANNO_FORMAT'
 ANNOTATORJS_FORMAT = 'ANNOTATORJS_FORMAT'
-CATCH_RESPONSE_FORMATS = [CATCH_ANNO_FORMAT, ANNOTATORJS_FORMAT]
-CATCH_EXTRA_RESPONSE_FORMATS = getattr(
-    settings, 'CATCH_EXTRA_RESPONSE_FORMATS', [])
-CATCH_RESPONSE_FORMATS += CATCH_EXTRA_RESPONSE_FORMATS
 
-CATCH_RESPONSE_FORMAT_HTTPHEADER = getattr(
-    settings, 'CATCH_RESPONSE_FORMAT_HTTPHEADER',
-    'HTTP_X_CATCH_RESPONSE_FORMAT')
+# the default is to return AnnotatorJS
+compat_mode = os.environ.get('CATCHPY_COMPAT_MODE', 'true')
+if compat_mode.lower() == 'true':
+    CATCH_RESPONSE_FORMAT_DEFAULT = 'ANNOTATORJS_FORMAT'
+else:
+    CATCH_RESPONSE_FORMAT_DEFAULT = 'CATCH_ANNO_FORMAT'
 
-CATCH_MAX_RESPONSE_LIMIT = getattr(
-    settings, 'CATCH_RESPONSE_LIMIT', 200)
+
+# django request header to set the response output format
+CATCH_RESPONSE_FORMAT_HTTPHEADER = 'HTTP_X_CATCH_RESPONSE_FORMAT'
+
+# max number of rows to be returned in a search request
+CATCH_RESPONSE_LIMIT = os.environ.get('CATCH_RESPONSE_LIMIT', 200)
 
 # default platform for annotatorjs annotations
-CATCH_DEFAULT_PLATFORM_NAME = getattr(
-    settings, 'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')
+CATCH_DEFAULT_PLATFORM_NAME = os.environ.get(
+    'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')
 
 # admin id overrides all permissions, when requesting_user
-CATCH_ADMIN_GROUP_ID = getattr(
-    settings, 'CATCH_ADMIN_GROUP_ID', '__admin__')
+CATCH_ADMIN_GROUP_ID = os.environ.get('CATCH_ADMIN_GROUP_ID', '__admin__')
 
 # purpose for annotation
 PURPOSE_COMMENTING = 'commenting'

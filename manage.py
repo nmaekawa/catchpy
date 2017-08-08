@@ -9,7 +9,10 @@ if __name__ == "__main__":
     if dotenv_path:
         load_dotenv(dotenv_path)
 
-    #os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
+    # define settings if not in environment
+    if os.environ.get("DJANGO_SETTINGS_MODULE", None) is None:
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError:

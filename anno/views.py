@@ -38,9 +38,8 @@ from .anno_defaults import CATCH_ADMIN_GROUP_ID
 from .anno_defaults import CATCH_ANNO_FORMAT
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
-from .anno_defaults import CATCH_MAX_RESPONSE_LIMIT
-from .anno_defaults import CATCH_RESPONSE_FORMATS
-from .anno_defaults import CATCH_EXTRA_RESPONSE_FORMATS
+from .anno_defaults import CATCH_RESPONSE_LIMIT
+from .anno_defaults import CATCH_RESPONSE_FORMAT_DEFAULT
 from .anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 
 
@@ -236,7 +235,7 @@ def _do_crud_api(request, anno_id):
 
 
 def fetch_response_format(request):
-    response_format = getattr(settings, 'CATCH_RESPONSE_FORMAT', CATCH_ANNO_FORMAT)
+    response_format = CATCH_RESPONSE_FORMAT_DEFAULT
     if CATCH_RESPONSE_FORMAT_HTTPHEADER in request.META:
         response_format = request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER]
     return response_format
@@ -369,9 +368,9 @@ def _do_search_api(request, back_compat=False):
     total = query.count()      # is it here when the querysets are evaluated?
     size = q_result.count()
 
-    # hard limit for response; to avoid out-of-memory errors
-    if size > CATCH_MAX_RESPONSE_LIMIT:
-        q_result = q_result[:CATCH_MAX_RESPONSE_LIMIT]
+    # hard limit for response
+    if size > CATCH_RESPONSE_LIMIT:
+        q_result = q_result[:CATCH_RESPONSE_LIMIT]
         size = q_result.count()
 
     if back_compat:

@@ -19,7 +19,7 @@ PROJECT_NAME = 'catchpy'
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('CATCHPY_SECRET_KEY', 'CHANGE_ME')
+SECRET_KEY = os.environ.get('CATCHPY_DJANGO_SECRET_KEY', 'CHANGE_ME')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -174,11 +174,3 @@ LOGGING = {
     }
 }
 
-compat_mode = os.environ.get('CATCHPY_COMPAT_MODE', 'false')
-if compat_mode.lower() == 'true':
-    CATCH_RESPONSE_FORMAT = 'ANNOTATORJS_FORMAT'
-else:
-    CATCH_RESPONSE_FORMAT = 'CATCH_ANNO_FORMAT'
-
-# max number of rows to be returned in a search request
-CATCH_RESPONSE_LIMIT = 200

@@ -12,6 +12,10 @@ if __name__ == "__main__":
     if dotenv_path:
         load_dotenv(dotenv_path)
 
+    # define settings if not in environment
+    if os.environ.get("DJANGO_SETTINGS_MODULE", None) is None:
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
+
     django.setup()
 
     from django.contrib.auth.models import User
