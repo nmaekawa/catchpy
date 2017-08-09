@@ -28,6 +28,10 @@ you will need
 step-by-step
 ------------
 
+usually the _master_ branch from both repos are in sync but if there are
+errors, check the tags: on provision repor a tag like _v0.1.7_ will sync with
+a tag _provision-v0.1.7_ on catchpy repo.
+
     # clone catchpy and catchpy-provision
     git clone https://github.com/nmaekawa/catchpy-provision.git
     git clone https://github.com/nmaekawa/catchpy.git
@@ -155,8 +159,12 @@ catchpy requires _python3_: 3.5 or higher
 run unit tests
 --------------
 
-unit tests require a db running (and its config in `catchpy/settings/test.py`)
-and are located under each django app:
+unit tests require:
+
+- a postgres 9.6 db running (and its config in `catchpy/settings/test.py`)
+- the fortune program, ex: `brew install fortune` if you're in macos
+
+tests are located under each django app:
 
     # tests for annotations
     py.test anno/tests

@@ -14,7 +14,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     postgres.vm.hostname = "postgres.vm"
     postgres.vm.network "private_network", ip: "10.5.5.5"
 
-    postgres.ssh.insert_key = false
+    postgres.ssh.forward_agent = true
     postgres.ssh.insert_key = false
 
     postgres.vm.provider "virtualbox" do |v|
