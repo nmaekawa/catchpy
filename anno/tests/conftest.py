@@ -4,6 +4,8 @@ from dateutil import tz
 import os
 import pytest
 from random import randint
+from subprocess import Popen
+from subprocess import PIPE
 from uuid import uuid4
 
 from django.test import RequestFactory
@@ -95,7 +97,9 @@ def js_image():
 
 
 def fetch_fortune():
-    return os.popen('fortune').read()
+    process = Popen('fortune', shell=True, stdout=PIPE, stderr=None)
+    output, _ = process.communicate()
+    return output.decode('utf-8')
 
 def get_fake_url():
     return 'http://fake{}.com'.format(randint(100, 1000))
