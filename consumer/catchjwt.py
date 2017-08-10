@@ -65,7 +65,8 @@ def validate_token(token_payload):
         return 'token has expired'
 
     # check for issuing at future - trying to cheat expiration?
-    if iat > now:
+    # taking timedrift into account
+    if iat > (now + timedelta(minutes=65)):
         return 'invalid `issuedAt` in the future.'
 
     return None
