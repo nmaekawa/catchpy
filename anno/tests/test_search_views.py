@@ -48,7 +48,7 @@ def test_search_by_username_ok(wa_audio):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 4
     assert len(resp['rows']) == 4
@@ -81,7 +81,7 @@ def test_search_by_userid_ok(wa_text):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 4
     assert len(resp['rows']) == 4
@@ -115,7 +115,7 @@ def test_search_by_tags_ok(wa_video):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 2
     assert len(resp['rows']) == 2
@@ -152,7 +152,7 @@ def test_search_by_tag_or_tag(wa_video):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 3
     assert len(resp['rows']) == 3
@@ -184,7 +184,7 @@ def test_search_by_target_source_ok(wa_audio, wa_image):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 4
     for a in resp['rows']:
@@ -205,7 +205,7 @@ def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 1
     assert resp['rows'][0]['target']['items'][0]['type'] == 'Video'
@@ -235,7 +235,7 @@ def test_search_by_body_text_ok(wa_list):
     request.catchjwt = payload
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 1
     assert resp['rows'][0]['id'] == anno.anno_id
@@ -268,7 +268,7 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
             z.raw['platform'].get('collection_id', 'na')))
 
     response = search_api(request)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert resp['total'] == 1
     assert resp['rows'][0]['target']['items'][0]['type'] == 'Audio'
@@ -306,7 +306,7 @@ def test_search_back_compat_by_context_id_ok(wa_list):
     url = '{}?{}'.format(reverse('compat_search'), query_string)
 
     response = client.get(url, HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
 
     assert response.status_code == 200
     assert resp['total'] == 1
@@ -379,14 +379,13 @@ def test_search_replies_js_ok(js_list):
     # search for the replies
     search_url = ('{}?context_id={}&collection_id={}&media=Annotation&'
                          'limit=-1&target_source_id={}').format(
-                             reverse('create_or_search'),
+                             reverse('compat_search'),
                              reply_to.raw['platform']['context_id'],
                              reply_to.raw['platform']['collection_id'],
                              reply_to.anno_id)
     response = client.get(
         search_url,
-        HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
-        HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
+        HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
 
     assert response.status_code == 200
     resp = response.json()
@@ -481,8 +480,7 @@ def test_search_replies_catcha_ok(wa_list):
                              reply_to.anno_id)
     response = client.get(
         search_url,
-        HTTP_AUTHORIZATION='token {}'.format(token),
-        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+        HTTP_AUTHORIZATION='token {}'.format(token))
 
     assert response.status_code == 200
     resp = response.json()
@@ -535,8 +533,7 @@ def test_search_deleted_catcha_ok(wa_list):
             anno_list[0].raw['platform']['collection_id'])
     response = client.get(
         search_url,
-        HTTP_AUTHORIZATION='token {}'.format(token),
-        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+        HTTP_AUTHORIZATION='token {}'.format(token))
 
     assert response.status_code == 200
     resp = response.json()
@@ -586,8 +583,7 @@ def test_search_private_catcha_ok(wa_list):
 
     response = client.get(
         search_url,
-        HTTP_AUTHORIZATION='token {}'.format(token_creator),
-        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+        HTTP_AUTHORIZATION='token {}'.format(token_creator))
 
     assert response.status_code == 200
     resp = response.json()
@@ -596,8 +592,7 @@ def test_search_private_catcha_ok(wa_list):
     # search for annotations peasant
     response = client.get(
         search_url,
-        HTTP_AUTHORIZATION='token {}'.format(token_peasant),
-        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+        HTTP_AUTHORIZATION='token {}'.format(token_peasant))
 
     assert response.status_code == 200
     resp = response.json()
@@ -606,8 +601,7 @@ def test_search_private_catcha_ok(wa_list):
     # search for annotations admin
     response = client.get(
         search_url,
-        HTTP_AUTHORIZATION='token {}'.format(token_admin),
-        HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT)
+        HTTP_AUTHORIZATION='token {}'.format(token_admin))
 
     assert response.status_code == 200
     resp = response.json()

@@ -39,8 +39,6 @@ from .anno_defaults import CATCH_ANNO_FORMAT
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import CATCH_RESPONSE_LIMIT
-from .anno_defaults import CATCH_RESPONSE_FORMAT_DEFAULT
-from .anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 
 
 logger = logging.getLogger(__name__)
@@ -161,7 +159,46 @@ def crud_api(request, anno_id):
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
     # no crud errors, try to convert to requested format
     else:
-        response_format = fetch_response_format(request)
+        response_format = CATCH_ANNO_FORMAT
+        try:
+            formatted_response = _format_response(resp, response_format)
+        except (AnnotatorJSError,
+                UnknownResponseFormatError) as e:
+            # at this point, the requested operation is completed successfully
+            # returns 203 to say op was done, but can't return proper anno json
+            status = HTTPStatus.NON_AUTHORITATIVE_INFORMATION  # 203
+            error_response = {'id': resp.anno_id,
+                              'msg': str(e)}
+            response = JsonResponse(status=status, data=error_response)
+        else:
+            status = HTTPStatus.OK
+            response = JsonResponse(status=status, data=formatted_response)
+            if request.method == 'POST' or request.method == 'PUT':
+                # add response header with location for new resource
+                response['Location'] = request.build_absolute_uri(
+                    reverse('crud_api', kwargs={'anno_id': resp.anno_id}))
+
+        return response
+
+
+@require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE'])
+@csrf_exempt
+@require_catchjwt
+def crud_compat_api(request, anno_id):
+    '''view to deal with crud api requests.'''
+    try:
+        resp = _do_crud_api(request, anno_id)
+    except AnnoError as e:
+        return JsonResponse(status=e.status,
+                            data={'status': e.status, 'payload': [str(e)]})
+    except (ValueError, KeyError) as e:
+        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
+        return JsonResponse(
+            status=HTTPStatus.BAD_REQUEST,
+            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
+    # no crud errors, try to convert to requested format
+    else:
+        response_format = ANNOTATORJS_FORMAT
         try:
             formatted_response = _format_response(resp, response_format)
         except (AnnotatorJSError,
@@ -234,13 +271,6 @@ def _do_crud_api(request, anno_id):
     return r
 
 
-def fetch_response_format(request):
-    response_format = CATCH_RESPONSE_FORMAT_DEFAULT
-    if CATCH_RESPONSE_FORMAT_HTTPHEADER in request.META:
-        response_format = request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER]
-    return response_format
-
-
 def _format_response(anno_result, response_format):
     # is it single anno or a QuerySet from search?
     is_single = isinstance(anno_result, Anno)
@@ -287,9 +317,10 @@ def partial_update_api(request, anno_id):
 
 
 def search_api(request):
+    # naomi note: always return catcha
     logger.debug('search query=({})'.format(request.GET))
     try:
-        resp = _do_search_api(request)
+        resp = _do_search_api(request, back_compat=False)
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
@@ -376,7 +407,7 @@ def _do_search_api(request, back_compat=False):
     if back_compat:
         response_format = ANNOTATORJS_FORMAT
     else:
-        response_format = fetch_response_format(request)
+        response_format = CATCH_ANNO_FORMAT
 
     response = _format_response(q_result, response_format)
     response['total'] = total  # add response info
@@ -536,7 +567,7 @@ def crud_compat_create(request):
     '''view for create, with no anno_id in querystring.'''
     must_be_int = True
     anno_id = generate_uid(must_be_int)
-    return crud_api(request, anno_id)
+    return crud_compat_api(request, anno_id)
 
 
 @require_http_methods('DELETE')
@@ -544,7 +575,15 @@ def crud_compat_create(request):
 @require_catchjwt
 def crud_compat_delete(request, anno_id):
     '''back compat view for delete.'''
-    return crud_api(request, anno_id)
+    return crud_compat_api(request, anno_id)
+
+
+@require_http_methods('GET')
+@csrf_exempt
+@require_catchjwt
+def crud_compat_read(request, anno_id):
+    '''back compat view for read.'''
+    return crud_compat_api(request, anno_id)
 
 
 @require_http_methods('POST')
@@ -559,7 +598,7 @@ def crud_compat_update(request, anno_id):
 
         # add response header with location for new resource
         response['Location'] = request.build_absolute_uri(
-            reverse('crud_api', kwargs={'anno_id': resp['id']}))
+            reverse('compat_read', kwargs={'anno_id': resp['id']}))
         return response
 
     except AnnoError as e:
@@ -587,5 +626,5 @@ def _do_crud_compat_update(request, anno_id):
                 request.catchjwt['userId']))
 
     r = process_update(request, anno)
-    response_format = fetch_response_format(request)
+    response_format = ANNOTATORJS_FORMAT
     return _format_response(r, response_format)

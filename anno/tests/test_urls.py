@@ -24,11 +24,14 @@ def test_urls():
             'url': reverse('compat_create'),
             'view_func': 'anno.views.crud_compat_create'},
         {
-            'url': reverse('compat_update', kwargs={'anno_id': '123-456-789'}),
+            'url': reverse('compat_update', kwargs={'anno_id': '123456789'}),
             'view_func': 'anno.views.crud_compat_update'},
         {
-            'url': reverse('compat_delete', kwargs={'anno_id': '123-456-789'}),
+            'url': reverse('compat_delete', kwargs={'anno_id': '123456789'}),
             'view_func': 'anno.views.crud_compat_delete'},
+        {
+            'url': reverse('compat_read', kwargs={'anno_id': '123456789'}),
+            'view_func': 'anno.views.crud_compat_read'},
         {
             'url': reverse('create_or_search'),
             'view_func': 'anno.views.create_or_search'},

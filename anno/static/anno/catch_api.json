@@ -26,14 +26,6 @@
                         "description": "annotation id",
                         "required": true,
                         "type": "string"
-                    },
-                    {
-                        "name": "X-CATCH-RESPONSE-FORMAT",
-                        "required": false,
-                        "in": "header",
-                        "type": "string",
-                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "default": "CATCH_ANNO_FORMAT"
                     }
                 ],
                 "responses": {
@@ -105,14 +97,6 @@
                 "summary": "Creates an `Annotation` object",
                 "description": "`id` values in the input annotation json will be ignored; the `id` specified at the path is always used.",
                 "parameters": [
-                    {
-                        "name": "X-CATCH-RESPONSE-FORMAT",
-                        "required": false,
-                        "in": "header",
-                        "type": "string",
-                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "default": "CATCH_ANNO_FORMAT"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -211,14 +195,6 @@
                 "summary": "Updates an `Annotation` object",
                 "description": "This operation will replace the list of tags and targets with the ones sent as input",
                 "parameters": [
-                    {
-                        "name": "X-CATCH-RESPONSE-FORMAT",
-                        "required": false,
-                        "in": "header",
-                        "type": "string",
-                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "default": "CATCH_ANNO_FORMAT"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -393,14 +369,6 @@
                 "summary": "Returns list of `Annotation` objects resulting from the given search",
                 "parameters": [
                     {
-                        "name": "X-CATCH-RESPONSE-FORMAT",
-                        "required": false,
-                        "in": "header",
-                        "type": "string",
-                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "default": "CATCH_ANNO_FORMAT"
-                    },
-                    {
                         "name": "limit",
                         "required": false,
                         "in": "query",
@@ -531,14 +499,6 @@
                 "summary": "Creates an `Annotation` object",
                 "description": "If an `id` is included in the annotation input parameter, it will try to be honored but the create action will fail if already present in storage.",
                 "parameters": [
-                    {
-                        "name": "X-CATCH-RESPONSE-FORMAT",
-                        "required": false,
-                        "in": "header",
-                        "type": "string",
-                        "description": "the annotation format can be returned as Catch WebAnnotation or AnnotatorJS",
-                        "default": "CATCH_ANNO_FORMAT"
-                    },
                     {
                         "name": "anno",
                         "in": "body",
@@ -703,12 +663,19 @@
                 ]
             }
         },
-        "/annos/update": {
+        "/annos/update/{id}": {
             "put": {
                 "tags": ["catch-annotator"],
                 "summary": "Updates an `Annotation` object",
                 "description": "This operation will replace the list of tags and targets with the ones sent as input",
                 "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "annotation id",
+                        "required": true,
+                        "type": "integer"
+                    },
                     {
                         "name": "anno",
                         "in": "body",
@@ -784,6 +751,13 @@
                 "description": "This operation will replace the list of tags and targets with the ones sent as input",
                 "parameters": [
                     {
+                        "name": "id",
+                        "in": "path",
+                        "description": "annotation id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "anno",
                         "in": "body",
                         "description": "annotation object",
@@ -853,7 +827,7 @@
                 ]
             }
         },
-        "/annos/delete": {
+        "/annos/delete/{id}": {
             "delete": {
                 "tags": ["catch-annotator"],
                 "summary": "Deletes an `Annotation` object",
@@ -861,10 +835,81 @@
                 "parameters": [
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "annotation id",
                         "required": true,
-                        "type": "string"
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    },
+                    "400": {
+                        "description": "bad request: invalid input format",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized: missing or invalid jwt token"
+                    },
+                    "403": {
+                        "description": "forbidden: request was understood but user is not authorized to perform operation requested",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "409": {
+                        "description": "conflict: usually, conflicting references or dependencies",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "422": {
+                        "description": "unprocessable entity: unknown or missing type/value in input",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error: some other runtime exceeption occurred.",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "jwt_annotator": []
+                    }
+                ]
+            }
+        },
+        "/annos/read/{id}": {
+            "get": {
+                "tags": ["catch-annotator"],
+                "summary": "Fetches an `Annotation` object",
+                "description": "The requesting user must have permission to read the Annotation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "annotation id",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {

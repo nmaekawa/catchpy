@@ -5,8 +5,6 @@ import os
 from django.urls import reverse
 from django.test import Client
 
-from anno.anno_defaults import ANNOTATORJS_FORMAT
-from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
 from anno.json_models import AnnoJS
 from anno.json_models import Catcha

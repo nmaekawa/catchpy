@@ -6,6 +6,7 @@ django.setup()
 
 import json
 from random import randint
+import logging
 
 from anno.anno_defaults import ANNOTATORJS_FORMAT
 from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
@@ -52,7 +53,7 @@ class UserBehavior_WebAnnotation(TaskSet):
         self.collection = x['platform']['collection_id']
         #def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
 
-    @task
+    @task(2)
     def add_annotation_then_tag(self):
         # pick random user
         user = random_user()
@@ -97,6 +98,74 @@ class UserBehavior_WebAnnotation(TaskSet):
                 'Content-Type': 'Application/json',
                 'Authorization': auth_header,
             })
+
+
+    @task(10)
+    def search_annotation(self):
+        # pick random user
+        user = random_user()
+        # generate token for user
+        token = make_token_for_user(user)
+        auth_header = 'token {}'.format(token)
+
+        # search all annotation for this assignment
+        search_query = ('context_id={}&collection_id={}'
+                        '&limit=-1&offset={}').format(
+            self.context, self.collection, randint(500,5000))
+
+        response = self.client.get(
+            '/annos/?{}'.format(search_query),
+            catch_response=True,
+            headers={
+                'Authorization': auth_header,
+            })
+
+        r = response.json()
+        logging.getLogger(__name__).debug('total={}; size={}'.format(
+            r['total'],r['size']))
+        if response.status_code == 200:
+            response.success()
+        else:
+            response.failure(r['payload'])
+
+
+
+class UserSearchPagination_WebAnnotation(TaskSet):
+    def on_start(self):
+        x = make_wa_object(age_in_hours=1)
+        self.platform = x['platform']['platform_name']
+        self.context = x['platform']['context_id']
+        self.collection = x['platform']['collection_id']
+        #def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
+
+    @task
+    def search_annotation(self):
+        # pick random user
+        user = random_user()
+        # generate token for user
+        token = make_token_for_user(user)
+        auth_header = 'token {}'.format(token)
+
+        # search all annotation for this assignment
+        search_query = ('context_id={}&collection_id={}'
+                        '&limit=-1&offset={}').format(
+            self.context, self.collection, randint(500,5000))
+
+        response = self.client.get(
+            '/annos/?{}'.format(search_query),
+            catch_response=True,
+            headers={
+                'Authorization': auth_header,
+            })
+
+        r = response.json()
+        logging.getLogger(__name__).debug('total={}; size={}'.format(
+            r['total'],r['size']))
+        if response.status_code == 200:
+            response.success()
+        else:
+            response.failure(r['payload'])
+
 
 class UserBehavior_AnnotatorJS(TaskSet):
     def on_start(self):
@@ -153,6 +222,6 @@ class UserBehavior_AnnotatorJS(TaskSet):
 
 
 class WebsiteUser(HttpLocust):
-    task_set = UserBehavior_AnnotatorJS
+    task_set = UserBehavior_WebAnnotation
     min_wait = 1000
-    max_wait = 5000
+    max_wait = 15000

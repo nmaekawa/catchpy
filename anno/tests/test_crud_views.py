@@ -7,13 +7,13 @@ from django.test import Client
 from anno.anno_defaults import ANNO, TEXT
 from anno.anno_defaults import ANNOTATORJS_FORMAT
 from anno.anno_defaults import CATCH_ANNO_FORMAT
-from anno.anno_defaults import CATCH_RESPONSE_FORMAT_HTTPHEADER
 from anno.crud import CRUD
 from anno.errors import AnnotatorJSError
 from anno.json_models import AnnoJS
 from anno.json_models import Catcha
 from anno.models import Anno
 from anno.views import crud_api
+from anno.views import crud_compat_api
 from anno.views import _format_response
 
 from consumer.models import Consumer
@@ -143,7 +143,7 @@ def test_update_no_body_in_request(wa_text):
 
     response = crud_api(request, x.anno_id)
     assert response.status_code == 400
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert len(resp['payload']) > 0
     assert 'missing json' in ','.join(resp['payload'])
 
@@ -163,7 +163,7 @@ def test_update_invalid_input(wa_video):
 
     response = crud_api(request, x.anno_id)
     assert response.status_code == 400
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert len(resp['payload']) > 0
 
 
@@ -187,7 +187,7 @@ def test_update_denied_can_admin(wa_video):
                                                 indent=4)))
 
     response = crud_api(request, x.anno_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 403
     assert len(resp['payload']) > 0
     assert 'not allowed to admin' in ','.join(resp['payload'])
@@ -218,7 +218,7 @@ def test_update_ok(wa_text):
     request.catchjwt = payload
 
     response = crud_api(request, x.anno_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert 'Location' in response
     assert response['Location'] is not None
@@ -243,7 +243,7 @@ def test_create_on_behalf_of_others(wa_image):
     assert catch['creator']['id'] != payload['userId']
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 409
     assert 'conflict in input creator_id' in ','.join(resp['payload'])
 
@@ -260,7 +260,7 @@ def test_create_ok(wa_image):
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
 
     assert response.status_code == 200
     assert 'Location' in response
@@ -286,7 +286,7 @@ def test_create_duplicate(wa_audio):
 
     response = crud_api(request, x.anno_id)
     assert response.status_code == 409
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert 'failed to create' in resp['payload'][0]
 
 
@@ -299,13 +299,12 @@ def test_create_annojs(js_text):
 
     request = make_json_request(
         method='post', anno_id=to_be_created_id, data=json.dumps(js))
-    request.META[CATCH_RESPONSE_FORMAT_HTTPHEADER] = ANNOTATORJS_FORMAT
     request.catchjwt = payload
 
     assert js['id'] != to_be_created_id
 
-    response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    response = crud_compat_api(request, to_be_created_id)
+    resp = json.loads(response.content.decode('utf-8'))
 
     assert response.status_code == 200
     assert resp['id'] == int(to_be_created_id)
@@ -329,7 +328,7 @@ def test_create_reply(wa_audio):
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 200
     assert 'Location' in response
     assert response['Location'] is not None
@@ -353,7 +352,7 @@ def test_create_reply_to_itself():
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 409
     assert 'cannot be a reply to itself' in resp['payload'][0]
 
@@ -374,7 +373,7 @@ def test_create_reply_missing_target(wa_audio):
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 409
     assert 'missing parent reference' in resp['payload'][0]
 
@@ -398,7 +397,7 @@ def test_create_reply_conflicting_target(wa_audio):
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert response.status_code == 409
     assert 'conflicting target_source_id' in resp['payload'][0]
 
@@ -421,11 +420,10 @@ def test_create_compat_annojs(js_text):
     response = client.post(
             compat_create_url, data=json.dumps(js),
             HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
-            HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT,
             content_type='application/json')
 
     assert response.status_code == 200
-    resp = json.loads(response.content)
+    resp = json.loads(response.content.decode('utf-8'))
     assert resp['id'] != js['id']  # should not preserve `id` in input annojs
     assert resp['user']['id'] == payload['userId']
     assert set(resp['tags']) == set(js['tags'])
@@ -501,41 +499,5 @@ def test_format_response_reply_to_reply(wa_text):
     assert 'reply to a reply' in resp['failed'][0]['msg']
     assert 'rows' in resp
     assert len(resp['rows']) == 2
-
-
-@pytest.mark.usefixtures('wa_image')
-@pytest.mark.django_db
-def test_read_203(wa_image):
-    wa = wa_image
-
-    c = Consumer._default_manager.create()
-    payload = make_jwt_payload(
-        apikey=c.consumer, user=wa['creator']['id'])
-    token = make_encoded_token(c.secret_key, payload)
-
-    client = Client()
-    create_url = reverse('create_or_search')
-    response = client.post(
-            create_url, data=json.dumps(wa),
-            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
-            HTTP_X_CATCH_RESPONSE_FORMAT=CATCH_ANNO_FORMAT,
-            content_type='application/json')
-
-    assert response.status_code == 200
-    resp = json.loads(response.content)
-    created_id = resp['id']  # created with id as uuid
-
-    read_url = reverse('crud_api', kwargs={'anno_id': created_id})
-    response = client.get(
-            read_url,
-            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
-            HTTP_X_CATCH_RESPONSE_FORMAT=ANNOTATORJS_FORMAT)
-
-    assert response.status_code == 203
-    resp = json.loads(response.content)
-    assert 'id' in resp
-    assert resp['id'] == created_id
-    assert 'msg' in resp
-    assert 'id is not a number' in resp['msg']
 
 

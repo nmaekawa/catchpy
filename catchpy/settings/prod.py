@@ -185,15 +185,8 @@ CATCH_JSONLD_CONTEXT_IRI = os.environ.get(
     'CATCH_JSONLD_CONTEXT_IRI',
     'http://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json')
 
-# the default is to return AnnotatorJS
-compat_mode = os.environ.get('CATCHPY_COMPAT_MODE', 'true')
-if compat_mode.lower() == 'true':
-    CATCH_RESPONSE_FORMAT_DEFAULT = 'ANNOTATORJS_FORMAT'
-else:
-    CATCH_RESPONSE_FORMAT_DEFAULT = 'CATCH_ANNO_FORMAT'
-
 # max number of rows to be returned in a search request
-CATCH_RESPONSE_LIMIT = os.environ.get('CATCH_RESPONSE_LIMIT', 200)
+CATCH_RESPONSE_LIMIT = int(os.environ.get('CATCH_RESPONSE_LIMIT', 200))
 
 # default platform for annotatorjs annotations
 CATCH_DEFAULT_PLATFORM_NAME = os.environ.get(

@@ -10,11 +10,6 @@ CATCH_JSONLD_CONTEXT_IRI = getattr(settings, 'CATCH_JSONLD_CONTEXT_IRI')
 # json response formats
 CATCH_ANNO_FORMAT = 'CATCH_ANNO_FORMAT'
 ANNOTATORJS_FORMAT = 'ANNOTATORJS_FORMAT'
-CATCH_RESPONSE_FORMAT_DEFAULT = getattr(
-    settings, 'CATCH_RESPONSE_FORMAT_DEFAULT')
-
-# django request header to set the response output format
-CATCH_RESPONSE_FORMAT_HTTPHEADER = 'HTTP_X_CATCH_RESPONSE_FORMAT'
 
 # max number of rows to be returned in a search request
 CATCH_RESPONSE_LIMIT = getattr(settings, 'CATCH_RESPONSE_LIMIT')
