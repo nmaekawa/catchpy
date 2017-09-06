@@ -8,6 +8,7 @@ from anno.errors import MissingAnnotationError
 from anno.models import Anno, Target
 from anno.models import PURPOSE_TAGGING
 
+from .conftest import make_wa_tag
 
 @pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
@@ -119,6 +120,39 @@ def test_update_anno_delete_tags_ok(wa_text):
     assert(x.body_text == original_body_text)
     assert(x.created == original_created)
     assert(x.modified > original_created)
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_update_anno_duplicate_tags(wa_text):
+    catcha = wa_text
+    x = CRUD.create_anno(catcha)
+    # save values before update
+    original_tags = x.anno_tags.count()
+    original_targets = x.target_set.count()
+    original_body_text = x.body_text
+    original_created = x.created
+
+    assert original_tags > 0
+
+    # remove tags and add duplicates
+    wa = dict(wa_text)
+    no_tags = [y for y in wa['body']['items']
+               if y['purpose'] != PURPOSE_TAGGING]
+    wa['body']['items'] = no_tags
+    for i in range(0, 4):
+        wa['body']['items'].append(make_wa_tag('tag_repeat'))
+
+    CRUD.update_anno(x, wa)
+    assert(x.anno_tags.count() == 1)
+
+    # get serialized because it's what's returned in a search
+    wa_updated = x.serialized
+    cleaned_tags = [y for y in wa_updated['body']['items']
+                    if y['purpose'] == PURPOSE_TAGGING]
+    assert len(cleaned_tags) == 1
+    assert cleaned_tags[0]['value'] == 'tag_repeat'
+
 
 
 @pytest.mark.usefixtures('wa_text')

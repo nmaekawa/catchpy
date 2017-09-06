@@ -53,6 +53,7 @@ class CRUD(object):
     def _group_body_items(cls, catcha):
         '''sort out body items into text, format, tags, reply_to.
 
+        modifies input `catcha['body']['items']` (removes duplicate tags)
         reply_to is the actual Anno model
         '''
         body = catcha['body']
@@ -60,21 +61,30 @@ class CRUD(object):
         body_text = ''
         body_format = ''
         tags = []
+        body_json = []
         for b in body['items']:
             if b['purpose'] == PURPOSE_COMMENTING:
                 body_text = b['value']
                 body_format = b['format'] if 'format' in b else 'text/plain'
+                body_json.append(b)
             elif b['purpose'] == PURPOSE_REPLYING:
                 reply = True
                 body_text = b['value']
                 body_format = b['format'] if 'format' in b else 'text/plain'
+                body_json.append(b)
             elif b['purpose'] == PURPOSE_TAGGING:
-                tags.append(b['value'])
+                if b['value'] not in tags:  # don't duplicate
+                    tags.append(b['value'])
+                    body_json.append(b)
             else:
                 raise InvalidAnnotationPurposeError(
                     ('body_item[purpose] should be in ({}), found({})'
                      'in anno({})').format(
                            ','.join(PURPOSES), b['purpose'], catcha['id']))
+
+        # replace with tag list clear of duplicates
+        catcha['body']['items'] = body_json
+
         reply_to = None
         reply_to_anno = None
         if reply:
