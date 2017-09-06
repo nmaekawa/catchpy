@@ -1,7 +1,7 @@
 {
 
 "@context": {
-    "catch": "http://catch-dev.harvardx.harvard.edu/catch-context.jsonld",
+    "catch": "http://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json",
     "oa":      "http://www.w3.org/ns/oa#",
     "dc":      "http://purl.org/dc/elements/1.1/",
     "dcterms": "http://purl.org/dc/terms/",
