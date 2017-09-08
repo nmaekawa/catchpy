@@ -485,10 +485,14 @@ def process_search_back_compat_params(request, query):
         query = query.filter(query_target_sources([source]))
 
     context_id = request.GET.get('contextId', None)
+    if context_id is None:  # forward-compat!!! see [1] at the bottom
+        context_id = request.GET.get('context_id', None)
     if context_id:
         query = query.filter(raw__platform__context_id=context_id)
 
     collection_id = request.GET.get('collectionId', None)
+    if collection_id is None:  # forward-compat!!! see [1] at the bottom
+        collection_id = request.GET.get('collection_id', None)
     if collection_id:
         query = query.filter(raw__platform__collection_id=collection_id)
 
@@ -628,3 +632,12 @@ def _do_crud_compat_update(request, anno_id):
     r = process_update(request, anno)
     response_format = ANNOTATORJS_FORMAT
     return _format_response(r, response_format)
+
+"""
+[1] got rid of camelCase in v2 for uniformity, so contextId is not allowed.
+    BUT, it might be that users want to set `context-id` in back-compat
+    searches... i did this in performance test and was thrown out by having the
+    whole db as result. In back-compat having a search return everythin will
+    cause problems because of the anno_id: in back-compat it must be an
+    integer.
+"""
