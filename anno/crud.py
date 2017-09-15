@@ -170,27 +170,28 @@ class CRUD(object):
             raw=catcha,
         )
 
+        # preserve created date if it's a copy
+        if is_copy:
+            a.created = cls._get_original_created(catcha)
+            a.anno_deleted = catcha.get('deleted', False)
+
         # validate  target objects
         target_list = cls._create_targets_for_annotation(a, catcha)
 
         # create anno, target, and tags relationship as transaction
         try:
             with transaction.atomic():
-
                 a.save()  # need to save before setting relationships
                 for t in target_list:
                     t.save()
                 tags = cls._create_taglist(body['tags'])
                 a.anno_tags = tags
-
-                if is_copy:  # keep original date if it's a copy
-                    a.created = cls._get_original_created(catcha)
-
-                    a.anno_deleted = catcha.get('deleted', False)
-
                 a.raw['created'] = a.created.replace(microsecond=0).isoformat()
                 a.save()
         except IntegrityError as e:
+            # TODO: investigate integrity error for duplicates
+            # integrity error creating anno(naomi-x): null value in column "created" violates not-null constraint
+            # instead of duplicate primary-key -- why?
             msg = 'integrity error creating anno({}): {}'.format(
                 catcha['id'], e)
             logger.error(msg, exc_info=True)
@@ -208,7 +209,7 @@ class CRUD(object):
         '''convert `created` from catcha or return current date.'''
         try:
             original_date = dateutil.parser.parse(catcha['created'])
-        except (TypeError, OverflowError) as e:
+        except (TypeError, OverflowError, KeyError) as e:
             msg = ('error converting iso8601 `created` date in anno({}) '
                    'copy, setting a fresh date: {}').format(
                        catcha['id'], str(e))
@@ -286,7 +287,7 @@ class CRUD(object):
                 'anno({}) not found'.format(anno.anno_id))
 
         with transaction.atomic():
-            anno.delete()
+            anno.mark_as_deleted()
             anno.save()
         return anno
 

@@ -12,6 +12,7 @@ from .anno_defaults import ANNO, AUDIO, IMAGE, TEXT, THUMB, VIDEO
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
+from .anno_defaults import PURPOSE_REPLYING
 from .anno_defaults import PURPOSE_TAGGING
 from .catch_json_schema import CATCH_JSON_SCHEMA
 from .errors import RawModelOutOfSynchError
@@ -850,4 +851,13 @@ class Catcha(object):
             return False
 
         return True
+
+
+    @classmethod
+    def is_reply(cls, catcha):
+        for x in catcha['body']['items']:
+            if x['purpose'] == PURPOSE_REPLYING:
+                return True
+
+        return False
 

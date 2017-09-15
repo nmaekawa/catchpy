@@ -6,7 +6,6 @@ from anno.anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from anno.anno_defaults import MEDIA_TYPES
 from anno.models import Anno, Tag, Target
 
-
 @pytest.mark.django_db
 def test_relationships_ok():
     # create some tags
@@ -47,3 +46,6 @@ def test_anno_object():
     assert(anno.anno_tags.count() == 1)
     assert(Tag.objects.count() == 1)
     assert(tag1.anno_set.all()[0].anno_id == anno.anno_id)
+
+
+

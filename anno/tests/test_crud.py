@@ -1,3 +1,6 @@
+from datetime import datetime
+from datetime import timedelta
+from dateutil import tz
 import pytest
 
 from anno.crud import CRUD
@@ -25,17 +28,47 @@ def test_create_anno_ok(wa_text):
 @pytest.mark.django_db(transaction=True)
 def test_create_duplicate_anno(wa_image):
     catcha = wa_image
+    catcha['id'] = 'naomi-x'
     x1 = CRUD.create_anno(catcha)
     assert(x1 is not None)
     assert(Anno.objects.count() == 1)
 
     x2 = None
-    with pytest.raises(AnnoError):
+    with pytest.raises(AnnoError) as e:
         x2 = CRUD.create_anno(catcha)
 
     assert x2 is None
     assert(Anno.objects.count() == 1)
     assert(Target.objects.count() == len(catcha['target']['items']))
+
+@pytest.mark.usefixtures('wa_image')
+@pytest.mark.django_db(transaction=True)
+def test_import_anno_ok(wa_image):
+    catcha = wa_image
+
+    now = datetime.now(tz.tzutc())
+
+    # import first because CRUD.create changes created time in input
+    catcha['id'] = 'naomi-xx-imported'
+    resp = CRUD.import_annos([catcha], {'override': ['CAN_IMPORT']})
+    x2 = Anno._default_manager.get(pk=catcha['id'])
+    assert x2 is not None
+    assert Anno._default_manager.count() == 1
+
+    # x2 was created more than 25h ago?
+    # (wa_image should have been created 30h ago)
+    delta = timedelta(hours=25)
+    assert (now - delta) < x2.created
+
+    # about to create
+    catcha['id'] = 'naomi-xx'
+    x1 = CRUD.create_anno(catcha)
+    assert x1 is not None
+    assert Anno._default_manager.count() == 2
+
+    # x1 was created less than 1m ago?
+    delta = timedelta(minutes=1)
+    assert (now - delta) < x1.created
 
 
 @pytest.mark.usefixtures('wa_video')
@@ -229,3 +262,26 @@ def test_delete_anno_ok(wa_list):
     deleted = Anno.objects.get(pk=x.anno_id)
     assert deleted is not None
     assert deleted.anno_deleted is True
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db(transaction=True)
+def test_true_delete_anno_ok(wa_text):
+    catcha = wa_text
+    x = CRUD.create_anno(catcha)
+
+    assert x.anno_id is not None
+    assert x.total_targets > 0
+    anno_id = x.anno_id
+
+    x.delete()
+
+    assert anno_id is not None
+    assert(CRUD.get_anno(x.anno_id) is None)  # this pulls from db
+
+    with pytest.raises(Anno.DoesNotExist):
+        deleted = Anno.objects.get(pk=anno_id)
+
+    targets = Target._default_manager.filter(anno__anno_id=anno_id)
+    assert targets.count() == 0
+

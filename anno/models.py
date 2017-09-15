@@ -153,7 +153,7 @@ class Anno(Model):
             permissions.append('can_admin')
         return permissions
 
-    def delete(self, *args, **kwargs):
+    def mark_as_deleted(self, *args, **kwargs):
         '''
         overwrite delete to perform a soft delete.
         THIS WILL PREVENT deletion using django ORM.
