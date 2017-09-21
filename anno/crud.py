@@ -41,7 +41,7 @@ class CRUD(object):
     def get_anno(cls, anno_id):
         '''filters out the soft deleted instances.'''
         try:
-            anno = Anno.objects.get(pk=anno_id)
+            anno = Anno._default_manager.get(pk=anno_id)
         except Anno.DoesNotExist as e:
             return None
         if anno.anno_deleted:
@@ -112,7 +112,7 @@ class CRUD(object):
         tags = []  # list of Tag instances
         for t in taglist:
             try:
-                tag = Tag.objects.get(tag_name=t)
+                tag = Tag._default_manager.get(tag_name=t)
             except Tag.DoesNotExist:
                 tag = Tag(tag_name=t)
                 tag.save()
@@ -155,32 +155,32 @@ class CRUD(object):
         # fill up derived properties in catcha
         catcha['totalReplies'] = 0
 
-        a = Anno(
-            anno_id=catcha['id'],
-            schema_version=catcha['schema_version'],
-            creator_id=catcha['creator']['id'],
-            creator_name=catcha['creator']['name'],
-            anno_reply_to=body['reply_to'],
-            can_read=catcha['permissions']['can_read'],
-            can_update=catcha['permissions']['can_update'],
-            can_delete=catcha['permissions']['can_delete'],
-            can_admin=catcha['permissions']['can_admin'],
-            body_text=body['text'],
-            body_format=body['format'],
-            raw=catcha,
-        )
-
-        # preserve created date if it's a copy
-        if is_copy:
-            a.created = cls._get_original_created(catcha)
-            a.anno_deleted = catcha.get('deleted', False)
-
-        # validate  target objects
-        target_list = cls._create_targets_for_annotation(a, catcha)
-
-        # create anno, target, and tags relationship as transaction
         try:
             with transaction.atomic():
+                a = Anno(
+                    anno_id=catcha['id'],
+                    schema_version=catcha['schema_version'],
+                    creator_id=catcha['creator']['id'],
+                    creator_name=catcha['creator']['name'],
+                    anno_reply_to=body['reply_to'],
+                    can_read=catcha['permissions']['can_read'],
+                    can_update=catcha['permissions']['can_update'],
+                    can_delete=catcha['permissions']['can_delete'],
+                    can_admin=catcha['permissions']['can_admin'],
+                    body_text=body['text'],
+                    body_format=body['format'],
+                    raw=catcha,
+                )
+
+                # preserve created date if it's a copy
+                if is_copy:
+                    a.created = cls._get_original_created(catcha)
+                    a.anno_deleted = catcha.get('deleted', False)
+
+                # validate  target objects
+                target_list = cls._create_targets_for_annotation(a, catcha)
+
+                # create anno, target, and tags relationship as transaction
                 a.save()  # need to save before setting relationships
                 for t in target_list:
                     t.save()
@@ -189,9 +189,6 @@ class CRUD(object):
                 a.raw['created'] = a.created.replace(microsecond=0).isoformat()
                 a.save()
         except IntegrityError as e:
-            # TODO: investigate integrity error for duplicates
-            # integrity error creating anno(naomi-x): null value in column "created" violates not-null constraint
-            # instead of duplicate primary-key -- why?
             msg = 'integrity error creating anno({}): {}'.format(
                 catcha['id'], e)
             logger.error(msg, exc_info=True)
@@ -282,11 +279,18 @@ class CRUD(object):
     @classmethod
     def delete_anno(cls, anno):
         if anno.anno_deleted:
-            logger.warn('anno({}) soft deleted'.format(anno.anno_id))
+            logger.warn('anno({}) already soft deleted'.format(anno.anno_id))
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
 
         with transaction.atomic():
+            # delete replies as well
+            for a in anno.replies:
+                try:
+                    cls.delete_anno(a)
+                except MissingAnnotationError:
+                    pass  # ignore if already deleted
+
             anno.mark_as_deleted()
             anno.save()
         return anno

@@ -4,6 +4,7 @@ from dateutil import tz
 import pytest
 
 from anno.crud import CRUD
+from anno.anno_defaults import ANNO
 from anno.errors import AnnoError
 from anno.errors import InvalidAnnotationTargetTypeError
 from anno.errors import InvalidInputWebAnnotationError
@@ -11,6 +12,7 @@ from anno.errors import MissingAnnotationError
 from anno.models import Anno, Target
 from anno.models import PURPOSE_TAGGING
 
+from .conftest import make_wa_object
 from .conftest import make_wa_tag
 
 @pytest.mark.usefixtures('wa_text')
@@ -19,7 +21,7 @@ def test_create_anno_ok(wa_text):
     catcha = wa_text
     x = CRUD.create_anno(catcha)
     assert(x is not None)
-    assert(Anno.objects.count() == 1)
+    assert(Anno._default_manager.count() == 1)
     assert(x.target_set.count() == len(catcha['target']['items']))
     assert(x.raw['totalReplies']) == 0
 
@@ -31,15 +33,15 @@ def test_create_duplicate_anno(wa_image):
     catcha['id'] = 'naomi-x'
     x1 = CRUD.create_anno(catcha)
     assert(x1 is not None)
-    assert(Anno.objects.count() == 1)
+    assert(Anno._default_manager.count() == 1)
 
     x2 = None
     with pytest.raises(AnnoError) as e:
         x2 = CRUD.create_anno(catcha)
 
     assert x2 is None
-    assert(Anno.objects.count() == 1)
-    assert(Target.objects.count() == len(catcha['target']['items']))
+    assert(Anno._default_manager.count() == 1)
+    assert(Target._default_manager.count() == len(catcha['target']['items']))
 
 @pytest.mark.usefixtures('wa_image')
 @pytest.mark.django_db(transaction=True)
@@ -246,7 +248,7 @@ def test_delete_anno_ok(wa_list):
     for wa in wa_list:
         catcha = wa
         annos.append(CRUD.create_anno(catcha))
-    total = Anno.objects.count()
+    total = Anno._default_manager.count()
     assert len(annos) == total
     assert len(wa_list) == total
 
@@ -259,9 +261,49 @@ def test_delete_anno_ok(wa_list):
 
     assert(CRUD.get_anno(x.anno_id) is None)  # this pulls from db
 
-    deleted = Anno.objects.get(pk=x.anno_id)
+    deleted = Anno._default_manager.get(pk=x.anno_id)
     assert deleted is not None
     assert deleted.anno_deleted is True
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db(transaction=True)
+def test_delete_anno_replies_ok(wa_text):
+    catcha = wa_text
+    x = CRUD.create_anno(catcha)
+
+    # create replies
+    x_replies = []
+    x_r2r_replies = []
+    for i in range(0, 4):
+        r = make_wa_object(age_in_hours=i+2, media=ANNO, reply_to=x.anno_id)
+        xr = CRUD.create_anno(r)
+        # adding reply2reply because it's supported, so just in case
+        r2r = make_wa_object(age_in_hours=i+1, media=ANNO, reply_to=xr.anno_id)
+        x_r2r = CRUD.create_anno(r2r)
+
+        x_replies.append(xr)
+        x_r2r_replies.append(x_r2r)
+
+    assert len(x.replies) == 4
+
+    x_deleted = CRUD.delete_anno(x)
+    assert x_deleted is not None
+    assert x_deleted == x
+
+    x_deleted_fresh = CRUD.get_anno(x.anno_id)
+    assert x_deleted_fresh is None
+
+    for i in range(0, 4):
+        xr = CRUD.get_anno(x_replies[i].anno_id)
+        assert xr is None
+
+        xr = Anno._default_manager.get(pk=x_replies[i].anno_id)
+        assert xr is not None
+        assert xr.anno_deleted
+
+        x_r2r = Anno._default_manager.get(pk=x_r2r_replies[i].anno_id)
+        assert x_r2r is not None
+        assert x_r2r.anno_deleted
 
 
 @pytest.mark.usefixtures('wa_text')
@@ -280,7 +322,7 @@ def test_true_delete_anno_ok(wa_text):
     assert(CRUD.get_anno(x.anno_id) is None)  # this pulls from db
 
     with pytest.raises(Anno.DoesNotExist):
-        deleted = Anno.objects.get(pk=anno_id)
+        deleted = Anno._default_manager.get(pk=anno_id)
 
     targets = Target._default_manager.filter(anno__anno_id=anno_id)
     assert targets.count() == 0

@@ -156,7 +156,6 @@ class Anno(Model):
     def mark_as_deleted(self, *args, **kwargs):
         '''
         overwrite delete to perform a soft delete.
-        THIS WILL PREVENT deletion using django ORM.
         '''
         self.anno_deleted = True
 
