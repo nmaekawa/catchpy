@@ -298,12 +298,15 @@ def _format_response(anno_result, response_format):
                     failed.append({'id': anno.anno_id, 'msg': str(e)})
                 else:
                     response['rows'].append(annojs)
+            response['size'] = len(response['rows'])
             response['failed'] = failed
             response['size_failed'] = len(failed)
         elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
             for anno in anno_result:
                 response['rows'].append(anno.serialized)
+            response['size'] = len(response['rows'])
+
         else:
             # worked hard and have nothing to show: format UNKNOWN
             raise UnknownResponseFormatError(
@@ -411,7 +414,6 @@ def _do_search_api(request, back_compat=False):
 
     response = _format_response(q_result, response_format)
     response['total'] = total  # add response info
-    response['size'] = size
     response['limit'] = limit
     response['offset'] = offset
     return response
