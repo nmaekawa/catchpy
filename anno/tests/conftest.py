@@ -17,6 +17,7 @@ from anno.anno_defaults import PURPOSE_TAGGING
 from anno.anno_defaults import RESOURCE_TYPE_LIST
 from anno.anno_defaults import RESOURCE_TYPE_CHOICE
 from anno.anno_defaults import CATCH_JSONLD_CONTEXT_IRI
+from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.utils import generate_uid
 
 from consumer.catchjwt import encode_token
@@ -123,7 +124,7 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
                 'name': 'user_{}'.format(creator_id),
             },
             'platform': {
-                'platform_name': 'hxat_edx',
+                'platform_name': CATCH_DEFAULT_PLATFORM_NAME,
                 'context_id': 'fake_context',
                 'collection_id': 'fake_collection',
                 'target_source_id': 'internal_reference_123',

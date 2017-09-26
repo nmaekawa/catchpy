@@ -5,6 +5,7 @@ import pytest
 
 from anno.crud import CRUD
 from anno.anno_defaults import ANNO
+from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.errors import AnnoError
 from anno.errors import InvalidAnnotationTargetTypeError
 from anno.errors import InvalidInputWebAnnotationError
@@ -326,4 +327,45 @@ def test_true_delete_anno_ok(wa_text):
 
     targets = Target._default_manager.filter(anno__anno_id=anno_id)
     assert targets.count() == 0
+
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_copy_ok(wa_list):
+    original_total = len(wa_list)
+
+    # import catcha list
+    import_resp = CRUD.import_annos_2(wa_list)
+    assert int(import_resp['original_total']) == original_total
+    assert int(import_resp['total_success']) == original_total
+    assert int(import_resp['total_failed']) == 0
+
+    anno_list = CRUD.select_for_copy(
+            context_id='fake_context',
+            collection_id='fake_collection',
+            platform_name=CATCH_DEFAULT_PLATFORM_NAME,
+            #userid_list=None, username_list=None
+            )
+    select_total = anno_list.count()
+    assert select_total == original_total
+
+    copy_resp = CRUD.copy_annos_2(
+            anno_list,
+            'another_fake_context',
+            'collection_x')
+    assert int(copy_resp['original_total']) == original_total
+    assert int(copy_resp['total_success']) == original_total
+    assert int(copy_resp['total_failed']) == 0
+
+"""
+        resp = {
+            'original_total': len(anno_list),
+            'total_success': len(copied),
+            'total_failed': len(discarded),
+            'success': copied,
+            'failure': discarded,
+        }
+"""
+
+
 

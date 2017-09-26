@@ -81,6 +81,7 @@ def get_jwt_payload(request):
     except Exception:
         raise NoPermissionForOperationError('missing jwt token')
 
+
 def get_default_permissions_for_user(user):
     return {
         'can_read': [],
@@ -509,30 +510,41 @@ def process_search_back_compat_params(request, query):
     return query
 
 
-@require_http_methods('GET')
+@require_http_methods('POST')
 @csrf_exempt
 @require_catchjwt
-def stash(request):
-    filepath = request.GET.get('filepath', None)
-    if filepath:
-        with open(filepath, 'r') as fh:
-            data = fh.read()
-        catcha_list = json.loads(data)
+def copy_api(request):
 
-    payload = get_jwt_payload(request)
-    try:
-        resp = CRUD.import_annos(catcha_list, payload)
-        return JsonResponse(status=HTTPStatus.OK, data=resp)
+    # check permissions to copy
+    jwt_payload = get_jwt_payload(request)
+    if 'CAN_COPY' not in jwt_payload['override']:
+        raise NoPermissionForOperationError(
+            'user ({}) not allowed to copy'.format(jwt_payload['name']))
 
-    except AnnoError as e:
-        return JsonResponse(status=e.status,
-                            data={'status': e.status, 'payload': [str(e)]})
+    params = get_input_json(request)
 
-    except (ValueError, KeyError) as e:
-        logger.error('bad input: requuest({})'.format(request), exc_info=True)
-        return JsonResponse(
-            status=HTTPStatus.BAD_REQUEST,
-            data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
+    # sanity check: not allowed to copy to same course or collection
+    if params['source_context_id'] == params['target_context_id']:
+        raise InconsistentAnnotationError(
+            'not allowed to copy to same context_id({})'.format(
+                params['source_context_id']))
+
+    userids = params['userid_list'] if 'userid_list' in params else None
+    usernames = params['username_list'] if 'username_list' in params else None
+    anno_list = CRUD.select_for_copy(
+            context_id=params['source_context_id'],
+            collection_id=params['source_collection_id'],
+            platform_name=params['platform_name'],
+            userid_list=userids,
+            username_list=usernames)
+
+    logger.debug('select for copy returned ({})'.format(anno_list.count()))
+
+    resp = CRUD.copy_annos(
+            anno_list,
+            params['target_context_id'], params['target_collection_id'])
+
+    return JsonResponse(status=HTTPStatus.OK, data=resp)
 
 
 

@@ -14,6 +14,7 @@ urlpatterns = [
         views.crud_compat_read, name='compat_read'),
 
     # these are for catchpy v2
+    url(r'^copy', views.copy_api, name='copy_api'),
     url(r'^(?P<anno_id>[0-9a-zA-z-]+)$', views.crud_api, name='crud_api'),
     url(r'^$', views.create_or_search, name='create_or_search'),
 ]

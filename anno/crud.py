@@ -10,6 +10,7 @@ from django.db import transaction
 
 from .errors import AnnoError
 from .errors import DuplicateAnnotationIdError
+from .errors import InconsistentAnnotationError
 from .errors import InvalidAnnotationPurposeError
 from .errors import InvalidAnnotationTargetTypeError
 from .errors import InvalidInputWebAnnotationError
@@ -18,10 +19,14 @@ from .errors import MissingAnnotationError
 from .errors import NoPermissionForOperationError
 from .errors import TargetAnnotationForReplyMissingError
 
+from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from .anno_defaults import MEDIA_TYPES, ANNO
 from .anno_defaults import PURPOSES
 from .anno_defaults import PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
 from .anno_defaults import RESOURCE_TYPES
+
+from .search import query_userid
+from .search import query_username
 from .models import Anno, Tag, Target
 from .utils import generate_uid
 
@@ -377,14 +382,7 @@ class CRUD(object):
     #
 
     @classmethod
-    def import_annos(cls, catcha_list, jwt_payload):
-
-        # check permissions to import
-        # TODO: review where permissions check should occur
-        if 'CAN_IMPORT' not in jwt_payload['override']:
-            raise NoPermissionForOperationError(
-                'user ({}) not allowed to import'.format(
-                    jwt_payload['userId']))
+    def import_annos(cls, catcha_list):
 
         discarded = []
         imported = []
@@ -413,22 +411,59 @@ class CRUD(object):
 
 
     @classmethod
-    def copy_annos(cls, anno_list, jwt_payload):
-        # TODO: uber similar to import; merge?
+    def select_for_copy(cls,
+                        context_id,
+                        collection_id=None,
+                        platform_name=None,
+                        userid_list=None, username_list=None):
 
-        # check permissions to copy
-        if 'CAN_COPY' not in jwt_payload['override']:
-            raise NoPermissionForOperationError(
-                'user ({}) not allowed to copy'.format(jwt_payload['name']))
+        if platform_name is None:  # default platform_name
+            platform_name = CATCH_DEFAULT_PLATFORM_NAME
+
+        # exclude deleted annotations
+        query = Anno._default_manager.filter(anno_deleted=False)
+
+        if username_list:
+            query = query.filter(query_username(username_list))
+        if userid_list:
+            query = query.filter(query_userid(userid_list))
+
+        # custom searches for platform params
+        # TODO ATTENTION: assumes custom_manager extends the defaullt one,
+        # provided by catchpy anno.managers.SearchManager
+        q = Anno.custom_manager.search_expression({
+            'platform_name': platform_name,
+            'context_id': context_id,
+            'collection_id': collection_id,
+        })
+        if q:
+            query = query.filter(q)
+
+        # exclude replies and sort by creation date
+        query = query.filter(anno_reply_to=None)
+        query = query.order_by('-created')
+
+        return query
+
+
+    @classmethod
+    def copy_annos(cls,
+                     anno_list,
+                     target_context_id,
+                     target_collection_id):
+        """
+        """
 
         discarded = []
         copied = []
         for a in anno_list:
             catcha = a.serialized
-            # TODO: pay attention when in compat-mode: anno_id must-be-integer
             catcha['id'] = generate_uid()  # create new id
+            catcha['platform']['context_id'] = target_context_id
+            catcha['platform']['collection_id'] = target_collection_id
+            catcha['totalReplies'] = 0
             try:
-                anno = CRUD.create_anno(catcha, is_copy=True)
+                anno = CRUD.create_anno(catcha)
             except AnnoError as e:
                 msg = 'error during copy of anno({}): {}'.format(
                     a.anno_id, str(e))
@@ -436,7 +471,7 @@ class CRUD(object):
                 catcha['error'] = msg
                 discarded.append(catcha)
             else:
-                copied.append(catcha)
+                copied.append(a.serialized)
 
         resp = {
             'original_total': len(anno_list),

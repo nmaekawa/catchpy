@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "0.1.0",
+        "version": "0.1.1",
         "title": "CATCH Annotation API"
     },
     "schemes": [
@@ -1356,6 +1356,42 @@
                     }
                 ]
             }
+        },
+        "/annos/copy": {
+            "post": {
+                "summary": "Copies set of annotation to different context_id",
+                "description": "Creates new instances given a set of annotations; the requesting user must have permission to perform 'copy' operation",
+                "parameters": [
+                    {
+                        "name": "copy_params",
+                        "in": "body",
+                        "description": "parameters for copy; note that (userid in userid_list AND username in username_list)",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CopyParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Results from copy operation",
+                        "schema": {
+                            "$ref": "#/definitions/CopyResult"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/Error"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "jwt_catchpy2": []
+                    }
+                ]
+            }
         }
     },
     "securityDefinitions": {
@@ -1634,71 +1670,6 @@
                 "type": "string"
             }
         },
-        "SearchResult": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer",
-                    "description": "total of objects found for search"
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "number of objects returned in this list"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "max number of objects requested"
-                },
-                "offset": {
-                    "type": "integer",
-                    "description": "requested offset"
-                },
-                "size_failed": {
-                    "type": "integer",
-                    "description": "number of objects that failed to be formatted"
-                },
-                "failed": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "$ref": "#/definitions/FailedItem"
-                    }
-                },
-                "rows": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "$ref": "#/definitions/Annotation"
-                    }
-                }
-            }
-        },
-        "FailedItem": {
-            "type": "object",
-            "required": ["id", "msg"],
-            "properties": {
-                "id": {"type": "string"},
-                "msg": {"type": "string", "description": "error message"}
-            }
-        },
-        "Error": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "integer",
-                    "format": "int32",
-                    "description": "http status code"
-
-                },
-                "payload": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "Annotator": {
             "description": "The AnnotatorJS object as catchpy v2 understands it. Some properties like 'deleted', or 'archived', were considered insipid, thus removed. Other properties like 'uri' are always 'strings' (while catch v1.2 would, at times, return integers, other times, strings.",
             "type": "object",
@@ -1815,6 +1786,126 @@
             "minItems": 0,
             "items": {"type": "string"},
             "uniqueItems": true
+        },
+        "SearchResult": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "total of objects found for search"
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "number of objects returned in this list"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "max number of objects requested"
+                },
+                "offset": {
+                    "type": "integer",
+                    "description": "requested offset"
+                },
+                "size_failed": {
+                    "type": "integer",
+                    "description": "number of objects that failed to be formatted"
+                },
+                "failed": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "$ref": "#/definitions/FailedItem"
+                    }
+                },
+                "rows": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "$ref": "#/definitions/Annotation"
+                    }
+                }
+            }
+        },
+        "FailedItem": {
+            "type": "object",
+            "required": ["id", "msg"],
+            "properties": {
+                "id": {"type": "string"},
+                "msg": {"type": "string", "description": "error message"}
+            }
+        },
+        "Error": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "http status code"
+
+                },
+                "payload": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "CopyParams": {
+            "type": "object",
+            "required": ["source_context_id", "source_collection_id",
+                "target_context_id", "target_collection_id", "platform_name"],
+            "properties": {
+                "source_context_id": {"type": "string"},
+                "source_collection_id": {"type": "string"},
+                "target_context_id": {"type": "string"},
+                "target_collection_id": {"type": "string"},
+                "platform_name": {"type": "string"},
+                "userid_list": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {"type": "string"},
+                    "uniqueItems": true
+                },
+                "username_list": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {"type": "string"},
+                    "uniqueItems": true
+                }
+            }
+        },
+        "CopyResult": {
+            "type": "object",
+            "properties": {
+                "original_total": {
+                    "type": "integer",
+                    "description": "number of total Annotation objects selected to be copied"
+                },
+                "total_success": {
+                    "type": "integer"
+                },
+                "total_failure": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "array",
+                    "minItems": 0,
+                    "description": "list of Annotation objects successfully created in copy operation",
+                    "items": {
+                        "$ref": "#/definitions/Annotation"
+                    }
+                },
+                "failure": {
+                    "type": "array",
+                    "minItems": 0,
+                    "description": "items that failed to be copied; each Annotation object in this array includes a string property `error` with error message",
+                    "items": {
+                        "$ref": "#/definitions/Annotation"
+                    }
+                }
+            }
         }
     },
     "tags": [

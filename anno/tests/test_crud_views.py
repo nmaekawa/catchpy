@@ -7,6 +7,7 @@ from django.test import Client
 from anno.anno_defaults import ANNO, TEXT
 from anno.anno_defaults import ANNOTATORJS_FORMAT
 from anno.anno_defaults import CATCH_ANNO_FORMAT
+from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.crud import CRUD
 from anno.errors import AnnotatorJSError
 from anno.json_models import AnnoJS
@@ -499,5 +500,68 @@ def test_format_response_reply_to_reply(wa_text):
     assert 'reply to a reply' in resp['failed'][0]['msg']
     assert 'rows' in resp
     assert len(resp['rows']) == 2
+
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_copy_ok(wa_list):
+    original_total = len(wa_list)
+
+    # import catcha list
+    import_resp = CRUD.import_annos_2(wa_list)
+    assert int(import_resp['original_total']) == original_total
+    assert int(import_resp['total_success']) == original_total
+    assert int(import_resp['total_failed']) == 0
+
+    anno_list = CRUD.select_for_copy(
+            context_id='fake_context',
+            collection_id='fake_collection',
+            platform_name=CATCH_DEFAULT_PLATFORM_NAME,
+            #userid_list=None, username_list=None
+            )
+    select_total = anno_list.count()
+    assert select_total == original_total
+
+    # setup copy call to client
+    params = {
+        'platform_name': CATCH_DEFAULT_PLATFORM_NAME,
+        'source_context_id': 'fake_context',
+        'source_collection_id': 'fake_collection',
+        'target_context_id': 'another_fake_context',
+        'target_collection_id': 'another_fake_collection',
+    }
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(
+        apikey=c.consumer, user='__admin__', override=['CAN_COPY'])
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+    copy_url = reverse('copy_api')
+    response = client.post(
+            copy_url, data=json.dumps(params),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            content_type='application/json')
+
+    assert response.status_code == 200
+    resp = json.loads(response.content.decode('utf-8'))
+    assert int(resp['original_total']) == original_total
+    assert int(resp['total_success']) == original_total
+    assert int(resp['total_failed']) == 0
+
+"""
+        resp = {
+            'original_total': len(anno_list),
+            'total_success': len(copied),
+            'total_failed': len(discarded),
+            'success': copied,
+            'failure': discarded,
+        }
+"""
+
+
+
+
+
+
 
 
