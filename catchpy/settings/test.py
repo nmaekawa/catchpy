@@ -13,37 +13,3 @@ DATABASES = {
         'ATOMIC_REQUESTS': False,
     },
 }
-# Logging config
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '%(asctime)s|%(levelname)s [%(filename)s:%(funcName)s] %(message)s'
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-            'stream': 'ext://sys.stdout',
-        },
-    },
-    'loggers': {
-        'anno': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': True
-        },
-        'consumer': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': True
-        },
-        'root': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        },
-    }
-}

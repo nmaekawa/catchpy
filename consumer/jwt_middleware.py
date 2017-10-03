@@ -6,6 +6,8 @@ import jwt
 import logging
 import pytz
 
+from django.conf import settings
+
 from .catchjwt import decode_token
 from .catchjwt import validate_token
 from .models import Consumer
@@ -13,8 +15,10 @@ from .models import Consumer
 
 JWT_AUTH_HEADER = 'HTTP_AUTHORIZATION'
 JWT_ANNOTATOR_HEADER = 'HTTP_X_ANNOTATOR_AUTH_TOKEN'
+PRINT_REQUEST_TIME = getattr(settings, 'CATCH_LOG_REQUEST_TIME', False)
 
 logger = logging.getLogger(__name__)
+
 
 def jwt_middleware(get_response):
 
@@ -32,6 +36,10 @@ def jwt_middleware(get_response):
 
         msg = ''
 
+
+        # log request time
+        # based on https://djangosnippets.org/snippets/1826/
+        start_ts = datetime.utcnow()
 
         #
         # TODO: refactor into more legible code...
@@ -83,6 +91,13 @@ def jwt_middleware(get_response):
 
         # code to be executed for each request/response after
         # the view is called
+
+        # calculate and log the response time
+        if PRINT_REQUEST_TIME:
+            ts_delta = datetime.utcnow() - start_ts
+            logger.info('[REQUEST_TIME] {}'.format(str(ts_delta)))
+
+
         return response
 
     return middleware

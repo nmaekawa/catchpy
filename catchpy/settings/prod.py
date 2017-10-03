@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'log_request_id.middleware.RequestIDMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -134,9 +135,15 @@ STATIC_ROOT = os.environ.get('CATCHPY_STATIC_ROOT', os.path.join(BASE_DIR, 'stat
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'request_id': {
+            '()': 'log_request_id.filters.RequestIDFilter',
+        },
+    },
     'formatters': {
         'simple': {
-            'format': '%(asctime)s|%(levelname)s [%(filename)s:%(funcName)s] %(message)s'
+            'format': ('%(asctime)s|%(levelname)s [%(filename)s:%(funcName)s]'
+                       ' [%(request_id)s] %(message)s')
         },
     },
     'handlers': {
@@ -145,6 +152,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
             'stream': 'ext://sys.stdout',
+            'filters': ['request_id'],
         },
         'errorfile_handler': {
             'level': 'DEBUG',
@@ -154,6 +162,7 @@ LOGGING = {
             'maxBytes': 10485760,  # 10MB
             'backupCount': 7,
             'encoding': 'utf8',
+            'filters': ['request_id'],
         },
     },
     'loggers': {
@@ -195,3 +204,5 @@ CATCH_DEFAULT_PLATFORM_NAME = os.environ.get(
 # admin id overrides all permissions, when requesting_user
 CATCH_ADMIN_GROUP_ID = os.environ.get('CATCH_ADMIN_GROUP_ID', '__admin__')
 
+# log request time
+CATCH_LOG_REQUEST_TIME = True
