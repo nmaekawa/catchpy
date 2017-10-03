@@ -301,6 +301,46 @@ class UserBehavior_AnnotatorJS(TaskSet):
             response.failure(response.status_code)
 
 
+class UserBehavior_CreateWebAnnotation(TaskSet):
+    def on_start(self):
+        self.catcha = fresh_wa_object(
+            'yoohoo', 'perf_context', 'perf_collection')
+        self.catcha['platform']['platform_name'] = 'perf_platform'
+
+    @task(1)
+    def add_annotation_then_tag(self):
+        # set user
+        user = self.catcha['creator']['id']
+        # generate token for user
+        token = make_token_for_user(user)
+        auth_header = 'token {}'.format(token)
+
+        # create annotation
+        response = self.client.post(
+            '/annos/', json=self.catcha, catch_response=True,
+            headers={
+                'Content-Type': 'Application/json',
+                'Authorization': auth_header,
+            })
+        if response.content == '':
+            response.failure('no data')
+        else:
+            try:
+                a_id = response.json()['id']
+            except KeyError:
+                resp = response.json()
+                if 'payload' in resp:
+                    response.failure(resp['payload'])
+                else:
+                    response.failure('no id in response')
+                return
+            except json.decoder.JSONDecodeError as e:
+                response.failure(e)
+                return
+            else:
+                response.success()
+
+
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior_WebAnnotation
     min_wait = 2000
