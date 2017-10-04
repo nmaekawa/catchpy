@@ -508,7 +508,7 @@ def test_copy_ok(wa_list):
     original_total = len(wa_list)
 
     # import catcha list
-    import_resp = CRUD.import_annos_2(wa_list)
+    import_resp = CRUD.import_annos(wa_list)
     assert int(import_resp['original_total']) == original_total
     assert int(import_resp['total_success']) == original_total
     assert int(import_resp['total_failed']) == 0
@@ -547,6 +547,66 @@ def test_copy_ok(wa_list):
     assert int(resp['original_total']) == original_total
     assert int(resp['total_success']) == original_total
     assert int(resp['total_failed']) == 0
+
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_copy_back_compat(wa_list):
+    original_total = len(wa_list)
+
+    # import catcha list
+    import_resp = CRUD.import_annos(wa_list)
+    assert int(import_resp['original_total']) == original_total
+    assert int(import_resp['total_success']) == original_total
+    assert int(import_resp['total_failed']) == 0
+
+    anno_list = CRUD.select_for_copy(
+            context_id='fake_context',
+            collection_id='fake_collection',
+            platform_name=CATCH_DEFAULT_PLATFORM_NAME,
+            #userid_list=None, username_list=None
+            )
+    select_total = anno_list.count()
+    assert select_total == original_total
+
+    # setup copy call to client
+    params = {
+        'platform_name': CATCH_DEFAULT_PLATFORM_NAME,
+        'source_context_id': 'fake_context',
+        'source_collection_id': 'fake_collection',
+        'target_context_id': 'another_fake_context',
+        'target_collection_id': 'another_fake_collection',
+        'back_compat': True,
+    }
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(
+        apikey=c.consumer, user='__admin__', override=['CAN_COPY'])
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+    copy_url = reverse('copy_api')
+    response = client.post(
+            copy_url, data=json.dumps(params),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            content_type='application/json')
+
+    assert response.status_code == 200
+    resp = json.loads(response.content.decode('utf-8'))
+    assert int(resp['original_total']) == original_total
+    assert int(resp['total_success']) == original_total
+    assert int(resp['total_failed']) == 0
+
+    # search via back-compat api
+    compat_search_url = reverse('compat_search')
+    response = client.get(
+        compat_search_url, data={'context_id': 'another_fake_context'},
+        HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
+
+    assert response.status_code == 200
+    content = json.loads(response.content.decode('utf-8'))
+    assert int(content['total']) == original_total
+    assert int(content['size_failed']) == 0
+
 
 """
         resp = {

@@ -1873,7 +1873,8 @@
                     "minItems": 0,
                     "items": {"type": "string"},
                     "uniqueItems": true
-                }
+                },
+                "back_compat": {"type": "boolean"}
             }
         },
         "CopyResult": {

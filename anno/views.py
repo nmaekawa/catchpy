@@ -529,6 +529,8 @@ def copy_api(request):
             'not allowed to copy to same context_id({})'.format(
                 params['source_context_id']))
 
+    back_compat = params['back_compat'] if 'back_compat' in params else False
+
     userids = params['userid_list'] if 'userid_list' in params else None
     usernames = params['username_list'] if 'username_list' in params else None
     anno_list = CRUD.select_for_copy(
@@ -541,8 +543,9 @@ def copy_api(request):
     logger.debug('select for copy returned ({})'.format(anno_list.count()))
 
     resp = CRUD.copy_annos(
-            anno_list,
-            params['target_context_id'], params['target_collection_id'])
+        anno_list,
+        params['target_context_id'], params['target_collection_id'],
+        back_compat=back_compat)
 
     return JsonResponse(status=HTTPStatus.OK, data=resp)
 

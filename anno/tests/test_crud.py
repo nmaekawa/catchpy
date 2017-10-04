@@ -53,7 +53,7 @@ def test_import_anno_ok(wa_image):
 
     # import first because CRUD.create changes created time in input
     catcha['id'] = 'naomi-xx-imported'
-    resp = CRUD.import_annos([catcha], {'override': ['CAN_IMPORT']})
+    resp = CRUD.import_annos([catcha])
     x2 = Anno._default_manager.get(pk=catcha['id'])
     assert x2 is not None
     assert Anno._default_manager.count() == 1
@@ -335,7 +335,7 @@ def test_copy_ok(wa_list):
     original_total = len(wa_list)
 
     # import catcha list
-    import_resp = CRUD.import_annos_2(wa_list)
+    import_resp = CRUD.import_annos(wa_list)
     assert int(import_resp['original_total']) == original_total
     assert int(import_resp['total_success']) == original_total
     assert int(import_resp['total_failed']) == 0
@@ -349,7 +349,7 @@ def test_copy_ok(wa_list):
     select_total = anno_list.count()
     assert select_total == original_total
 
-    copy_resp = CRUD.copy_annos_2(
+    copy_resp = CRUD.copy_annos(
             anno_list,
             'another_fake_context',
             'collection_x')

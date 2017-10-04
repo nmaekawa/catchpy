@@ -448,9 +448,10 @@ class CRUD(object):
 
     @classmethod
     def copy_annos(cls,
-                     anno_list,
-                     target_context_id,
-                     target_collection_id):
+                   anno_list,
+                   target_context_id,
+                   target_collection_id,
+                   back_compat=False):
         """
         """
 
@@ -458,7 +459,7 @@ class CRUD(object):
         copied = []
         for a in anno_list:
             catcha = a.serialized
-            catcha['id'] = generate_uid()  # create new id
+            catcha['id'] = generate_uid(must_be_int=back_compat)  # create new id
             catcha['platform']['context_id'] = target_context_id
             catcha['platform']['collection_id'] = target_collection_id
             catcha['totalReplies'] = 0
