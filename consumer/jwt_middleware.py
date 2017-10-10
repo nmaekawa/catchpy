@@ -85,7 +85,7 @@ def jwt_middleware(get_response):
 
         request.catchjwt['error'] = msg
         if msg:
-            logger.warn(msg)
+            logger.info(msg)
 
         response = get_response(request)
 
