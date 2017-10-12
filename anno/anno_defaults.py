@@ -60,4 +60,7 @@ MEDIA_TYPE_CHOICES = (
 MEDIA_TYPES = [x[0] for x in MEDIA_TYPE_CHOICES]
 
 
+# log for stat/perf matters
+CATCH_LOG_REQUEST_TIME = getattr(settings, 'CATCH_LOG_REQUEST_TIME')
+CATCH_LOG_SEARCH_TIME = getattr(settings, 'CATCH_LOG_SEARCH_TIME')
 

@@ -20,22 +20,17 @@ try:
 except ImportError:
     pass
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('CATCHPY_DB_NAME', 'catchpy'),
-        'USER': os.environ.get('CATCHPY_DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('CATCHPY_DB_PASSWORD', 'catchpy'),
-        'HOST': os.environ.get('CATCHPY_DB_HOST', 'localhost'),
-        'PORT': os.environ.get('CATCHPY_DB_PORT', '5432'),
-        'ATOMIC_REQUESTS': False,
-    },
-}
-
 # add db logging to dev settings
 LOGGING['loggers']['django.db'] = {
         'level': 'INFO',
         'handlers': ['console'],
         'propagate': True
 }
+
+# log request time
+CATCH_LOG_REQUEST_TIME = os.environ.get(
+    'CATCH_LOG_REQUEST_TIME', 'true').lower() == 'true'
+CATCH_LOG_SEARCH_TIME = os.environ.get(
+    'CATCH_LOG_SEARCH_TIME', 'true').lower() == 'true'
+
 

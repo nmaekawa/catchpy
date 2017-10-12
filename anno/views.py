@@ -39,6 +39,7 @@ from .anno_defaults import CATCH_ANNO_FORMAT
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import CATCH_RESPONSE_LIMIT
+from .anno_defaults import CATCH_LOG_SEARCH_TIME
 
 
 logger = logging.getLogger(__name__)
@@ -322,7 +323,6 @@ def partial_update_api(request, anno_id):
 
 def search_api(request):
     # naomi note: always return catcha
-    logger.debug('search query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request, back_compat=False)
         return JsonResponse(status=HTTPStatus.OK, data=resp)
@@ -343,7 +343,6 @@ def search_api(request):
 @csrf_exempt
 @require_catchjwt
 def search_back_compat_api(request):
-    logger.debug('search_back_compat query=({})'.format(request.GET))
     try:
         resp = _do_search_api(request, back_compat=True)
         return JsonResponse(status=HTTPStatus.OK, data=resp)
@@ -359,12 +358,22 @@ def search_back_compat_api(request):
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
 
+def step_in_time(delta_list=None):
+    if not delta_list:
+        return [(datetime.utcnow(), 0)]
+
+    i = len(delta_list) - 1
+    ts = datetime.utcnow()
+    d = ts - delta_list[i][0]
+    delta_list.append((ts, d))
+
 
 def _do_search_api(request, back_compat=False):
 
+    # prep to count how long a search is taking
+    ts_deltas = step_in_time()
+
     payload = request.catchjwt
-    logger.debug('_do_search payload[userid]=({}) | back_compat={}'.format(
-        payload['userId'], back_compat))
 
     # filter out the soft-deleted
     query = Anno._default_manager.filter(anno_deleted=False)
@@ -381,8 +390,14 @@ def _do_search_api(request, back_compat=False):
     else:
         query = process_search_params(request, query)
 
+
+    # delta[1] - process search params
+    step_in_time(ts_deltas)
+
+
     # sort by created date, descending (more recent first)
     query = query.order_by('-created')
+
 
     # max results and offset
     try:
@@ -400,8 +415,19 @@ def _do_search_api(request, back_compat=False):
         q_result = query[offset:]
     else:
         q_result = query[offset:(offset+limit)]
+
+
+    # delta[2] - evaluated again?
+    step_in_time(ts_deltas)
+
+
     total = query.count()      # is it here when the querysets are evaluated?
     size = q_result.count()
+
+
+    # delta[3] - how long to evaluate query
+    step_in_time(ts_deltas)
+
 
     # hard limit for response
     if size > CATCH_RESPONSE_LIMIT:
@@ -413,7 +439,27 @@ def _do_search_api(request, back_compat=False):
     else:
         response_format = CATCH_ANNO_FORMAT
 
+
+    # delta[4] - just before formatting
+    step_in_time(ts_deltas)
+
+
     response = _format_response(q_result, response_format)
+
+
+    # delta[5] - how  long to format
+    step_in_time(ts_deltas)
+
+
+    if CATCH_LOG_SEARCH_TIME:
+        logger.info(('[SEARCH_TIME] (prep, eval, format, total) '
+                     '{0:12.3f} {1:12.3f} {2:12.3f} {3:12.3f}').format(
+                         (ts_deltas[1][1].total_seconds()),
+                         (ts_deltas[3][1].total_seconds()),
+                         (ts_deltas[5][1].total_seconds()),
+                         (datetime.utcnow() - ts_deltas[0][0]).total_seconds()))
+
+
     response['total'] = total  # add response info
     response['limit'] = limit
     response['offset'] = offset

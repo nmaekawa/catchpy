@@ -205,4 +205,9 @@ CATCH_DEFAULT_PLATFORM_NAME = os.environ.get(
 CATCH_ADMIN_GROUP_ID = os.environ.get('CATCH_ADMIN_GROUP_ID', '__admin__')
 
 # log request time
-CATCH_LOG_REQUEST_TIME = True
+CATCH_LOG_REQUEST_TIME = os.environ.get(
+    'CATCH_LOG_REQUEST_TIME', 'false').lower() == 'true'
+CATCH_LOG_SEARCH_TIME = os.environ.get(
+    'CATCH_LOG_SEARCH_TIME', 'false').lower() == 'true'
+
+
