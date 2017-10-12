@@ -87,6 +87,7 @@ DATABASES = {
         'HOST': os.environ.get('CATCHPY_DB_HOST', 'localhost'),
         'PORT': os.environ.get('CATCHPY_DB_PORT', '5432'),
         'ATOMIC_REQUESTS': False,
+        'CONN_MAX_AGE': 500,  # permanent connections
     },
 }
 

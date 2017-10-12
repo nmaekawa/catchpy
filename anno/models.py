@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 
 class Anno(Model):
-    created = DateTimeField(auto_now_add=True, null=False)
+    created = DateTimeField(db_index=True, auto_now_add=True, null=False)
     modified = DateTimeField(auto_now=True, null=False)
 
     schema_version = CharField(
@@ -57,7 +57,7 @@ class Anno(Model):
 
     anno_id = CharField(max_length=128, primary_key=True)
     # soft delete
-    anno_deleted = BooleanField(default=False)
+    anno_deleted = BooleanField(db_index=True, default=False)
     # comment to a parent annotation
     anno_reply_to = ForeignKey('Anno', null=True, blank=True, on_delete=CASCADE)
     anno_tags = ManyToManyField('Tag', blank=True)
