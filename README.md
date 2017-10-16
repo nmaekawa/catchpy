@@ -6,7 +6,7 @@ format.
 
 for info on Catch WebAnnotation, check:
 
-- https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/api/catch_api.json
+- https://raw.githubusercontent.com/nmaekawa/catchpy/master/anno/static/anno/catch_api.json
 - https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json
 
 
