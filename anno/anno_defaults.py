@@ -1,8 +1,6 @@
 from django.conf import settings
 
-
-# schema versions
-CATCH_CURRENT_SCHEMA_VERSION = 'catch_v2.0'
+from .catch_json_schema import CATCH_CURRENT_SCHEMA_VERSION
 
 # jsonld context
 CATCH_JSONLD_CONTEXT_IRI = getattr(settings, 'CATCH_JSONLD_CONTEXT_IRI')

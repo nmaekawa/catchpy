@@ -19,3 +19,4 @@ del(definitions['Annotation'])
 jschema['definitions'] = definitions
 
 CATCH_JSON_SCHEMA = jschema
+CATCH_CURRENT_SCHEMA_VERSION = api_spec['info']['version']

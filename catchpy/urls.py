@@ -17,8 +17,11 @@ from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 
+from . import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^annos/', include('anno.urls')),
+    url(r'^version/', views.app_version),
+    url(r'^is_alive/', views.is_alive),
 ]
