@@ -26,6 +26,7 @@ def app_version(request):
 def is_alive(request):
 
     try:
+        # TODO: queryset is NOT being evaluated, so useless check for db conn
         result = Anno._default_manager.all()[:1]
     except AnnoError as e:
         return JsonResponse(
