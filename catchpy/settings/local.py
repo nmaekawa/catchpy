@@ -1,4 +1,4 @@
-from .prod import *
+from .dev import *
 
 DEBUG = True
 
@@ -19,18 +19,4 @@ try:
     DEBUG_TOOLBAR_PATCH_SETTINGS = True
 except ImportError:
     pass
-
-# add db logging to dev settings
-LOGGING['loggers']['django.db'] = {
-        'level': 'INFO',
-        'handlers': ['console'],
-        'propagate': True
-}
-
-# log request time
-CATCH_LOG_REQUEST_TIME = os.environ.get(
-    'CATCH_LOG_REQUEST_TIME', 'true').lower() == 'true'
-CATCH_LOG_SEARCH_TIME = os.environ.get(
-    'CATCH_LOG_SEARCH_TIME', 'true').lower() == 'true'
-
 
