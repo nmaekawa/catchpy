@@ -173,12 +173,17 @@ LOGGING = {
             'propagate': True
         },
         'consumer': {
-            'level': 'DEBUG',
+            'level': 'INFO',
+            'handlers': ['console'],
+            'propagate': True
+        },
+        'catchpy': {
+            'level': 'INFO',
             'handlers': ['console'],
             'propagate': True
         },
         'root': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'handlers': ['console'],
         },
     }

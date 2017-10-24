@@ -1,6 +1,5 @@
 from datetime import datetime
 import dateutil
-from functools import wraps
 import json
 import logging
 
@@ -16,6 +15,7 @@ from http import HTTPStatus
 from .json_models import AnnoJS
 from .json_models import Catcha
 from .crud import CRUD
+from .decorators import require_catchjwt
 from .errors import AnnoError
 from .errors import AnnotatorJSError
 from .errors import InvalidAnnotationCreatorError
@@ -52,28 +52,6 @@ METHOD_PERMISSION_MAP = {
     'DELETE': 'delete',
     'PUT': 'update',
 }
-
-
-def require_catchjwt(view_func):
-    def _decorator(request, *args, **kwargs):
-        # check that middleware added jwt info in request
-        catchjwt = getattr(request, 'catchjwt', None)
-        if catchjwt is None:
-            return JsonResponse(
-                status=HTTPStatus.UNAUTHORIZED,
-                data={'status': HTTPStatus.UNAUTHORIZED,
-                      'payload': ['looks like catchjwt middleware is not on']}
-            )
-        if catchjwt['error']:
-            return JsonResponse(
-                status=HTTPStatus.UNAUTHORIZED,
-                data={'status': HTTPStatus.UNAUTHORIZED,
-                      'payload': catchjwt['error']},
-            )
-
-        response = view_func(request, *args, **kwargs)
-        return response
-    return wraps(view_func)(_decorator)
 
 
 def get_jwt_payload(request):
