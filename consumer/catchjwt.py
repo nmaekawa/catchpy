@@ -5,6 +5,7 @@ from dateutil import tz
 import iso8601
 import jwt
 import logging
+from uuid import uuid4
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,9 @@ def encode_catchjwt(apikey=None, secret=None,
         'ttl': ttl,
         'override': override,
     }
-    return encode_token(payload, secret)
+    return encode_token(
+        payload,
+        secret if secret else str(uuid4()))
 
 
 def now_utc():
