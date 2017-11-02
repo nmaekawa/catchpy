@@ -439,7 +439,7 @@
                         "type": "string"
                     },
                     {
-                        "name": "target_source_id",
+                        "name": "source_id",
                         "required": false,
                         "in": "query",
                         "description": "source_id is the parent annotation `id` property of annotation `platform`",

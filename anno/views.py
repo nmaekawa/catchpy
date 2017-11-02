@@ -381,36 +381,31 @@ def _do_search_api(request, back_compat=False):
     try:
         limit = int(request.GET.get('limit', 10))
     except ValueError:
-        limit = 10
+        limit = CATCH_RESPONSE_LIMIT
 
     try:
         offset = int(request.GET.get('offset', 0))
     except ValueError:
         offset = 0
 
-    # check if limit -1 meaning complete result
-    if limit < 0:
-        q_result = query[offset:]
+    # calculate response size
+    total = query.count()
+    if limit < 0:   # limit -1 means complete result, limit response size
+        size = CATCH_RESPONSE_LIMIT \
+                if (total - offset) > CATCH_RESPONSE_LIMIT else (total - offset)
     else:
-        q_result = query[offset:(offset+limit)]
+        size = limit
 
-
-    # delta[2] - evaluated again?
+    # delta[2]
     step_in_time(ts_deltas)
 
 
-    total = query.count()      # is it here when the querysets are evaluated?
-    size = q_result.count()
+    q_result = query[offset:(offset+size)]
 
 
-    # delta[3] - how long to evaluate query
+    # delta[3]
     step_in_time(ts_deltas)
 
-
-    # hard limit for response
-    if size > CATCH_RESPONSE_LIMIT:
-        q_result = q_result[:CATCH_RESPONSE_LIMIT]
-        size = q_result.count()
 
     if back_compat:
         response_format = ANNOTATORJS_FORMAT
@@ -430,14 +425,14 @@ def _do_search_api(request, back_compat=False):
 
 
     if CATCH_LOG_SEARCH_TIME:
-        logger.info(('[SEARCH_TIME] (prep, eval, format, total) '
-                     '{0:12.3f} {1:12.3f} {2:12.3f} {3:12.3f}').format(
+        logger.info(('[SEARCH_TIME] (prep, count, eval, -, format, total) '
+                     '{0:12.3f} {1:12.3f} {2:12.3f} {3:12.3f} {4:12.3f} {4:12.3f}').format(
                          (ts_deltas[1][1].total_seconds()),
+                         (ts_deltas[2][1].total_seconds()),
                          (ts_deltas[3][1].total_seconds()),
+                         (ts_deltas[4][1].total_seconds()),
                          (ts_deltas[5][1].total_seconds()),
                          (datetime.utcnow() - ts_deltas[0][0]).total_seconds()))
-
-
     response['total'] = total  # add response info
     response['limit'] = limit
     response['offset'] = offset
