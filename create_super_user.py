@@ -7,6 +7,7 @@ import django
 from django.conf import settings
 
 if __name__ == "__main__":
+    print('deprecating soon; use `./manage.py create_user` instead')
     # if dotenv file, load it
     dotenv_path = os.environ.get('CATCHPY_DOTENV_PATH', None)
     if dotenv_path:

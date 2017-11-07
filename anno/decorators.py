@@ -18,7 +18,7 @@ def require_catchjwt(view_func):
             return JsonResponse(
                 status=HTTPStatus.UNAUTHORIZED,
                 data={'status': HTTPStatus.UNAUTHORIZED,
-                      'payload': catchjwt['error']},
+                      'payload': [catchjwt['error']]},
             )
 
         response = view_func(request, *args, **kwargs)
