@@ -102,7 +102,6 @@ class AnnoJS(object):
     @classmethod
     def convert_reply(cls, anno):
         anno_parent = anno.anno_reply_to
-        # will raise exc if multiple targets in parent annotation
         try:
             resp = cls.convert_target(anno_parent)
         except AnnotatorJSError as e:
@@ -116,21 +115,16 @@ class AnnoJS(object):
 
     @classmethod
     def convert_target(cls, anno):
-        resp = {}
+        i_resp = {}
 
         if anno.target_type == RESOURCE_TYPE_LIST:
-            if anno.total_targets > 1:
-                # flag error: multiple targets not supported by annotatorjs
-                msg = ('anno({}) multiple targets not supported by '
-                       'annotatorjs').format(anno.anno_id)
-                logger.error(msg)
-                raise AnnotatorJSError(msg)
-
+            # assume that anno in the system has at least 1 target
+            # if more than one, pick the first, see pivotal tracker:
+            # https://www.pivotaltracker.com/story/show/152686994
             t = anno.targets[0]
+
             t_wa = Catcha.fetch_target_item_by_source(
                 anno.serialized, t.target_source)
-
-            i_resp = {}
 
             if t.target_media in [VIDEO, AUDIO]:
                 i_resp = cls.convert_target_video(anno, t_wa)
@@ -167,7 +161,6 @@ class AnnoJS(object):
             logger.error(msg)
             raise AnnoError(msg)
 
-        #resp.update(i_resp)
         return i_resp
 
 
@@ -251,15 +244,8 @@ class AnnoJS(object):
     @classmethod
     def convert_target_video(cls, anno, catcha_target_item):
         resp = {}
-        if len(catcha_target_item['selector']['items']) > 1:
-            msg = ('anno({}) multiple selectors for target_type `{}` '
-                   'not supported in annotatorjs').format(
-                       anno.anno_id, catcha_target_item['type'])
-            logger.error(msg)
-            raise AnnotatorJSError(msg)
 
-
-        # treat first target, ignore rest
+        # treat first selector, ignore rest
         selector_item = catcha_target_item['selector']['items'][0]
         (start, end) = selector_item['value'].split('=')[1].split(',')
         resp['rangeTime'] = {'start': string_to_number(start),
@@ -281,7 +267,6 @@ class AnnoJS(object):
         resp['ranges'] = []
         for s in catcha_target_item['selector']['items']:
             if s['type'] == 'RangeSelector':
-                #resp['ranges'] = cls.convert_rangeSelector_to_ranges(s)
                 resp['ranges'].append(cls.convert_rangeSelector_to_ranges(s))
             elif s['type'] == 'TextQuoteSelector':
                 # ATTENTION! trusts that there's quoteSelector then single
@@ -608,10 +593,6 @@ class AnnoJS(object):
 
         x1 = json.dumps(annojs1, sort_keys=True, indent=4)
         x2 = json.dumps(annojs2, sort_keys=True, indent=4)
-
-        #if x1 != x2:  # naomi naomi naomi naomi naomi debug debug debug
-        #    logger.debug('AnnoJS.are-similar FALSE: {}\n{}'.format(x1, x2))
-
         return x1 == x2
 
 

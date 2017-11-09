@@ -455,26 +455,30 @@ def test_format_response_id_nan(wa_text):
 @pytest.mark.django_db
 def test_format_response_multitarget(wa_text):
     wa = wa_text
+
     target_item = {
         'source': 'target_source_blah',
         'type': 'Text',
         'format': 'text/plain',
         'selector': {
-            'type': 'TextQuoteSelector',
-            'exact': 'Quote selector exact blah',
+            'type': 'List',
+            'items': [
+                {
+                    'type': 'TextQuoteSelector',
+                    'exact': 'Quote selector exact blah',
+                }
+            ]
         }
     }
-    wa['target']['items'].append(target_item)
     wa['id'] = '666'
+    wa['target']['items'].append(target_item)
     x = CRUD.create_anno(wa)
-    assert x is not None
+    assert x.total_targets == 2
 
-    query_set = Anno._default_manager.all()
-    resp = _format_response(query_set, 'ANNOTATORJS_FORMAT')
-    assert 'failed' in resp
-    assert resp['failed'][0]['id'] == x.anno_id
-    assert 'multiple targets not supported' in resp['failed'][0]['msg']
-    assert resp['size_failed'] == 1
+    resp = _format_response(x, 'ANNOTATORJS_FORMAT')
+    assert str(resp['id']) == x.anno_id
+    assert resp['uri'] in [wa['target']['items'][0]['source'],
+                           wa['target']['items'][1]['source']]
 
 
 @pytest.mark.usefixtures('wa_text')

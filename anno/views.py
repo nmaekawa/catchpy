@@ -18,6 +18,7 @@ from .crud import CRUD
 from .decorators import require_catchjwt
 from .errors import AnnoError
 from .errors import AnnotatorJSError
+from .errors import InconsistentAnnotationError
 from .errors import InvalidAnnotationCreatorError
 from .errors import DuplicateAnnotationIdError
 from .errors import MethodNotAllowedError

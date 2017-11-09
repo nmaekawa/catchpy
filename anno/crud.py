@@ -248,14 +248,13 @@ class CRUD(object):
         anno.body_format = body['format']
         anno.raw = catcha
 
-        # validate  target objects
-        target_list = cls._create_targets_for_annotation(anno, catcha)
-
         try:
             with transaction.atomic():
-                # remove all targets
+                # validate  input target objects
+                target_list = cls._create_targets_for_annotation(anno, catcha)
+                # remove all targets from annotation object
                 cls._delete_targets(anno)
-                # persist target objects
+                # persist input target objects
                 for t in target_list:
                     t.save()
                 # dissociate tags from annotation
