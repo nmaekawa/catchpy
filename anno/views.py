@@ -496,6 +496,8 @@ def process_search_back_compat_params(request, query):
         query = query.filter(body_text__search=text)
 
     userids = request.GET.getlist('userid', [])
+    if not userids:  # back-compat list in querystring
+        userids = request.GET.getlist('userid[]', [])
     if userids:
         query = query.filter(query_userid(userids))
 
