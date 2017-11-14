@@ -442,22 +442,32 @@ def _do_search_api(request, back_compat=False):
 
 def process_search_params(request, query):
     usernames = request.GET.getlist('username', [])
+    if not usernames:
+        usernames = request.GET.getlist('username[]', [])
     if usernames:
         query = query.filter(query_username(usernames))
 
     userids = request.GET.getlist('userid', [])
+    if not userids:
+        userids = request.GET.getlist('userid[]', [])
     if userids:
         query = query.filter(query_userid(userids))
 
     tags = request.GET.getlist('tag', [])
+    if not tags:
+        tags = request.GET.getlist('tag[]', [])
     if tags:
         query = query.filter(query_tags(tags))
 
     targets = request.GET.get('target_source', [])
+    if not targets:
+        targets = request.GET.getlist('target_source[]', [])
     if targets:
         query = query.filter(query_target_sources(targets))
 
     medias = request.GET.getlist('media', [])
+    if not medias:
+        medias = request.GET.getlist('media[]', [])
     if medias:
         mlist = [x.capitalize() for x in medias]
         query = query.filter(query_target_medias(mlist))
