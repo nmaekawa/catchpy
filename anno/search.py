@@ -38,7 +38,7 @@ def query_username(username_params):
 
 def query_tags(tags_params):
     return dynamic_lookup_valuelist(
-        'anno_tags__tag_name', tags_params, lookup='contains')
+        'anno_tags__tag_name', tags_params)
 
 
 def query_target_sources(target_params):

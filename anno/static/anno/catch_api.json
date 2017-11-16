@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "version": "1.1.0",
-        "title": "CATCH Annotation API"
+        "title": "CATCHPY Annotation API"
     },
     "schemes": [
         "http",
@@ -390,6 +390,7 @@
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?userid=jsnow&userid=rstark&userid=tgreyjoy",
                         "type": "array",
+                        "collectionFormat": "multi",
                         "items": {"type": "string"}
                     },
                     {
@@ -398,6 +399,7 @@
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
                         "type": "array",
+                        "collectionFormat": "multi",
                         "items": {"type": "string"}
                     },
                     {
@@ -406,6 +408,7 @@
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we",
                         "type": "array",
+                        "collectionFormat": "multi",
                         "items": {"type": "string"}
                     },
                     {
@@ -419,16 +422,18 @@
                         "name": "media",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _OR_ list; ex: ?media=Video&media=Annotation. Note that media type changed for replies: for catchpy v2 use `Annotation` instead of `comment`",
+                        "description": "repeat if you want a _OR_ list; ex: ?media=Video&media=Annotation. Note that media type changed for replies: for catchpy use `Annotation` instead of `comment`",
                         "type": "array",
+                        "collectionFormat": "multi",
                         "items": {"type": "string"}
                     },
                     {
                         "name": "tag",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _AND_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
+                        "description": "repeat if you want a _OR_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
                         "type": "array",
+                        "collectionFormat": "multi",
                         "items": {"type": "string"}
                     },
                     {
@@ -995,20 +1000,22 @@
                         "required": false,
                         "in": "query",
                         "description": "repeat if you want a _OR_ list; ex: ?userid=jsnow&userid=rstark&userid=tgreyjoy",
-                        "type": "string"
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {"type": "string"}
                     },
                     {
                         "name": "username",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _OR_ list; ex: ?username=firstofhername&userid=theunburnt&userid=motherofdragons",
+                        "description": "ex: ?username=motherofdragons",
                         "type": "string"
                     },
                     {
                         "name": "source",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we. Corresponds to catchpy v2 search paramenter `target_source`",
+                        "description": "?source=http//essos.we. Corresponds to catchpy search paramenter `target_source`",
                         "type": "string"
                     },
                     {
@@ -1022,28 +1029,28 @@
                         "name": "media",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _OR_ list; ex: ?media=video&media=comment",
+                        "description": "ex: ?media=comment",
                         "type": "string"
                     },
                     {
                         "name": "tag",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _OR_ list; ex: ?tag=firstofhisname&tag=protectoroftherealm&tag=lannister",
+                        "description": "ex: ?tag=protectoroftherealm",
                         "type": "string"
                     },
                     {
                         "name": "uri",
                         "required": false,
                         "in": "query",
-                        "description": "exact match for property `uri`; corresponds to search parameter `source_id` in catchpy v2",
+                        "description": "exact match for property `uri`; corresponds to search parameter `source_id` in catchpy",
                         "type": "string"
                     },
                     {
                         "name": "parentid",
                         "required": false,
                         "in": "query",
-                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy v2 do: ?media=Annotation&source_id=(parent_annotation_id)",
+                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy do: ?media=Annotation&source_id=(parent_annotation_id)",
                         "allowEmptyValue": true,
                         "type": "integer"
                     },
@@ -1051,14 +1058,14 @@
                         "name": "contextId",
                         "required": false,
                         "in": "query",
-                        "description": "exact match for property `contextId`. Note that, in catchpy v2, `contextId` search parameter changed to `context_id`",
+                        "description": "exact match for property `contextId`. Note that, in catchpy, `contextId` search parameter changed to `context_id`",
                         "type": "string"
                     },
                     {
                         "name": "collectionId",
                         "required": false,
                         "in": "query",
-                        "description": "exact match for property `collectionId`. Note that, in catchpy v2, `collectionId` search parameter changed to `collection_id`",
+                        "description": "exact match for property `collectionId`. Note that, in catchpy, `collectionId` search parameter changed to `collection_id`",
                         "type": "string"
                     }
                 ],
@@ -1135,7 +1142,7 @@
                         "name": "source",
                         "required": false,
                         "in": "query",
-                        "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we. Corresponds to catchpy v2 search paramenter `target_source`",
+                        "description": "repeat if you want a _OR_ list; ex: ?source=http//winterfell.no&source=http//dorn.so&source=http//essos.we. Corresponds to catchpy search paramenter `target_source`",
                         "type": "string"
                     },
                     {
@@ -1163,14 +1170,14 @@
                         "name": "uri",
                         "required": false,
                         "in": "query",
-                        "description": "exact match for property `uri`; corresponds to search parameter `source_id` in catchpy v2",
+                        "description": "exact match for property `uri`; corresponds to search parameter `source_id` in catchpy",
                         "type": "string"
                     },
                     {
                         "name": "parentid",
                         "required": false,
                         "in": "query",
-                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy v2 do: ?media=Annotation&source_id=(parent_annotation_id)",
+                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy do: ?media=Annotation&source_id=(parent_annotation_id)",
                         "allowEmptyValue": true,
                         "type": "integer"
                     },
@@ -1178,14 +1185,14 @@
                         "name": "contextId",
                         "required": false,
                         "in": "query",
-                        "description": "exact match for property `contextId`. Note that, in catchpy v2, `contextId` search parameter changed to `context_id`",
+                        "description": "exact match for property `contextId`. Note that, in catchpy, `contextId` search parameter changed to `context_id`",
                         "type": "string"
                     },
                     {
                         "name": "collectionId",
                         "required": false,
                         "in": "query",
-                        "description": "exact match for property `collectionId`. Note that, in catchpy v2, `collectionId` search parameter changed to `collection_id`",
+                        "description": "exact match for property `collectionId`. Note that, in catchpy, `collectionId` search parameter changed to `collection_id`",
                         "type": "string"
                     }
                 ],
@@ -1671,7 +1678,7 @@
             }
         },
         "Annotator": {
-            "description": "The AnnotatorJS object as catchpy v2 understands it. Some properties like 'deleted', or 'archived', were considered insipid, thus removed. Other properties like 'uri' are always 'strings' (while catch v1.2 would, at times, return integers, other times, strings.",
+            "description": "The AnnotatorJS object as catchpy understands it. Some properties like 'deleted', or 'archived', were considered insipid, thus removed. Other properties like 'uri' are always 'strings' (while catch v1.2 would, at times, return integers, other times, strings.",
             "type": "object",
             "properties": {
                 "id": {
