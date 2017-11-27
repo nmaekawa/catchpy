@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 from dateutil import tz
+import json
 import pytest
 
 from anno.crud import CRUD
@@ -46,7 +47,7 @@ def test_create_duplicate_anno(wa_image):
 
 @pytest.mark.usefixtures('wa_image')
 @pytest.mark.django_db(transaction=True)
-def test_import_anno_ok(wa_image):
+def test_import_anno_ok_2(wa_image):
     catcha = wa_image
 
     now = datetime.now(tz.tzutc())
@@ -58,10 +59,9 @@ def test_import_anno_ok(wa_image):
     assert x2 is not None
     assert Anno._default_manager.count() == 1
 
-    # x2 was created more than 25h ago?
-    # (wa_image should have been created 30h ago)
+    # x2 was created more in the past? import preserves created date?
     delta = timedelta(hours=25)
-    assert (now - delta) < x2.created
+    assert x2.created < (now - delta)
 
     # about to create
     catcha['id'] = 'naomi-xx'
@@ -72,6 +72,87 @@ def test_import_anno_ok(wa_image):
     # x1 was created less than 1m ago?
     delta = timedelta(minutes=1)
     assert (now - delta) < x1.created
+
+
+@pytest.mark.usefixtures('wa_image')
+@pytest.mark.django_db(transaction=True)
+def test_import_anno_ok(wa_image):
+    catcha = wa_image
+    catcha_reply = make_wa_object(
+        age_in_hours=1, reply_to=catcha['id'])
+
+    now = datetime.now(tz.tzutc())
+
+    resp = CRUD.import_annos([catcha, catcha_reply])
+    x2 = Anno._default_manager.get(pk=catcha['id'])
+    assert x2 is not None
+
+    # preserve replies?
+    assert x2.total_replies == 1
+    assert x2.replies[0].anno_id == catcha_reply['id']
+
+    # import preserve created date?
+    delta = timedelta(hours=25)
+    assert x2.created < (now - delta)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_import_deleted_reply_ok():
+    catcha_dict = {}
+    catcha_dict['c_regular'] = make_wa_object(age_in_hours=10)
+    catcha_dict['c_regular']['id'] = 'regular'
+    catcha_dict['c_parent1'] = make_wa_object(age_in_hours=9)
+    catcha_dict['c_parent1']['id'] = 'parent1'
+    catcha_dict['c_reply1'] = make_wa_object(
+        age_in_hours=8, reply_to=catcha_dict['c_parent1']['id'])
+    catcha_dict['c_reply1']['id'] = 'reply1'
+    catcha_dict['c_deleted'] = make_wa_object(age_in_hours=7)
+    catcha_dict['c_deleted']['platform']['deleted'] = True
+    catcha_dict['c_deleted']['id'] = 'deleted'
+
+    # import all
+    resp = CRUD.import_annos(catcha_dict.values())
+
+    assert resp['total_failed'] == 0
+    assert len(resp['deleted']) == 1
+    assert len(resp['reply']) == 1
+
+    c_parent1 = Anno._default_manager.get(pk=catcha_dict['c_parent1']['id'])
+    assert c_parent1.total_replies == 1
+    c_reply1 = Anno._default_manager.get(pk=catcha_dict['c_reply1']['id'])
+    assert c_reply1.anno_reply_to.anno_id == c_parent1.anno_id
+    c_deleted = Anno._default_manager.get(pk=catcha_dict['c_deleted']['id'])
+    assert c_deleted.anno_deleted
+
+
+@pytest.mark.django_db(transaction=True)
+def test_import_deleted_parent_ok():
+    catcha_dict = {}
+    catcha_dict['c_regular'] = make_wa_object(age_in_hours=10)
+    catcha_dict['c_regular']['id'] = 'regular'
+    catcha_dict['c_parent1'] = make_wa_object(age_in_hours=9)
+    catcha_dict['c_parent1']['id'] = 'parent1_deleted'
+    catcha_dict['c_parent1']['platform']['deleted'] = True
+    catcha_dict['c_reply1'] = make_wa_object(
+        age_in_hours=8, reply_to=catcha_dict['c_parent1']['id'])
+    catcha_dict['c_reply1']['id'] = 'reply1'
+
+    # import all
+    resp = CRUD.import_annos(catcha_dict.values())
+
+    assert resp['total_failed'] == 0
+    assert len(resp['deleted']) == 1
+    assert len(resp['reply']) == 1
+
+    c_parent1 = Anno._default_manager.get(pk=catcha_dict['c_parent1']['id'])
+    assert c_parent1.total_replies == 1
+    assert c_parent1.anno_deleted
+    c_reply1 = Anno._default_manager.get(pk=catcha_dict['c_reply1']['id'])
+    assert c_reply1.anno_reply_to.anno_id == c_parent1.anno_id
+    assert c_reply1.anno_deleted
+    c_regular = Anno._default_manager.get(pk=catcha_dict['c_regular']['id'])
+    assert c_regular.total_replies == 0
+    assert c_regular.anno_deleted is False
 
 
 @pytest.mark.usefixtures('wa_video')
@@ -340,13 +421,13 @@ def test_copy_ok(wa_list):
     assert int(import_resp['total_success']) == original_total
     assert int(import_resp['total_failed']) == 0
 
-    anno_list = CRUD.select_for_copy(
-            context_id='fake_context',
-            collection_id='fake_collection',
-            platform_name=CATCH_DEFAULT_PLATFORM_NAME,
-            #userid_list=None, username_list=None
+    anno_list = CRUD.select_annos(
+            context_id=wa_list[0]['platform']['context_id'],
+            collection_id=wa_list[0]['platform']['collection_id'],
+            platform_name=wa_list[0]['platform']['platform_name'],
             )
-    select_total = anno_list.count()
+
+    select_total = len(anno_list)
     assert select_total == original_total
 
     copy_resp = CRUD.copy_annos(
@@ -355,6 +436,44 @@ def test_copy_ok(wa_list):
             'collection_x')
     assert int(copy_resp['original_total']) == original_total
     assert int(copy_resp['total_success']) == original_total
+    assert int(copy_resp['total_failed']) == 0
+
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_copy_except_deleted_and_reply(wa_list):
+    # insert a reply
+    wa_list.append(make_wa_object(
+        age_in_hours=8, reply_to=wa_list[0]['id']))
+    # add a deleted
+    wa_list[1]['platform']['deleted'] = True
+    original_total = len(wa_list)
+
+    # import catcha list
+    import_resp = CRUD.import_annos(wa_list)
+    assert int(import_resp['original_total']) == original_total
+    assert int(import_resp['total_success']) == original_total
+    assert int(import_resp['total_failed']) == 0
+
+    anno_list = CRUD.select_annos(
+            context_id=wa_list[0]['platform']['context_id'],
+            collection_id=wa_list[0]['platform']['collection_id'],
+            platform_name=wa_list[0]['platform']['platform_name']
+            )
+
+    select_total = len(anno_list)
+    for x in anno_list:
+        print('search returned ({})'.format(x.anno_id))
+
+    # discount the deleted and reply
+    assert select_total == (original_total - 2)
+
+    copy_resp = CRUD.copy_annos(
+            anno_list,
+            'another_fake_context',
+            'collection_x')
+    assert int(copy_resp['original_total']) == (original_total - 2)
+    assert int(copy_resp['total_success']) == (original_total - 2)
     assert int(copy_resp['total_failed']) == 0
 
 """

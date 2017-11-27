@@ -25,6 +25,8 @@ from .anno_defaults import PURPOSES
 from .anno_defaults import PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
 from .anno_defaults import RESOURCE_TYPES
 
+from .json_models import Catcha
+
 from .search import query_userid
 from .search import query_username
 from .models import Anno, Tag, Target
@@ -151,7 +153,8 @@ class CRUD(object):
 
 
     @classmethod
-    def _create_from_webannotation(cls, catcha, is_copy=False):
+    def _create_from_webannotation(
+        cls, catcha, preserve_create=False):
         '''creates new annotation instance and saves in db.'''
 
         # fetch reply-to if it's a reply
@@ -177,11 +180,6 @@ class CRUD(object):
                     raw=catcha,
                 )
 
-                # preserve created date if it's a copy
-                if is_copy:
-                    a.created = cls._get_original_created(catcha)
-                    a.anno_deleted = catcha.get('deleted', False)
-
                 # validate  target objects
                 target_list = cls._create_targets_for_annotation(a, catcha)
 
@@ -191,6 +189,12 @@ class CRUD(object):
                     t.save()
                 tags = cls._create_taglist(body['tags'])
                 a.anno_tags = tags
+
+                # warn: order is important, update "created" after the first
+                # save, or it won't take effect - first save is auto-now_add
+                if preserve_create:
+                    a.created = cls._get_original_created(catcha)
+
                 a.raw['created'] = a.created.replace(microsecond=0).isoformat()
                 a.save()
         except IntegrityError as e:
@@ -349,12 +353,12 @@ class CRUD(object):
 
 
     @classmethod
-    def create_anno(cls, catcha, is_copy=False):
+    def create_anno(cls, catcha, preserve_create=False):
         '''creates new instance of Anno model.
 
         expects `id` in catcha['id']
 
-        when is_copy=True, keeps the original `created` date
+        when preserve_date=True, keeps the original `created` date
         errors in date parsing _silently_ render fresh `created` date.
         '''
         if 'id' not in catcha:
@@ -364,7 +368,7 @@ class CRUD(object):
             raise AnnoError(msg)
 
         try:
-            anno = cls._create_from_webannotation(catcha, is_copy)
+            anno = cls._create_from_webannotation(catcha, preserve_create)
         except AnnoError as e:
             msg = '*failed to create anno({}) - {}'.format(
                 catcha['id'], str(e))
@@ -382,13 +386,36 @@ class CRUD(object):
 
     @classmethod
     def import_annos(cls, catcha_list):
+        '''import a list of json catcha objects.
 
+        CAUTION: this operation is done in steps and is not atomic.
+        intermediate state between steps are not consistent and
+        IS NOT MEANT to be an api endpoint.
+        '''
         discarded = []
         imported = []
-        for c in catcha_list:
-            # import does not change the id
+        deleted = []
+        reply = []
+
+        # order by creation date (try to prevent import reply before parent)
+        ordered_catcha_list = sorted(
+            catcha_list, key=lambda k: k['created'])
+
+        for c in ordered_catcha_list:
+            logger.debug('processing anno_id({})'.format(c['id']))
+            if Catcha.is_reply(c):  # leave replies for later
+                logger.debug('({}) is reply'.format(c['id']))
+                reply.append(c)
+                continue  # leave reply for later
+
+            if 'deleted' in c['platform'] and c['platform']['deleted']:
+                logger.debug('({}) is deleted'.format(c['id']))
+                del c['platform']['deleted']   # remove before saving json
+                deleted.append(c)  # insert now and delete afterwards
+
+            # import fails if missing id
             try:
-                anno = CRUD.create_anno(c, is_copy=True)
+                anno = cls.create_anno(c, preserve_create=True)
             except AnnoError as e:
                 msg = 'error during import of anno({}): {}'.format(
                     c['id'], str(e))
@@ -396,7 +423,50 @@ class CRUD(object):
                 c['error'] = msg
                 discarded.append(c)
             else:
+                logger.debug('imported ({})'.format(c['id']))
                 imported.append(c)
+
+        for r in reply:  # import all replies first
+            logger.debug('importing reply({})'.format(c['id']))
+
+            if 'deleted' in r['platform'] and r['platform']['deleted']:
+                logger.debug('({}) is DELETED reply'.format(r['id']))
+                del r['platform']['deleted']   # remove before saving json
+                deleted.append(r)
+            try:
+                anno = cls.create_anno(r, preserve_create=True)
+            except AnnoError as e:
+                msg = 'error during import of reply anno({}): {}'.format(
+                    r['id'], str(e))
+                logger.error(msg, exc_info=True)
+                r['error'] = msg
+                discarded.append(r)
+            else:
+                logger.debug('imported reply ({})'.format(r['id']))
+                imported.append(r)
+
+        for d in deleted:  # now delete what is marked
+        # deleted annotations that failed to be imported are silently ignored
+            try:
+                anno = Anno._default_manager.get(pk=d['id'])
+            except Anno.DoesNotExist:
+                logger.debug('Error deleting ({}); maybe import failed?'.format(d['id']))
+                continue
+
+            try:
+                anno_deleted = cls.delete_anno(anno)
+            except MissingAnnotationError as e:
+                # ok to be already deleted
+                continue
+            except AnnoError as e:
+                logger.debug('Error deleted ({})'.format(d['id']))
+                msg = 'error setting <soft-deleted> anno({}): {}'.format(
+                    d['id'], str(e))
+                logger.error(msg, exc_info=True)
+                d['error'] = msg
+                discarded.append(d)
+            else:
+                logger.debug('marked deleted ({})'.format(d['id']))
 
         resp = {
             'original_total': len(catcha_list),
@@ -404,23 +474,38 @@ class CRUD(object):
             'total_failed': len(discarded),
             'imported': imported,
             'failed': discarded,
+            'deleted': deleted,
+            'reply': reply,
         }
         # not an annotation model list, but proper catcha jsons
         return resp
 
 
     @classmethod
-    def select_for_copy(cls,
+    def select_annos(cls,
                         context_id,
                         collection_id=None,
                         platform_name=None,
-                        userid_list=None, username_list=None):
+                        userid_list=None, username_list=None,
+                        is_copy=True):
+        """ select a list of annotations directly from db.
+
+        returns a QuerySet
+
+        output list will include deleted annotations.
+        NOT MEANT TO BE AN API ENDPOINT!
+        """
 
         if platform_name is None:  # default platform_name
             platform_name = CATCH_DEFAULT_PLATFORM_NAME
 
-        # exclude deleted annotations
-        query = Anno._default_manager.filter(anno_deleted=False)
+        if is_copy:
+            # exclude deleted annotations
+            query = Anno._default_manager.filter(anno_deleted=False)
+            # exclude replies and sort by creation date
+            query = query.filter(anno_reply_to=None)
+        else:  # select for export, include replies and deleted!
+            query = Anno._default_manager.all()
 
         if username_list:
             query = query.filter(query_username(username_list))
@@ -438,8 +523,6 @@ class CRUD(object):
         if q:
             query = query.filter(q)
 
-        # exclude replies and sort by creation date
-        query = query.filter(anno_reply_to=None)
         query = query.order_by('-created')
 
         return query
@@ -452,6 +535,8 @@ class CRUD(object):
                    target_collection_id,
                    back_compat=False):
         """
+
+        ATT: anno_list should not contain replies nor deleted annatations!
         """
 
         discarded = []
@@ -463,7 +548,7 @@ class CRUD(object):
             catcha['platform']['collection_id'] = target_collection_id
             catcha['totalReplies'] = 0
             try:
-                anno = CRUD.create_anno(catcha)
+                anno = cls.create_anno(catcha)
             except AnnoError as e:
                 msg = 'error during copy of anno({}): {}'.format(
                     a.anno_id, str(e))

@@ -36,9 +36,7 @@ def wa_list():
             continue  # skip replies for now
 
         was.append(make_wa_object(
-            age_in_hours=i*10, media=MEDIAS[index],
-            reply_to=was[0]['id']))
-
+            age_in_hours=i*10, media=MEDIAS[index]))
     return was
 
 @pytest.fixture(scope='function')
@@ -112,6 +110,9 @@ def get_past_datetime(age_in_hours):
 
 def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
     creator_id = user if user else generate_uid()
+
+    if reply_to is not None:
+        media = ANNO
 
     if age_in_hours > 0:
         created_at = get_past_datetime(age_in_hours)

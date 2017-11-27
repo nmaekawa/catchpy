@@ -565,7 +565,7 @@ def copy_api(request):
 
     userids = params['userid_list'] if 'userid_list' in params else None
     usernames = params['username_list'] if 'username_list' in params else None
-    anno_list = CRUD.select_for_copy(
+    anno_list = CRUD.select_annos(
             context_id=params['source_context_id'],
             collection_id=params['source_collection_id'],
             platform_name=params['platform_name'],

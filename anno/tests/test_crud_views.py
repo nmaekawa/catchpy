@@ -517,11 +517,10 @@ def test_copy_ok(wa_list):
     assert int(import_resp['total_success']) == original_total
     assert int(import_resp['total_failed']) == 0
 
-    anno_list = CRUD.select_for_copy(
+    anno_list = CRUD.select_annos(
             context_id='fake_context',
             collection_id='fake_collection',
             platform_name=CATCH_DEFAULT_PLATFORM_NAME,
-            #userid_list=None, username_list=None
             )
     select_total = anno_list.count()
     assert select_total == original_total
@@ -564,11 +563,10 @@ def test_copy_back_compat(wa_list):
     assert int(import_resp['total_success']) == original_total
     assert int(import_resp['total_failed']) == 0
 
-    anno_list = CRUD.select_for_copy(
+    anno_list = CRUD.select_annos(
             context_id='fake_context',
             collection_id='fake_collection',
             platform_name=CATCH_DEFAULT_PLATFORM_NAME,
-            #userid_list=None, username_list=None
             )
     select_total = anno_list.count()
     assert select_total == original_total

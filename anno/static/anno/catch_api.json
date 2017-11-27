@@ -1367,7 +1367,7 @@
         "/annos/copy": {
             "post": {
                 "summary": "Copies set of annotation to different context_id",
-                "description": "Creates new instances given a set of annotations; the requesting user must have permission to perform 'copy' operation",
+                "description": "Creates new instances given a set of annotations; the requesting user must have permission to perform 'copy' operation; replies to annotations are ignored",
                 "parameters": [
                     {
                         "name": "copy_params",
