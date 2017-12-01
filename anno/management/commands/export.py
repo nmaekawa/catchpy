@@ -40,8 +40,12 @@ class Command(BaseCommand):
         context_id = kwargs['context_id']
         collection_id = kwargs['collection_id']
         platform_name = kwargs['platform_name']
-        userid_list = kwargs['userid_list'].strip().split(',')
-        username_list = kwargs['username_list'].strip().split(',')
+        userid_list = None
+        username_list = None
+        if userid_list:
+            userid_list = kwargs['userid_list'].strip().split(',')
+        if username_list:
+            username_list = kwargs['username_list'].strip().split(',')
 
         # search by params
         qset = CRUD.select_annos(
@@ -55,12 +59,12 @@ class Command(BaseCommand):
         # serialize results as in api search
         resp = []
         for a in qset:
-            catcha = anno.serialized
-            if a.anno_delete:  # hack! have to flag it's a deleted
+            catcha = a.serialized
+            if a.anno_deleted:  # hack! have to flag it's a deleted
                 catcha['platform']['deleted'] = True
             resp.append(catcha)
 
-        print(json.dumps(resp, indent=4)
+        print(json.dumps(resp, indent=4))
 
 
 
