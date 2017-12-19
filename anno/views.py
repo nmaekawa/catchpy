@@ -34,6 +34,7 @@ from .search import query_target_sources
 from .models import Anno
 from .utils import generate_uid
 
+from .anno_defaults import ANNO
 from .anno_defaults import ANNOTATORJS_FORMAT
 from .anno_defaults import CATCH_ADMIN_GROUP_ID
 from .anno_defaults import CATCH_ANNO_FORMAT
@@ -486,20 +487,26 @@ def process_search_params(request, query):
 
 
 def process_search_back_compat_params(request, query):
-    target = request.GET.get('uri', None)
-    if target:
-        query = query.filter(raw__platform__target_source_id=target)
+
+    parent_id = request.GET.get('parentid', None)
+    if parent_id:
+        query = query.filter(anno_reply_to__anno_id=parent_id)
 
     medias = request.GET.getlist('media', [])
     if medias:
         if 'comment' in medias:
             medias.remove('comment')
-            medias.append('Annotation')
+            medias.append(ANNO)
 
         mlist = [x.capitalize() for x in medias]
         query = query.filter(query_target_medias(mlist))
 
-    # search by quote?
+    target = request.GET.get('uri', None)
+    if target:
+        if parent_id is not None:
+            pass  # in this case `uri` is irrelevant; see [2] at the bottom
+        else:
+            query = query.filter(raw__platform__target_source_id=target)
 
     text = request.GET.get('text', [])
     if text:
@@ -516,7 +523,7 @@ def process_search_back_compat_params(request, query):
         query = query.filter(query_username(usernames))
 
     source = request.GET.get('source', None)
-    if source:
+    if source:  # 19dec17 naomi: does [2] applies to `source` as well?
         query = query.filter(query_target_sources([source]))
 
     context_id = request.GET.get('contextId', None)
@@ -530,10 +537,6 @@ def process_search_back_compat_params(request, query):
         collection_id = request.GET.get('collection_id', None)
     if collection_id:
         query = query.filter(raw__platform__collection_id=collection_id)
-
-    parent_id = request.GET.get('parentid', None)
-    if parent_id:
-        query = query.filter(anno_reply_to__anno_id=parent_id)
 
     tags = request.GET.getlist('tag', [])
     if tags:
@@ -686,7 +689,15 @@ def _do_crud_compat_update(request, anno_id):
 [1] got rid of camelCase in v2 for uniformity, so contextId is not allowed.
     BUT, it might be that users want to set `context-id` in back-compat
     searches... i did this in performance test and was thrown out by having the
-    whole db as result. In back-compat having a search return everythin will
+    whole db as result. In back-compat having a search return everything will
     cause problems because of the anno_id: in back-compat it must be an
     integer.
+
+[2] in back-compat mode, the hxat always sends a filter for `uri` in searches.
+    Usually, `uri` is translated as target_source_id (internal id for target);
+    but in searches for replies, `uri` carries the internal id for the target
+    annotated by the parent, instead of the parent id (which is the source
+    being annotated). So, in the "search for replies" context, the use of `uri`
+    in the list of filters selects OUT the replies the search actually wants
+    and should be ignored.
 """

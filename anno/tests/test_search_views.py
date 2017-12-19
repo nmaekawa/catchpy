@@ -378,7 +378,7 @@ def test_search_replies_js_ok(js_list):
 
     # search for the replies
     search_url = ('{}?context_id={}&collection_id={}&media=Annotation&'
-                         'limit=-1&target_source_id={}').format(
+                         'limit=-1&parentid={}').format(
                              reverse('compat_search'),
                              reply_to.raw['platform']['context_id'],
                              reply_to.raw['platform']['collection_id'],
@@ -606,4 +606,54 @@ def test_search_private_catcha_ok(wa_list):
     assert response.status_code == 200
     resp = response.json()
     assert resp['total'] == total_annotations
+
+
+@pytest.mark.usefixtures('js_list')
+@pytest.mark.django_db
+def test_search_replies_js_with_uri(js_list):
+    anno_list = []
+    for js in js_list:
+        wa = Catcha.normalize(js)
+        x = CRUD.create_anno(wa)
+        anno_list.append(x)
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(apikey=c.consumer)
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+
+    # create some replies
+    reply_to = anno_list[0]
+    js_replies = []
+    compat_create_url = reverse('compat_create')
+    for i in range(1, 5):
+        js = make_annotatorjs_object(
+            age_in_hours=1, media=ANNO,
+            reply_to=reply_to.anno_id, user=payload['userId'])
+        js_replies.append(js)
+        response = client.post(
+            compat_create_url, data=json.dumps(js),
+            HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
+            content_type='application/json')
+        assert response.status_code == 200
+
+    # search for the replies
+    search_url = ('{}?context_id={}&collection_id={}&media=comment&'
+                         'limit=-1&uri=someFakeId&parentid={}').format(
+                             reverse('compat_search'),
+                             reply_to.raw['platform']['context_id'],
+                             reply_to.raw['platform']['collection_id'],
+                             reply_to.anno_id)
+    response = client.get(
+        search_url,
+        HTTP_X_ANNOTATOR_AUTH_TOKEN=token)
+
+    assert response.status_code == 200
+    resp = response.json()
+    assert resp['total'] == 4
+    for annojs in resp['rows']:
+        assert annojs['media'] == 'comment'
+        assert annojs['parent'] == reply_to.anno_id
+        assert annojs['user']['id'] == payload['userId']
 
