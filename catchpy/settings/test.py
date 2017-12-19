@@ -7,7 +7,7 @@ if dotenv_path:
     load_dotenv(dotenv_path)
 
 
-from .prod import *
+from .base import *
 
 DEBUG = True
 
