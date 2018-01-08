@@ -1,4 +1,4 @@
-from .prod import *
+from .base import *
 
 # add db logging to dev settings
 LOGGING['loggers']['django.db'] = {

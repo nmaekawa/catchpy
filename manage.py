@@ -5,7 +5,11 @@ import sys
 
 if __name__ == "__main__":
     # if dotenv file, load it
-    dotenv_path = os.environ.get('CATCHPY_DOTENV_PATH', None)
+    dotenv_path = None
+    if 'CATCHPY_DOTENV_PATH' in os.environ:
+        dotenv_path = os.environ['CATCHPY_DOTENV_PATH']
+    elif os.path.exists(os.path.join('catchpy', 'settings', '.env')):
+        dotenv_path = os.path.join('catchpy', 'settings', '.env')
     if dotenv_path:
         load_dotenv(dotenv_path)
 
