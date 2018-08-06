@@ -162,14 +162,18 @@ run unit tests
 unit tests require:
 
 - a postgres 9.6 db running (and its config in `catchpy/settings/test.py`)
+  this is hard to fake because it requires postgres jsonb data type
 - the fortune program, ex: `brew install fortune` if you're in macos
 
 tests are located under each django app:
 
     # tests for annotations
-    py.test anno/tests
+    (CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v anno/tests)
     
     # tests for consumer (jwt generation/validation)
-    py.test consumer/tests
+    (CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v consumer/tests)
     
+    # or use tox
+    (CATCHPY_DOTENV_PATH=/path/to/dotenv/file tox)
+
 
