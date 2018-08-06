@@ -1,7 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 from dateutil import tz
-import os
+import json
 import pytest
 from random import randint
 from subprocess import Popen
@@ -25,6 +25,7 @@ from consumer.catchjwt import encode_token
 
 MEDIAS = [ANNO, AUDIO, TEXT, VIDEO, IMAGE]
 
+
 @pytest.fixture(scope='function')
 def wa_list():
     was = [make_wa_object(age_in_hours=500)]
@@ -38,6 +39,7 @@ def wa_list():
         was.append(make_wa_object(
             age_in_hours=i*10, media=MEDIAS[index]))
     return was
+
 
 @pytest.fixture(scope='function')
 def wa_text():
@@ -71,9 +73,11 @@ def js_list():
 
         jss.append(make_annotatorjs_object(
             age_in_hours=i*10, media=MEDIAS[index],
-            reply_to=jss[0]['id']))
+            reply_to=jss[0]['id'])
+        )
 
     return jss
+
 
 @pytest.fixture(scope='function')
 def js_text():
@@ -100,17 +104,20 @@ def fetch_fortune():
     output, _ = process.communicate()
     return output.decode('utf-8')
 
+
 def get_fake_url():
     return 'http://fake{}.com'.format(randint(100, 1000))
+
 
 def get_past_datetime(age_in_hours):
     now = datetime.now(tz.tzutc())
     delta = timedelta(hours=age_in_hours)
     return (now - delta).replace(microsecond=0).isoformat()
 
+
 def make_wa_object(
-    age_in_hours=0, media=TEXT, reply_to=None,
-    user=None, body_value=None):
+        age_in_hours=0, media=TEXT, reply_to=None,
+        user=None, body_value=None):
 
     creator_id = user if user else generate_uid()
 
@@ -147,7 +154,7 @@ def make_wa_object(
             'type': 'TextualBody',
             'purpose': body_purpose,
             'format': 'text/html',
-            'value': fetch_fortune() if body_value is None \
+            'value': fetch_fortune() if body_value is None
                 else body_value,
         }],
     }
@@ -255,11 +262,13 @@ def make_wa_object(
     wa['target'] = target
     return wa
 
+
 def make_wa_tag(tagname):
     return {'type': 'TextualBody',
             'purpose': PURPOSE_TAGGING,
             'format': 'text/html',
-            'value': tagname }
+            'value': tagname}
+
 
 def make_xywh_annotator():
     return {
@@ -267,12 +276,14 @@ def make_xywh_annotator():
         'x': str(randint(0, 100)), 'y': str(randint(0, 100)),
     }
 
+
 def make_ranges_annotator():
     return {
         'startOffset': randint(10, 300),
         'endOffset': randint(350, 750),
         'start': '/p[1]', 'end': '/p[2]',
     }
+
 
 def make_annotatorjs_object(
         age_in_hours=0, media=TEXT, reply_to=None, user=None):
@@ -348,6 +359,7 @@ def make_jwt_payload(apikey=None, user=None, iat=None, ttl=60, override=[]):
         'override': override,
         'error': '',
     }
+
 
 def make_encoded_token(secret, payload=None):
     if payload is None:

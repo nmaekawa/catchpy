@@ -5,8 +5,6 @@ import os
 from django.urls import reverse
 from django.test import Client
 
-from anno.anno_defaults import ANNOTATORJS_FORMAT
-from anno.crud import CRUD
 from anno.json_models import AnnoJS
 from anno.json_models import Catcha
 from anno.models import Anno
@@ -24,8 +22,8 @@ from .conftest import readfile_into_jsonobj
 @pytest.mark.django_db
 def test_long_annotatorjs():
     here = os.path.abspath(os.path.dirname(__file__))
-    #filename = os.path.join(here, 'annojs_3K_sorted.json')
-    #filename = os.path.join(here, 'annojs_HxAT101.json')
+    # filename = os.path.join(here, 'annojs_3K_sorted.json')
+    # filename = os.path.join(here, 'annojs_HxAT101.json')
     filename = os.path.join(here, 'annojs_sample_1.json')
     sample = readfile_into_jsonobj(filename)
 
@@ -43,7 +41,7 @@ def test_long_annotatorjs():
             continue
 
         # prep and remove insipient props for compare easiness
-        #js['id'] = str(js['id'])
+        # js['id'] = str(js['id'])
         js['uri'] = str(js['uri'])
         del(js['archived'])
         del(js['deleted'])

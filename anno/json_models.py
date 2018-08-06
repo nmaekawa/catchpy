@@ -16,7 +16,6 @@ from .anno_defaults import PURPOSE_REPLYING
 from .anno_defaults import PURPOSE_TAGGING
 from .anno_defaults import CATCH_ANNO_REGEXPS
 from .catch_json_schema import CATCH_JSON_SCHEMA
-from .errors import RawModelOutOfSynchError
 from .errors import InconsistentAnnotationError
 from .errors import InvalidAnnotationCreatorError
 from .errors import InvalidInputWebAnnotationError
@@ -54,7 +53,7 @@ class AnnoJS(object):
             uri = anno.raw['platform']['target_source_id']
         except KeyError as e:
             msg = 'anno({}) missing platform property: {}'.format(
-                    anno.anno_id, str(e))
+                anno.anno_id, str(e))
             logger.error(msg)
             raise AnnotatorJSError(msg)
 
@@ -159,7 +158,7 @@ class AnnoJS(object):
         else:
             # not supposed to happen!
             msg = 'anno({}) has unknown target type({})'.format(
-                    anno.anno_id, t.target_type)
+                anno.anno_id, t.target_type)
             logger.error(msg)
             raise AnnoError(msg)
 
@@ -255,9 +254,9 @@ class AnnoJS(object):
         container = selector_item['refinedBy'][0]['value'].split('#')[1]
         ext = catcha_target_item['format'].split('/')[1].capitalize()
         resp['target'] = {
-                'container': container,
-                'src': catcha_target_item['source'],
-                'ext': ext,
+            'container': container,
+            'src': catcha_target_item['source'],
+            'ext': ext,
         }
         return resp
 
@@ -318,8 +317,7 @@ class AnnoJS(object):
             'schema_version': 'catch v1.0',
             'created': annojs.get('created', now),
             'modified': annojs.get('updated', now),
-
-            'creator':  {
+            'creator': {
                 'id': annojs['user']['id'],
                 'name': annojs['user']['name'],
             },
@@ -393,7 +391,7 @@ class AnnoJS(object):
             target['items'].append({
                 'type': 'Annotation',
                 'format': 'text/html',
-                'source': str(annojs['parent']),  # TODO: have to make it a url???
+                'source': str(annojs['parent']),  # TODO: make it a url???
             })
         else:
             raise AnnotatorJSError((
@@ -696,8 +694,8 @@ class Catcha(object):
            reply_target['source'] != catcha['platform']['target_source_id']:
             msg = ('anno_reply({}) have conflicting target_source_id({}) '
                    'and target_source({})').format(
-                      catcha['id'], catcha['platform']['target_source_id'],
-                      reply_target['source'])
+                       catcha['id'], catcha['platform']['target_source_id'],
+                       reply_target['source'])
             logger.error(msg)
             logger.debug(
                 'conflicting target_id in reply for catcha({})'.format(catcha))
