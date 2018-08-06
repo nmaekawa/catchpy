@@ -14,6 +14,7 @@ from consumer.models import Consumer
 
 from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
+from .conftest import readfile_into_jsonobj
 
 
 #
@@ -123,8 +124,4 @@ def test_long_annotatorjs():
     assert counter == 0
 
 
-def readfile_into_jsonobj(filepath):
-    with open(filepath, 'r') as f:
-        context = f.read()
-    return json.loads(context)
 

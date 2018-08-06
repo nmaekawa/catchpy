@@ -1,11 +1,13 @@
 import json
 import pytest
 import os
+from unittest import mock
 
 from django.urls import reverse
 from django.test import Client
 
 from anno.crud import CRUD
+from anno.errors import InvalidInputWebAnnotationError
 from anno.json_models import AnnoJS
 from anno.json_models import Catcha
 from anno.models import Anno
@@ -13,18 +15,19 @@ from consumer.models import Consumer
 
 from .conftest import make_encoded_token
 from .conftest import make_jwt_payload
+from .conftest import make_wa_object
 
 
 @pytest.mark.skip('debugging fixture')
 @pytest.mark.usefixtures('wa_list')
-def x_test_fixture_wa_list(wa_list):
+def test_fixture_wa_list(wa_list):
     print(json.dumps(wa_list, sort_keys=True, indent=2))
     assert wa_list == 'blah'
 
 
 @pytest.mark.skip('debugging fixture')
 @pytest.mark.usefixtures('js_list')
-def x_test_fixture_js_list(js_list):
+def test_fixture_js_list(js_list):
     print(json.dumps(js_list, sort_keys=True, indent=2))
     assert js_list == 'blah'
 
@@ -39,9 +42,27 @@ def test_to_annotatorjs(js_list):
         assert AnnoJS.are_similar(js, js_back)
 
 
-def readfile_into_jsonobj(filepath):
-    with open(filepath, 'r') as f:
-        context = f.read()
-    return json.loads(context)
+def test_body_sanitize():
+    body_unsafe_text = [
+        '  <   script same_attr=blah other_attr="pooh"></scritp>',
+        '<script>',
+        'something <\tscript\t  somethingelse="{}">'.format('blah'),
+    ]
+    catcha = make_wa_object()
+
+    for b_text in body_unsafe_text:
+        catcha['body']['items'][0]['value'] = b_text
+        with pytest.raises(InvalidInputWebAnnotationError) as e:
+            safe = Catcha.safe_body_text_value(catcha)
+
+    catcha['body']['items'][0]['value'] = \
+        body_value='body of annotation that is safe and has no script tags.'
+    safe = Catcha.safe_body_text_value(catcha)
+    assert safe
+
+
+
+
+
 
 

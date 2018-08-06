@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import re
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_NAME = 'catchpy'
@@ -215,5 +216,16 @@ CATCH_LOG_REQUEST_TIME = os.environ.get(
     'CATCH_LOG_REQUEST_TIME', 'false').lower() == 'true'
 CATCH_LOG_SEARCH_TIME = os.environ.get(
     'CATCH_LOG_SEARCH_TIME', 'false').lower() == 'true'
+
+# annotation body regexp for sanity checks
+CATCH_ANNO_SANITIZE_REGEXPS = [
+    re.compile(r) for r in ['<\s*script',]
+]
+
+
+
+
+
+
 
 

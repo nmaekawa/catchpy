@@ -14,11 +14,13 @@ from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from .anno_defaults import PURPOSE_REPLYING
 from .anno_defaults import PURPOSE_TAGGING
+from .anno_defaults import CATCH_ANNO_REGEXPS
 from .catch_json_schema import CATCH_JSON_SCHEMA
 from .errors import RawModelOutOfSynchError
 from .errors import InconsistentAnnotationError
 from .errors import InvalidAnnotationCreatorError
 from .errors import InvalidInputWebAnnotationError
+from .errors import InvalidAnnotationBodyTypeError
 
 from .utils import string_to_number
 
@@ -627,6 +629,7 @@ class Catcha(object):
 
         # by now we have a catcha, so check json schema
         cls.check_json_schema(norm)
+        cls.safe_body_text_value(norm)
         return norm
 
 
@@ -641,6 +644,20 @@ class Catcha(object):
                    'schema: {}').format(catcha.get('id', 'NA'), e)
             logger.error(msg, exc_info=True)
             raise InvalidInputWebAnnotationError(msg)
+
+
+    @classmethod
+    def safe_body_text_value(cls, catcha):
+        '''check for forbidden patterns against CATCH_ANNO_REGEXPS.'''
+
+        for x in catcha['body']['items']:
+            for r in CATCH_ANNO_REGEXPS:
+                if r.search(x['value']):
+                    msg = ('annotation body contains forbidden chars '
+                           'in catcha({})'.format(catcha.get('id', 'NA')))
+                    logger.error(msg, exc_info=True)
+                    raise InvalidAnnotationBodyTypeError(msg)
+        return True
 
 
     @classmethod
