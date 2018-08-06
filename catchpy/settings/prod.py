@@ -219,7 +219,7 @@ CATCH_LOG_SEARCH_TIME = os.environ.get(
 
 # annotation body regexp for sanity checks
 CATCH_ANNO_SANITIZE_REGEXPS = [
-    re.compile(r) for r in ['<\s*script',]
+    re.compile(r) for r in ['<\s*script', ]
 ]
 
 
