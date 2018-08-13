@@ -29,29 +29,8 @@ step-by-step
 ------------
 
 usually the _master_ branch from both repos are in sync but if there are
-errors, check the tags: on provision repor a tag like _v0.1.7_ will sync with
+errors, check the tags: on provision repo a tag like _v0.1.7_ will sync with
 a tag _provision-v0.1.7_ on catchpy repo.
-
-    # clone catchpy and catchpy-provision
-    git clone https://github.com/nmaekawa/catchpy-provision.git
-    git clone https://github.com/nmaekawa/catchpy.git
-    
-    # start vagrant instances
-    cd catchpy
-    vagrant up
-    
-    # provision both instances
-    ansible-playbook -i provision/hosts/vagrant.ini --private-key \
-        ~/.vagrant.d/insecure_private_key provision/playbook.yml
-    
-    # now go to a browser and access http://catchpy.vm/static/anno/index.html
-    # this will present a nice interface for the catchpy api
-    # note that, for vagrant, nginx is configured to serve content via HTTP;
-    # and in prod, via HTTPS.
-
-
-more info on provisioning
--------------------------
 
 check readme from catchpy-provisioning repo at
 https://github.com/nmaekawa/catchpy-provision
@@ -80,19 +59,6 @@ then the payload must be something like:
     }
 
 the encoded token will show up in the left part of the screen.
-
-
-
-development
-===========
-
-2 ways to work in catchpy development: in vagrant catchpy.vm instance or
-setting a local installation of catchpy.
-
-> i've tried to set a symlink to `/vagrant` shared folder under the catchpy
-> install dir, but had problems with user `catchpy` writing to it while
-> pip installing catchpy as an editable package. if you figure this out, let me
-> know!
 
 
 working on catchpy.vm instance
