@@ -1,4 +1,4 @@
-Annotations Backend CATCHpy/CATCHv2
+Annotations Backend catchpy
 ===================
 
 annotations backend provides storage api for annotations in Catch WebAnnotation
@@ -11,115 +11,54 @@ for info on Catch WebAnnotation, check:
 
 
 
-vagrant quick start
-===================
-
-this will start 2 ubuntu 16.04 instances: one for postgres other for catchpy
-django app.
-
-you will need
-
-- ansible provisioning repo dir at the same level as catchpy dir
-- vagrant with landrush plugin (for dns)
-    - `vagrant plugin install landrush`
-- virtualbox
-- ansible
-
-step-by-step
-------------
-
-usually the _master_ branch from both repos are in sync but if there are
-errors, check the tags: on provision repo a tag like _v0.1.7_ will sync with
-a tag _provision-v0.1.7_ on catchpy repo.
-
-check readme from catchpy-provisioning repo at
-https://github.com/nmaekawa/catchpy-provision
-
-
-to play with this catchpy install
----------------------------------
-
-you can use the default api key-pair created for the django admin user; check
-the table `consumer` in the django admin ui (or use `psql`, catchpy:catchpy).
-The default django admin user is dragonman:password.
-
-the easiest way to generate an encoded token is to grab the key-pair from the
-django admin user and paste it to http://jwt.io debugger.
-
-first, paste the secret-key in the "verify signature" tab of jwt.io (the bottom
-one, in blue).
-
-then the payload must be something like:
-
-    {
-      "consumerKey": "the-consumer-key-from-django-admin-user",
-      "userId": "some-dummy-user-id",
-      "issuedAt": "YYYY-MM-DDTHH:mm:SS+00:00",
-      "ttl": 6000
-    }
-
-the encoded token will show up in the left part of the screen.
-
-
-working on catchpy.vm instance
-------------------------------
-
-login as vagrant user and sudo as catchpy. You might want to make catchpy a
-sudoer.
-
-    # in host box, ssh into catchpy.vm instance
-    host> vagrant ssh catchpy
-    # or
-    host> ssh -i ~/.vagrant.d/insecure_private_key vagrant@catchpy.vm
-    
-    # in catchpy.vm, stop catchpy/gunicorn service
-    catchpy> sudo supervisorctl stop catchpy
-    
-    # then become catchpy user
-    catchpy> sudo su catchpy
-    
-    # start venv
-    catchpy> source /opt/hx/catchpy/venvs/catchpy/bin/activate
-    
-    # go to catchpy clone
-    (catchpy) catchpy> cd /opt/hx/catchpy/catchpy
-    
-    # you can start catchpy
-    (catchpy) catchpy> ./manage.py runserver 0.0.0.0:8000
-
-beware that to start catchpy with `manage.py` you have to have the
-`CATCHPY_DOTENV_PATH` defined. This path has env vars definitions for the
-django app to run.
-
-
-working on a local catchpy installation
----------------------------------------
+quick start
+===========
 
 you're going to need a postgres 9.6 server running; you can install it locally
-via preferred method, use a docker container, or use the vagrant postgres.vm
-vagrant instance.
+via preferred method, use a docker container, or use a vagrant postgres.vm
+vagrant instance (see `using a vagrant instance` at the bottom).
 
 catchpy requires _python3_: 3.5 or higher
 
-     # clone repo
-     git clone https://github.com/nmaekawa/catchpy.git
-     
-     # create venv
-     cd catchpy
-     virtualenv -p python3 venv
-     
-     # install requirements
-     source catchpy/bin/activate
-     (venv) pip install -r requirements/dev.txt
-     
-     # edit dotenv sample or create your own, db creds etc...
-     (venv) vi catchpy/settings/sample.env
-     
-     # set env var pointing to dotenv file
-     (venv) export CATCHPY_DOTENV_PATH=<path/to/catchpy/repo>/catchpy/settings/sample.env
-     
-     # now you can start the server
-     (venv) ./manage.py runserver
+    # clone repo
+    git clone https://github.com/nmaekawa/catchpy.git
+
+    # create venv
+    cd catchpy
+    virtualenv -p python3 venv
+
+    # install requirements
+    source catchpy/bin/activate
+    (venv) pip install -r catchpy/requirements/dev.txt
+
+    # edit dotenv sample or create your own, db creds etc...
+    (venv) vi catchpy/settings/sample.env
+
+    # custom django-commands for catchpy have help!
+    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py --help
+
+    # create a django-admin user
+    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py create_user --username user --password password --is_admin
+
+    # create a consumer key-pair
+    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py create_consumer_pair --consumer my_consumer --secret super_secret --expire_in_weeks 1
+
+    # generate a jwt token, the command below expires in 10 min
+    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py make_token --user "exceptional_user" --api_key "my_consumer" --secret "super_secret" --ttl 3600
+
+    # start the server
+    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py runserver
+
+
+you can check the api in the link below, using the token create in the previous
+step:
+
+    http://localhost:8000/static/anno/index.html
+
+and the django-admin, using the admin user created in the previous step:
+
+    http://localhost:8000/admin
+
 
 
 run unit tests
@@ -129,17 +68,32 @@ unit tests require:
 
 - a postgres 9.6 db running (and its config in `catchpy/settings/test.py`)
   this is hard to fake because it requires postgres jsonb data type
-- the fortune program, ex: `brew install fortune` if you're in macos
+- the fortune program, ex: `brew install fortune` if you're in macos --
+  `fortune` is used to create content in test annotations.
 
 tests are located under each django app:
 
     # tests for annotations
-    (CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v anno/tests)
-    
+    CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v anno/tests
+
     # tests for consumer (jwt generation/validation)
-    (CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v consumer/tests)
-    
+    CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v consumer/tests
+
     # or use tox
-    (CATCHPY_DOTENV_PATH=/path/to/dotenv/file tox)
+    CATCHPY_DOTENV_PATH=/path/to/dotenv/file tox
+
+
+using a vagrant instance
+========================
+
+check readme from catchpy-provisioning repo at
+https://github.com/nmaekawa/catchpy-provision
+
+usually the _master_ branch from both repos are in sync but if there are
+errors, check the tags: on provision repo a tag like _v0.1.7_ will sync with
+a tag _provision-v0.1.7_ on catchpy repo.
+
+
+---eop
 
 
