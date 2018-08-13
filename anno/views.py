@@ -642,7 +642,7 @@ def crud_compat_read(request, anno_id):
     return crud_compat_api(request, anno_id)
 
 
-@require_http_methods('POST')
+@require_http_methods(['POST', 'PUT'])
 @csrf_exempt
 @require_catchjwt
 def crud_compat_update(request, anno_id):
