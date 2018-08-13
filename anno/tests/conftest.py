@@ -108,7 +108,10 @@ def get_past_datetime(age_in_hours):
     delta = timedelta(hours=age_in_hours)
     return (now - delta).replace(microsecond=0).isoformat()
 
-def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
+def make_wa_object(
+    age_in_hours=0, media=TEXT, reply_to=None,
+    user=None, body_value=None):
+
     creator_id = user if user else generate_uid()
 
     if reply_to is not None:
@@ -144,7 +147,8 @@ def make_wa_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
             'type': 'TextualBody',
             'purpose': body_purpose,
             'format': 'text/html',
-            'value': fetch_fortune(),
+            'value': fetch_fortune() if body_value is None \
+                else body_value,
         }],
     }
     for t in range(0, randint(1, 10)):
@@ -375,3 +379,13 @@ def make_json_request(
     request = method_to_call(url, data=data, content_type='application/json')
     request.catchjwt = jwt_payload if jwt_payload else make_jwt_payload()
     return request
+
+
+def readfile_into_jsonobj(filepath):
+    with open(filepath, 'r') as f:
+        context = f.read()
+    return json.loads(context)
+
+
+
+

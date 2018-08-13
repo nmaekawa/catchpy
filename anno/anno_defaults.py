@@ -62,3 +62,9 @@ MEDIA_TYPES = [x[0] for x in MEDIA_TYPE_CHOICES]
 CATCH_LOG_REQUEST_TIME = getattr(settings, 'CATCH_LOG_REQUEST_TIME')
 CATCH_LOG_SEARCH_TIME = getattr(settings, 'CATCH_LOG_SEARCH_TIME')
 
+
+# regexps to sanitize anno text body
+CATCH_ANNO_REGEXPS = getattr(settings, 'CATCH_ANNO_SANITIZE_REGEXPS')
+
+
+
