@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 import re
 
+from corsheaders.defaults import default_headers
+
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_NAME = 'catchpy'
 
@@ -41,17 +44,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'log_request_id.middleware.RequestIDMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'consumer.jwt_middleware.jwt_middleware',
 ]
 
@@ -236,8 +240,13 @@ CATCH_ANNO_SANITIZE_REGEXPS = [
     re.compile(r) for r in ['<\s*script', ]
 ]
 
-
-
+#
+# settings for django-cors-headers
+#
+CORS_ORIGIN_ALLOW_ALL = True   # accept requests from anyone
+CORS_ALLOW_HEADERS = default_headers + (
+    'x-annotator-auth-token',  # for back-compat
+)
 
 
 
