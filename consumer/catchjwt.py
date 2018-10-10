@@ -27,18 +27,23 @@ def encode_token(payload, secret_key):
     return jwt.encode(payload, secret_key)
 
 
-def encode_catchjwt(apikey=None, secret=None,
-                    user=None, iat=None, ttl=60, override=[]):
+def encode_catchjwt(
+    apikey=None, secret=None,
+    user=None, iat=None, ttl=60, override=[],
+    backcompat=False):
     payload = {
         'consumerKey': apikey if apikey else str(uuid4()),
         'userId': user if user else str(uuid4()),
         'issuedAt': iat if iat else now_utc().isoformat(),
         'ttl': ttl,
-        'override': override,
     }
+    if not backcompat:
+        payload['override'] = override
+
     return encode_token(
         payload,
         secret if secret else str(uuid4()))
+
 
 
 def now_utc():

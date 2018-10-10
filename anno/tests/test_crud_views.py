@@ -132,6 +132,30 @@ def test_delete_with_override(wa_audio):
     assert response.status_code == 404
 
 
+@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.django_db
+def test_delete_back_compat_with_override(wa_audio):
+    catcha = wa_audio
+    catcha['id'] = '123'  # faking a number id for annotatorjs
+    x = CRUD.create_anno(catcha)
+    # requesting user is not the creator
+    payload = make_jwt_payload(user='fake_user')
+    # back-compat jwt doesn't have a `override` key
+    del payload['override']
+
+    request = make_request(method='delete', anno_id=x.anno_id)
+    request.catchjwt = payload
+
+    response = crud_compat_api(request, x.anno_id)
+    assert response.status_code == 200
+    assert response.content is not None
+
+    request = make_request(method='get', anno_id=x.anno_id)
+    request.catchjwt = payload
+    response = crud_api(request, x.anno_id)
+    assert response.status_code == 404
+
+
 @pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_update_no_body_in_request(wa_text):

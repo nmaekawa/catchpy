@@ -28,6 +28,14 @@ class Command(BaseCommand):
             '--user', dest='user', default='public_user',
             help='requesting user in jwt payload; default is "public_user"',
         )
+        parser.add_argument(
+            '--back-compat', dest='backcompat', action='store_true',
+            help='requesting user in jwt payload; default is "public_user"',
+        )
+        parser.add_argument(
+            '--not-back-compat', dest='backcompat', action='store_false',
+            help='requesting user in jwt payload; default is "public_user"',
+        )
 
 
     def handle(self, *args, **kwargs):
@@ -36,9 +44,11 @@ class Command(BaseCommand):
         secret = kwargs['secret_key']
         ttl = kwargs['ttl']
         user = kwargs['user']
+        backcompat = kwargs['backcompat']
 
         token = encode_catchjwt(
-            apikey=api, secret=secret, user=user, ttl=ttl).decode('utf-8')
+            apikey=api, secret=secret, user=user, ttl=ttl,
+            backcompat=backcompat).decode('utf-8')
         print('{}'.format(token))
 
 

@@ -207,8 +207,15 @@ def has_permission_for_op(op, request, anno):
     if request.catchjwt['userId'] == CATCH_ADMIN_GROUP_ID:
         return True
 
-    if anno.has_permission_for(op, request.catchjwt['userId']) \
-       or 'CAN_{}'.format(op).upper() in request.catchjwt['override']:
+    # 10oct18 naomi
+    # hotfix for back-compat: when `override` not present assumes permission ok
+    # since, in back-compat, requests always comes from HxAT and we trust that
+    # HxAT knows better.
+    # TODO: refactor so permission checks depends on back-compat or not.
+    override = 'CAN_{}'.format(op).upper() in request.catchjwt['override'] \
+            if 'override' in request.catchjwt else True
+
+    if anno.has_permission_for(op, request.catchjwt['userId']) or override:
         return True
     else:
         return False
