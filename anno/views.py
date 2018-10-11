@@ -207,11 +207,8 @@ def has_permission_for_op(op, request, anno):
     if request.catchjwt['userId'] == CATCH_ADMIN_GROUP_ID:
         return True
 
-    # 10oct18 naomi
-    # hotfix for back-compat: when `override` not present assumes permission ok
-    # since, in back-compat, requests always comes from HxAT and we trust that
-    # HxAT knows better.
-    # TODO: refactor so permission checks depends on back-compat or not.
+    # catchpy trusts the jwt; `override` missing means it's back-compat.
+    # in back-compat, catchpy trusts the hxat, and performs any op requested.
     override = 'CAN_{}'.format(op).upper() in request.catchjwt['override'] \
             if 'override' in request.catchjwt else True
 
