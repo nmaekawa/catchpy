@@ -113,11 +113,16 @@ class Anno(Model):
 
     @property
     def total_replies(self):
-        return self.anno_set.count()
+        #return self.anno_set.count()
+        return self.anno_set.all().filter(anno_deleted=False).count()
 
     @property
     def replies(self):
-        return self.anno_set.all()
+        # exclude deleted replies!
+        #
+        # ATT: this makes marked_for_deletion replies _unaccessible via API_
+        #
+        return self.anno_set.all().filter(anno_deleted=False)
 
     @property
     def total_targets(self):

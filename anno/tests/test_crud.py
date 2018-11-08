@@ -145,7 +145,11 @@ def test_import_deleted_parent_ok():
     assert len(resp['reply']) == 1
 
     c_parent1 = Anno._default_manager.get(pk=catcha_dict['c_parent1']['id'])
-    assert c_parent1.total_replies == 1
+
+    #assert c_parent1.total_replies == 1
+    # have to check that reply is associated, but marked for deletion
+    assert c_parent1.anno_set.count() == 1
+
     assert c_parent1.anno_deleted
     c_reply1 = Anno._default_manager.get(pk=catcha_dict['c_reply1']['id'])
     assert c_reply1.anno_reply_to.anno_id == c_parent1.anno_id
@@ -386,6 +390,38 @@ def test_delete_anno_replies_ok(wa_text):
         x_r2r = Anno._default_manager.get(pk=x_r2r_replies[i].anno_id)
         assert x_r2r is not None
         assert x_r2r.anno_deleted
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db(transaction=True)
+def test_count_deleted_anno_replies_ok(wa_text):
+    catcha = wa_text
+    x = CRUD.create_anno(catcha)
+
+    # create replies
+    x_replies = []
+    x_r2r_replies = []
+    for i in range(0, 4):
+        r = make_wa_object(age_in_hours=i+2, media=ANNO, reply_to=x.anno_id)
+        xr = CRUD.create_anno(r)
+        # adding reply2reply because it's supported, so just in case
+        r2r = make_wa_object(age_in_hours=i+1, media=ANNO, reply_to=xr.anno_id)
+        x_r2r = CRUD.create_anno(r2r)
+
+        x_replies.append(xr)
+        x_r2r_replies.append(x_r2r)
+
+    assert x.total_replies == 4
+
+    # delete _ONE_ reply
+    x_deleted = CRUD.delete_anno(x_replies[0])
+    assert x_deleted is not None
+    assert x_deleted == x_replies[0]
+
+    x_deleted_fresh = CRUD.get_anno(x_replies[0].anno_id)
+    assert x_deleted_fresh is None
+
+    assert x.total_replies == 3
 
 
 @pytest.mark.usefixtures('wa_text')
