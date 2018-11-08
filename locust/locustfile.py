@@ -22,8 +22,8 @@ from locust import task
 
 PAGE_SIZE = 100
 
-APIKEY='apikey'
-SECRET='secret'
+APIKEY=os.environ.get('APIKEY', 'apikey')
+SECRET=os.environ.get('SECRETKEY', 'secret')
 
 user_pool = [
     'balin', 'bifur', 'bofur', 'bombur', 'gamil',
@@ -37,10 +37,11 @@ tag_pool = [
     'ship', 'glove', 'war', 'theory', 'vessel', 'bone',
 ]
 
-def make_token_for_user(user):
+def make_token_for_user(user, backcompat=False):
     return encode_catchjwt(
         apikey=APIKEY, secret=SECRET,
-        user=user, ttl=86400).decode('utf-8')
+        user=user, ttl=86400, backcompat=backcompat).decode('utf-8')
+
 
 def random_user():
     return user_pool[randint(0, len(user_pool)-1)]
@@ -228,7 +229,7 @@ class UserBehavior_AnnotatorJS(TaskSet):
         # pick random user
         user = random_user()
         # generate token for user
-        token = make_token_for_user(user)
+        token = make_token_for_user(user, backcompat=True)
 
         # plop a new annotation json
         a = fresh_js_object(user=user, context_id=self.context,
