@@ -394,6 +394,36 @@ def test_delete_anno_replies_ok(wa_text):
 
 @pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db(transaction=True)
+def test_anno_replies_chrono_sorted(wa_text):
+    catcha = wa_text
+    x = CRUD.create_anno(catcha)
+
+    # create replies
+    x_replies = []
+    x_r2r_replies = []
+    for i in range(0, 4):
+        r = make_wa_object(age_in_hours=i+2, media=ANNO, reply_to=x.anno_id)
+        xr = CRUD.create_anno(r)
+        x_replies.append(xr)
+
+    assert len(x.replies) == 4
+    for i in range(0, 3):
+        assert x.replies[i].created < x.replies[i+1].created
+
+    # adding reply2reply because it's supported, so just in case
+    xr = x.replies[0]
+    for i in range(0, 4):
+        r2r = make_wa_object(age_in_hours=i+3, media=ANNO, reply_to=xr.anno_id)
+        x_r2r = CRUD.create_anno(r2r)
+
+    assert len(xr.replies) == 4
+    for i in range(0, 3):
+        assert xr.replies[i].created < xr.replies[i+1].created
+
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db(transaction=True)
 def test_count_deleted_anno_replies_ok(wa_text):
     catcha = wa_text
     x = CRUD.create_anno(catcha)

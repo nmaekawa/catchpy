@@ -122,7 +122,7 @@ class Anno(Model):
         #
         # ATT: this makes marked_for_deletion replies _unaccessible via API_
         #
-        return self.anno_set.all().filter(anno_deleted=False)
+        return self.anno_set.all().filter(anno_deleted=False).order_by('created')
 
     @property
     def total_targets(self):
