@@ -50,7 +50,6 @@ setup(
     include_package_data=True,
     install_requires=requirements,
     tests_require=test_requirements,
-    license="Apache Software License 2.0",
     zip_safe=False,
     keywords='catchpy',
     classifiers=[
@@ -58,7 +57,6 @@ setup(
         'Framework :: Django',
         'Framework :: Django :: 1.11',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
