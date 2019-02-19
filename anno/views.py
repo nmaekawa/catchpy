@@ -493,7 +493,7 @@ def process_search_params(request, query):
 def process_search_back_compat_params(request, query):
 
     parent_id = request.GET.get('parentid', None)
-    if parent_id:
+    if parent_id:  # not None nor empty string
         query = query.filter(anno_reply_to__anno_id=parent_id)
 
     medias = request.GET.getlist('media', [])
@@ -507,7 +507,7 @@ def process_search_back_compat_params(request, query):
 
     target = request.GET.get('uri', None)
     if target:
-        if parent_id is not None:
+        if parent_id:  # not None nor empty string
             pass  # in this case `uri` is irrelevant; see [2] at the bottom
         else:
             query = query.filter(raw__platform__target_source_id=target)
