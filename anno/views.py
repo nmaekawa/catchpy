@@ -221,6 +221,14 @@ def has_permission_for_op(op, request, anno):
 def _do_crud_api(request, anno_id):
     # assumes went through main auth and is ok
 
+    # info log
+    logger.info('[{3}] {0} {1}/{2}'.format(
+        request.method,
+        request.path,
+        request.META['QUERY_STRING'],
+        request.catchjwt['consumerKey'],
+    ))
+
     # retrieves anno
     anno = CRUD.get_anno(anno_id)
 
@@ -356,6 +364,14 @@ def _do_search_api(request, back_compat=False):
 
     # prep to count how long a search is taking
     ts_deltas = step_in_time()
+
+    # info log
+    logger.info('[{3}] {0} {1}/{2}'.format(
+        request.method,
+        request.path,
+        request.META['QUERY_STRING'],
+        request.catchjwt['consumerKey'],
+    ))
 
     payload = request.catchjwt
 
