@@ -15,6 +15,7 @@
     "owl":     "http://www.w3.org/2002/07/owl#",
     "as":      "http://www.w3.org/ns/activitystreams#",
     "schema":  "http://schema.org/",
+    "sc":      "http://iiif.io/api/presentation/2#",
 
     "schema_version": {"@id": "catch:schema_version", "@type": "xsd:string"},
     "platform": {"@id": "catch:platform", "@type": "@id"},
