@@ -7,5 +7,6 @@ PyLD
 python-dateutil
 python-dotenv
 pytz
+requests
 django-log-request-id
 django-cors-headers

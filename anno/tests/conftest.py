@@ -233,7 +233,7 @@ def make_wa_object(
                     'type': RESOURCE_TYPE_LIST,
                     'items': [{
                         'type': 'FragmentSelector',
-                        'conformsTo': 'http:/www.w3c.org/TR/media-frags/',
+                        'conformsTo': 'http://www.w3c.org/TR/media-frags/',
                         'value': 'xywh={},{},{},{}'.format(
                             randint(0, 100), randint(0, 100),
                             randint(0, 100), randint(0, 100)),

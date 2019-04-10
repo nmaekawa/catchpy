@@ -52,6 +52,15 @@ def test_body_sanitize():
     assert safe
 
 
+@pytest.mark.usefixtures('wa_image')
+@pytest.mark.django_db
+def test_catcha_normalize_ok(wa_image):
+    catch = wa_image
+    catcha = Catcha.normalize(catch)
+
+    assert json.dumps(catch, sort_keys=True, indent=4) == json.dumps(
+        catcha, sort_keys=True, indent=4)
+
 
 
 
