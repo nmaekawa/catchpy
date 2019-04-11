@@ -28,8 +28,11 @@ SECRET_KEY = os.environ.get('CATCHPY_DJANGO_SECRET_KEY', 'CHANGE_ME')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get(
-    'CATCHPY_ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
+ALLOWED_HOSTS = ['localhost',  '127.0.0.1']
+allowed_hosts_other = os.environ.get('CATCHPY_ALLOWED_HOSTS', '')
+if allowed_hosts_other:
+    ALLOWED_HOSTS.extend(allowed_hosts_other.split())
+
 
 
 # Application definition
