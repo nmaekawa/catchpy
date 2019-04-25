@@ -94,8 +94,9 @@ def jwt_middleware(get_response):
         # the view is called
 
         # calculate and log the response time
+        ts_delta = (datetime.utcnow() - start_ts).total_seconds()
+        response['x-hx-custom1'] = format(str(ts_delta))
         if PRINT_REQUEST_TIME:
-            ts_delta = datetime.utcnow() - start_ts
             logger.info('[REQUEST_TIME] {}'.format(str(ts_delta)))
 
 
