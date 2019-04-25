@@ -188,7 +188,7 @@ class CRUD(object):
                 for t in target_list:
                     t.save()
                 tags = cls._create_taglist(body['tags'])
-                a.anno_tags = tags
+                a.anno_tags.set(tags)
 
                 # warn: order is important, update "created" after the first
                 # save, or it won't take effect - first save is auto-now_add
@@ -266,7 +266,7 @@ class CRUD(object):
                 # create tags
                 if body['tags']:
                     tags = cls._create_taglist(body['tags'])
-                    anno.anno_tags = tags
+                    anno.anno_tags.set(tags)
                 anno.save()
         except (IntegrityError, DataError, DatabaseError) as e:
             msg = '-failed to create anno({}): {}'.format(anno.anno_id, str(e))
@@ -307,7 +307,7 @@ class CRUD(object):
     @classmethod
     def read_anno(cls, anno):
         if anno.anno_deleted:
-            logger.warn('anno({}) soft deleted'.format(anno.anno_id))
+            logger.warning('anno({}) soft deleted'.format(anno.anno_id))
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
 

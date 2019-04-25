@@ -13,7 +13,7 @@ def test_relationships_ok():
 
     # create annotations
     anno = mommy.make(Anno)
-    anno.anno_tags = tags
+    anno.anno_tags.set(tags)
 
     # create targets
     target = mommy.make(Target, anno=anno)
@@ -42,7 +42,7 @@ def test_anno_object():
     tag1 = Tag(tag_name='tag1')
     tag1.save()
     anno.save()
-    anno.anno_tags = [tag1]
+    anno.anno_tags.set([tag1])
     assert(anno.anno_tags.count() == 1)
     assert(Tag.objects.count() == 1)
     assert(tag1.anno_set.all()[0].anno_id == anno.anno_id)
