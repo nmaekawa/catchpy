@@ -47,7 +47,9 @@ setup(
     author_email='nmaekawa@g.harvard.edu',
     url='https://github.com/nmaekawa/catchpy',
     packages=find_packages(exclude=["docs", "tests*"]),
-    include_package_data=True,
+    package_data={
+        'anno': ['static/anno/*.json'],
+    },
     install_requires=requirements,
     tests_require=test_requirements,
     zip_safe=False,
