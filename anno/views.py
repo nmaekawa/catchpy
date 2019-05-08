@@ -124,7 +124,7 @@ def process_update(request, anno):
     return anno
 
 
-@require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE'])
+@require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def crud_api(request, anno_id):
@@ -163,7 +163,7 @@ def crud_api(request, anno_id):
         return response
 
 
-@require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE'])
+@require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def crud_compat_api(request, anno_id):
@@ -331,7 +331,7 @@ def search_api(request):
             data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
 
 
-@require_http_methods(['GET', 'HEAD', 'POST'])
+@require_http_methods(['GET', 'HEAD', 'POST', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def search_back_compat_api(request):
@@ -565,7 +565,7 @@ def process_search_back_compat_params(request, query):
     return query
 
 
-@require_http_methods('POST')
+@require_http_methods(['POST', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def copy_api(request):
@@ -624,7 +624,7 @@ def process_partial_update(request, anno_id):
     pass
 
 
-@require_http_methods(['POST', 'GET'])
+@require_http_methods(['POST', 'GET', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def create_or_search(request):
@@ -636,7 +636,7 @@ def create_or_search(request):
         return search_api(request)
 
 
-@require_http_methods('POST')
+@require_http_methods(['POST', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def crud_compat_create(request):
@@ -646,7 +646,7 @@ def crud_compat_create(request):
     return crud_compat_api(request, anno_id)
 
 
-@require_http_methods('DELETE')
+@require_http_methods(['DELETE', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def crud_compat_delete(request, anno_id):
@@ -654,7 +654,7 @@ def crud_compat_delete(request, anno_id):
     return crud_compat_api(request, anno_id)
 
 
-@require_http_methods('GET')
+@require_http_methods(['GET', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def crud_compat_read(request, anno_id):
@@ -662,7 +662,7 @@ def crud_compat_read(request, anno_id):
     return crud_compat_api(request, anno_id)
 
 
-@require_http_methods(['POST', 'PUT'])
+@require_http_methods(['POST', 'PUT', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
 def crud_compat_update(request, anno_id):
