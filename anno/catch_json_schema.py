@@ -20,3 +20,17 @@ jschema['definitions'] = definitions
 
 CATCH_JSON_SCHEMA = jschema
 CATCH_CURRENT_SCHEMA_VERSION = api_spec['info']['version']
+
+# read jsonld from file
+jsonld_filepath = os.path.join(here, 'static/anno/catch_context_jsonld.json')
+with open(jsonld_filepath, 'r') as f:
+    context = f.read()
+
+jsonld_context = json.loads(context)
+CATCH_JSONLD_CONTEXT_OBJECT = jsonld_context
+
+#
+# TODO: for now this is not very flexible if you need to replace the annotation
+# context or schema, since it's reading from files in the package...
+# Refactor that into more env_vars if needed.
+#
