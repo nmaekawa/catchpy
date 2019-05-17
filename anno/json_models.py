@@ -16,6 +16,7 @@ from .anno_defaults import PURPOSE_REPLYING
 from .anno_defaults import PURPOSE_TAGGING
 from .anno_defaults import CATCH_ANNO_REGEXPS
 from .catch_json_schema import CATCH_JSON_SCHEMA
+from .catch_json_schema import CATCH_JSONLD_CONTEXT_OBJECT
 from .errors import InconsistentAnnotationError
 from .errors import InvalidAnnotationCreatorError
 from .errors import InvalidInputWebAnnotationError
@@ -607,7 +608,7 @@ class Catcha(object):
         returns a valid catcha or raises InvalidInputWebAnnotationError
         if `@context` not present, assume it's annotatorjs and try to convert
         '''
-        if '@context' in annotation:
+        if '@context' in annotation:  # assumes webannotation
             try:
                 norm = cls.expand_compact_for_context(
                     annotation, CATCH_JSONLD_CONTEXT_IRI)
@@ -616,7 +617,7 @@ class Catcha(object):
                 msg = ('failed to translate input annotation({}) to catcha '
                        'jsonld context: {}').format(annotation['id'], e)
                 raise InvalidInputWebAnnotationError(msg)
-        else:
+        else:  # no @context, assumes annotatorjs
             try:
                 norm = AnnoJS.convert_to_catcha(annotation)
             except Exception as e:
@@ -707,41 +708,27 @@ class Catcha(object):
     def expand_compact_for_context(cls, annotation, context):
         '''translate property names to given context vocabs
 
-        expands using its @context and compacts using given context
+        uses local context from anno/static/anno/catch_json_context.json
+        the value from annotation["@context"] is ignored!
         '''
-        try:
-            local_context = annotation['@context']
-        except KeyError as e:
-            msg = 'failed to get `@context` from annotation json ({})'.format(
-                annotation.get('id', 'None'))
-            logger.error(msg, exc_info=True)
-            raise InvalidInputWebAnnotationError(msg)
+        # forcing to be the context we expect
+        # setting the object so it does not pull from th web
+        original_context = annotation['@context']
+        annotation['@context'] = CATCH_JSONLD_CONTEXT_OBJECT
 
         try:
-            compacted = jsonld.compact(annotation, local_context)
+            compacted = jsonld.compact(annotation, CATCH_JSONLD_CONTEXT_OBJECT)
         except Exception as e:
             msg = 'compaction for context({}) of anno({}) failed: {}'.format(
                 local_context, annotation['id'], str(e))
             logger.error(msg, exc_info=True)
+            annotation['@context'] = original_context
             raise e
 
-        try:
-            expanded = jsonld.expand(compacted)
-        except Exception as e:
-            msg = 'expansion for context({}) of anno({}) failed: {}'.format(
-                local_context, annotation['id'], str(e))
-            logger.error(msg, exc_info=True)
-            raise e
-
-        try:
-            translated = jsonld.compact(expanded, context)
-        except Exception as e:
-            msg = 'translation for context({}) of anno({}) failed: {}'.format(
-                context, annotation['id'], str(e))
-            logger.error(msg, exc_info=True)
-            raise e
-
-        return translated
+        # restore context uri for compact-ness
+        compacted['@context'] = CATCH_JSONLD_CONTEXT_IRI
+        annotation['@context'] = CATCH_JSONLD_CONTEXT_IRI
+        return compacted
 
 
     @classmethod

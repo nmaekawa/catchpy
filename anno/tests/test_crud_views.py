@@ -39,7 +39,7 @@ def test_index():
 
 
 @pytest.mark.django_db
-def test_method_not_allowed(wa_audio):
+def test_method_not_allowed():
     request = make_request(method='patch')
     response = crud_api(request, '1234')
     assert response.status_code == 405
@@ -644,6 +644,25 @@ def test_copy_back_compat(wa_list):
         }
 """
 
+
+@pytest.mark.usefixtures('wa_image')
+@pytest.mark.django_db
+def test_redirect_ok(wa_image):
+    wa = wa_image
+
+    c = Consumer._default_manager.create()
+    payload = make_jwt_payload(
+        apikey=c.consumer, user=wa['creator'])
+    token = make_encoded_token(c.secret_key, payload)
+
+    client = Client()
+    response = client.post(
+        '/annos',  # this should force a redirect
+        data=json.dumps(wa),
+        HTTP_AUTHORIZATION='token ' + token,
+        content_type='application/json')
+
+    assert response.status_code == 308
 
 
 
