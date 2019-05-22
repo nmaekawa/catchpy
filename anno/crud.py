@@ -339,7 +339,8 @@ class CRUD(object):
         recreates list of tags and targets every time
         '''
         if anno.anno_deleted:
-            logger.error('try to update deleted anno({})'.format(anno.anno_id))
+            logger.error('try to update deleted anno({})'.format(anno.anno_id),
+                        exc_info=True)
             raise MissingAnnotationError(
                 'anno({}) not found'.format(anno.anno_id))
         try:
@@ -364,7 +365,7 @@ class CRUD(object):
         if 'id' not in catcha:
             # counting that caller fills up with proper id
             msg = 'cannot not generate an id for annotation to-be-created'
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnoError(msg)
 
         try:
