@@ -549,7 +549,7 @@ class CRUD(object):
             catcha['platform']['collection_id'] = target_collection_id
             catcha['totalReplies'] = 0
             try:
-                anno = cls.create_anno(catcha)
+                anno = cls.create_anno(catcha, preserve_create=True)
             except AnnoError as e:
                 msg = 'error during copy of anno({}): {}'.format(
                     a.anno_id, str(e))
