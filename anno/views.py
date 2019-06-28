@@ -163,7 +163,7 @@ def crud_api(request, anno_id):
                     reverse('crud_api', kwargs={'anno_id': resp.anno_id}))
 
     # info log
-    logger.info('[{0}] {1}:{2} {3}{4}'.format(
+    logger.info('[{0}] {1}:{2} {3} {4}'.format(
         request.catchjwt['consumerKey'],
         request.method,
         response.status_code,
@@ -212,7 +212,7 @@ def crud_compat_api(request, anno_id):
                     reverse('crud_api', kwargs={'anno_id': resp.anno_id}))
 
     # info log
-    logger.info('[{0}] {1}:{4} {2}{3}'.format(
+    logger.info('[{0}] {1}:{4} {2} {3}'.format(
         request.catchjwt['consumerKey'],
         request.method,
         request.path,
@@ -371,7 +371,7 @@ def search_back_compat_api(request):
             data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
 
     # info log
-    logger.info('[{0}] {1}:{4} {2}{3}'.format(
+    logger.info('[{0}] {1}:{4} {2} {3}'.format(
         request.catchjwt['consumerKey'],
         request.method,
         request.path,
@@ -397,7 +397,7 @@ def _do_search_api(request, back_compat=False):
     ts_deltas = step_in_time()
 
     # info log
-    logger.info('[{3}] {0} {1}{2}'.format(
+    logger.info('[{3}] {0} {1} {2}'.format(
         request.method,
         request.path,
         request.META['QUERY_STRING'],
@@ -499,11 +499,23 @@ def process_search_params(request, query):
     if usernames:
         query = query.filter(query_username(usernames))
 
+    excl_usernames = request.GET.getlist('exclude_username', [])
+    if not excl_usernames:
+        excl_usernames = request.GET.getlist('exclude_username[]', [])
+    if excl_usernames:
+        query = query.exclude(query_username(excl_usernames))
+
     userids = request.GET.getlist('userid', [])
     if not userids:
         userids = request.GET.getlist('userid[]', [])
     if userids:
         query = query.filter(query_userid(userids))
+
+    excl_userids = request.GET.getlist('exclude_userid', [])
+    if not excl_userids:
+        excl_userids = request.GET.getlist('exclued_userid[]', [])
+    if excl_userids:
+        query = query.exclude(query_userid(excl_userids))
 
     tags = request.GET.getlist('tag', [])
     if not tags:
@@ -668,7 +680,7 @@ def create_or_search(request):
         response = crud_api(request, anno_id)
 
         # info log
-        logger.info('[{0}] {1}:{4} {2}{3}'.format(
+        logger.info('[{0}] {1}:{4} {2} {3}'.format(
             request.catchjwt['consumerKey'],
             request.method,
             request.path,
@@ -679,7 +691,7 @@ def create_or_search(request):
     else:  # it's a GET
         response = search_api(request)
         # info log
-        logger.info('[{0}] {1}:{4} {2}{3}'.format(
+        logger.info('[{0}] {1}:{4} {2} {3}'.format(
             request.catchjwt['consumerKey'],
             request.method,
             request.path,
@@ -722,7 +734,7 @@ def crud_compat_update(request, anno_id):
     '''back compat view for update.'''
 
     # info log
-    logger.info('[{0}] {1} {2}{3}'.format(
+    logger.info('[{0}] {1} {2} {3}'.format(
         request.catchjwt['consumerKey'],
         request.method,
         request.path,
@@ -750,7 +762,7 @@ def crud_compat_update(request, anno_id):
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
 
     # info log
-    logger.info('[{0}] {1}:{4} {2}{3}'.format(
+    logger.info('[{0}] {1}:{4} {2} {3}'.format(
         request.catchjwt['consumerKey'],
         request.method,
         request.path,
