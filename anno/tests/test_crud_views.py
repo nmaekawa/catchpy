@@ -645,6 +645,7 @@ def test_copy_back_compat(wa_list):
 """
 
 
+@pytest.mark.skip('unable to force a redirect')
 @pytest.mark.usefixtures('wa_image')
 @pytest.mark.django_db
 def test_redirect_ok(wa_image):
@@ -663,6 +664,18 @@ def test_redirect_ok(wa_image):
         content_type='application/json')
 
     assert response.status_code == 308
+    '''
+    before 2019.05.22 559a70f, urls.py would redirect paths that missed the
+    trailing slash '/' with a 301; for POST/create requests this was a problem
+    since the redirected request would be issued as a GET and change the REST
+    meaning from create to search/read. A CommonMiddleware fix was implemented
+    to override the 301 with a 308: 308 is permanent redirect but does not
+    allow changing the rquest method from POST to GET.
+
+    after 559a70f, trailing slashes are optional, so there's no way to force a
+    redirect to check that catchpy is in fact returning a 308. This usecase is
+    untestable or irrelevant, but keeping it for a while, just in case.
+    '''
 
 
 
