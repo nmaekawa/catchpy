@@ -132,11 +132,12 @@ def crud_api(request, anno_id):
     try:
         resp = _do_crud_api(request, anno_id)
     except AnnoError as e:
-        return JsonResponse(status=e.status,
+        logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
+        response = JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
     except (ValueError, KeyError) as e:
-        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
-        return JsonResponse(
+        logger.error('anno({}): bad input: {}'.format(anno_id, e), exc_info=True)
+        response = JsonResponse(
             status=HTTPStatus.BAD_REQUEST,
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
     # no crud errors, try to convert to requested format
@@ -151,6 +152,7 @@ def crud_api(request, anno_id):
             status = HTTPStatus.NON_AUTHORITATIVE_INFORMATION  # 203
             error_response = {'id': resp.anno_id,
                               'msg': str(e)}
+            logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
             response = JsonResponse(status=status, data=error_response)
         else:
             status = HTTPStatus.OK
@@ -160,7 +162,15 @@ def crud_api(request, anno_id):
                 response['Location'] = request.build_absolute_uri(
                     reverse('crud_api', kwargs={'anno_id': resp.anno_id}))
 
-        return response
+    # info log
+    logger.info('[{0}] {1}:{2} {3} {4}'.format(
+        request.catchjwt['consumerKey'],
+        request.method,
+        response.status_code,
+        request.path,
+        request.META['QUERY_STRING'],
+    ))
+    return response
 
 
 @require_http_methods(['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
@@ -171,11 +181,12 @@ def crud_compat_api(request, anno_id):
     try:
         resp = _do_crud_api(request, anno_id)
     except AnnoError as e:
-        return JsonResponse(status=e.status,
+        logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
+        response = JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
     except (ValueError, KeyError) as e:
-        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
-        return JsonResponse(
+        logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
+        response = JsonResponse(
             status=HTTPStatus.BAD_REQUEST,
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
     # no crud errors, try to convert to requested format
@@ -190,6 +201,7 @@ def crud_compat_api(request, anno_id):
             status = HTTPStatus.NON_AUTHORITATIVE_INFORMATION  # 203
             error_response = {'id': resp.anno_id,
                               'msg': str(e)}
+            logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
             response = JsonResponse(status=status, data=error_response)
         else:
             status = HTTPStatus.OK
@@ -199,7 +211,15 @@ def crud_compat_api(request, anno_id):
                 response['Location'] = request.build_absolute_uri(
                     reverse('crud_api', kwargs={'anno_id': resp.anno_id}))
 
-        return response
+    # info log
+    logger.info('[{0}] {1}:{4} {2} {3}'.format(
+        request.catchjwt['consumerKey'],
+        request.method,
+        request.path,
+        request.META['QUERY_STRING'],
+        response.status_code,
+    ))
+    return response
 
 
 def has_permission_for_op(op, request, anno):
@@ -222,11 +242,11 @@ def _do_crud_api(request, anno_id):
     # assumes went through main auth and is ok
 
     # info log
-    logger.info('[{3}] {0} {1}/{2}'.format(
+    logger.info('[{0}] {1} {2}/{3}'.format(
+        request.catchjwt['consumerKey'],
         request.method,
         request.path,
-        request.META['QUERY_STRING'],
-        request.catchjwt['consumerKey'],
+        anno_id,
     ))
 
     # retrieves anno
@@ -337,18 +357,29 @@ def search_api(request):
 def search_back_compat_api(request):
     try:
         resp = _do_search_api(request, back_compat=True)
-        return JsonResponse(status=HTTPStatus.OK, data=resp)
+        response = JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
         logger.error('search failed: {}'.format(e, exc_info=True))
-        return JsonResponse(status=e.status,
+        response = JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
 
     except Exception as e:
-        logger.error('search failed; request({})'.format(request), exc_info=True)
-        return JsonResponse(
+        logger.error('search failed; request({}): {}'.format(request, e), exc_info=True)
+        response = JsonResponse(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             data={'status': HTTPStatus.INTERNAL_SERVER_ERROR, 'payload': [str(e)]})
+
+    # info log
+    logger.info('[{0}] {1}:{4} {2} {3}'.format(
+        request.catchjwt['consumerKey'],
+        request.method,
+        request.path,
+        request.META['QUERY_STRING'],
+        response.status_code,
+    ))
+    return response
+
 
 def step_in_time(delta_list=None):
     if not delta_list:
@@ -366,7 +397,7 @@ def _do_search_api(request, back_compat=False):
     ts_deltas = step_in_time()
 
     # info log
-    logger.info('[{3}] {0} {1}/{2}'.format(
+    logger.info('[{3}] {0} {1} {2}'.format(
         request.method,
         request.path,
         request.META['QUERY_STRING'],
@@ -468,11 +499,23 @@ def process_search_params(request, query):
     if usernames:
         query = query.filter(query_username(usernames))
 
+    excl_usernames = request.GET.getlist('exclude_username', [])
+    if not excl_usernames:
+        excl_usernames = request.GET.getlist('exclude_username[]', [])
+    if excl_usernames:
+        query = query.exclude(query_username(excl_usernames))
+
     userids = request.GET.getlist('userid', [])
     if not userids:
         userids = request.GET.getlist('userid[]', [])
     if userids:
         query = query.filter(query_userid(userids))
+
+    excl_userids = request.GET.getlist('exclude_userid', [])
+    if not excl_userids:
+        excl_userids = request.GET.getlist('exclued_userid[]', [])
+    if excl_userids:
+        query = query.exclude(query_userid(excl_userids))
 
     tags = request.GET.getlist('tag', [])
     if not tags:
@@ -573,16 +616,18 @@ def copy_api(request):
     # check permissions to copy
     jwt_payload = get_jwt_payload(request)
     if 'CAN_COPY' not in jwt_payload['override']:
-        raise NoPermissionForOperationError(
-            'user ({}) not allowed to copy'.format(jwt_payload['name']))
+        msg = 'user ({}) not allowed to copy'.format(jwt_payload['name'])
+        logger.error(msg, exc_info=True)
+        raise NoPermissionForOperationError(msg)
 
     params = get_input_json(request)
 
     # sanity check: not allowed to copy to same course or collection
     if params['source_context_id'] == params['target_context_id']:
-        raise InconsistentAnnotationError(
-            'not allowed to copy to same context_id({})'.format(
-                params['source_context_id']))
+        msg = 'not allowed to copy to same context_id({})'.format(
+            params['source_context_id'])
+        logger.error(msg, exc_info=True)
+        raise InconsistentAnnotationError(msg)
 
     back_compat = params['back_compat'] if 'back_compat' in params else False
 
@@ -629,11 +674,31 @@ def process_partial_update(request, anno_id):
 @require_catchjwt
 def create_or_search(request):
     '''view for create, with no anno_id in querystring.'''
+
     if request.method == 'POST':
         anno_id = generate_uid()
-        return crud_api(request, anno_id)
+        response = crud_api(request, anno_id)
+
+        # info log
+        logger.info('[{0}] {1}:{4} {2} {3}'.format(
+            request.catchjwt['consumerKey'],
+            request.method,
+            request.path,
+            anno_id,
+            response.status_code,
+        ))
+        return response
     else:  # it's a GET
-        return search_api(request)
+        response = search_api(request)
+        # info log
+        logger.info('[{0}] {1}:{4} {2} {3}'.format(
+            request.catchjwt['consumerKey'],
+            request.method,
+            request.path,
+            request.META['QUERY_STRING'],
+            response.status_code,
+        ))
+        return response
 
 
 @require_http_methods(['POST', 'OPTIONS'])
@@ -667,6 +732,15 @@ def crud_compat_read(request, anno_id):
 @require_catchjwt
 def crud_compat_update(request, anno_id):
     '''back compat view for update.'''
+
+    # info log
+    logger.info('[{0}] {1} {2} {3}'.format(
+        request.catchjwt['consumerKey'],
+        request.method,
+        request.path,
+        anno_id,
+    ))
+
     try:
         resp = _do_crud_compat_update(request, anno_id)
         status = HTTPStatus.OK
@@ -675,17 +749,27 @@ def crud_compat_update(request, anno_id):
         # add response header with location for new resource
         response['Location'] = request.build_absolute_uri(
             reverse('compat_read', kwargs={'anno_id': resp['id']}))
-        return response
 
     except AnnoError as e:
-        return JsonResponse(status=e.status,
+        logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
+        response = JsonResponse(status=e.status,
                             data={'status': e.status, 'payload': [str(e)]})
 
     except (ValueError, KeyError) as e:
-        logger.error('anno({}): bad input:'.format(anno_id), exc_info=True)
-        return JsonResponse(
+        logger.error('anno({}): {}'.format(anno_id, e), exc_info=True)
+        response = JsonResponse(
             status=HTTPStatus.BAD_REQUEST,
             data={'status': HTTPStatus.BAD_REQUEST, 'payload': [str(e)]})
+
+    # info log
+    logger.info('[{0}] {1}:{4} {2} {3}'.format(
+        request.catchjwt['consumerKey'],
+        request.method,
+        request.path,
+        request.META['QUERY_STRING'],
+        response.status_code,
+    ))
+    return response
 
 
 def _do_crud_compat_update(request, anno_id):

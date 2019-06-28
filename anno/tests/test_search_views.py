@@ -56,6 +56,40 @@ def test_search_by_username_ok(wa_audio):
     for a in resp['rows']:
         assert a['creator']['name'] == catcha['creator']['name']
 
+@pytest.mark.usefixtures('wa_audio')
+@pytest.mark.django_db
+def test_search_by_exclude_username_ok(wa_audio):
+    catcha = wa_audio
+    c = deepcopy(catcha)
+    for i in [1, 2, 3, 4, 5]:
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        c['creator']['id'] = '{}-{}'.format(catcha['creator']['id'], i)
+        c['creator']['name'] = '{}-{}'.format(catcha['creator']['name'], i)
+        x = CRUD.create_anno(c)
+
+    c = deepcopy(catcha)
+    for i in [6, 7, 8, 9]:
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        x = CRUD.create_anno(c)
+
+    payload = make_jwt_payload(user=catcha['creator']['id'])
+    other_username = '{}-4'.format(catcha['creator']['name'])
+    request = make_json_request(
+        method='get',
+        query_string='exclude_username={}&exclude_username={}'.format(
+            other_username, catcha['creator']['name']))
+    request.catchjwt = payload
+
+    response = search_api(request)
+    resp = json.loads(response.content.decode('utf-8'))
+    assert response.status_code == 200
+    assert resp['total'] == 4
+    assert len(resp['rows']) == 4
+
+    for a in resp['rows']:
+        print('----- {} : {}'.format(a['id'], a['creator']['name']))
+        assert (a['creator']['name'] != catcha['creator']['name']) and (
+            a['creator']['name'] != other_username)
 
 @pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
@@ -88,6 +122,41 @@ def test_search_by_userid_ok(wa_text):
 
     for a in resp['rows']:
         assert a['creator']['id'] == catcha['creator']['id']
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_search_by_exclude_userid_ok(wa_text):
+    catcha = wa_text
+    c = deepcopy(catcha)
+    for i in [1, 2, 3, 4, 5]:
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        c['creator']['id'] = '{}-{}'.format(catcha['creator']['id'], i)
+        c['creator']['name'] = '{}-{}'.format(catcha['creator']['name'], i)
+        x = CRUD.create_anno(c)
+
+    c = deepcopy(catcha)
+    for i in [6, 7, 8, 9]:
+        c['id'] = '{}{}'.format(catcha['id'], i)
+        x = CRUD.create_anno(c)
+
+    payload = make_jwt_payload(user=catcha['creator']['id'])
+    other_userid = '{}-1'.format(catcha['creator']['id'])
+    request = make_json_request(
+        method='get',
+        # to send a list of userids
+        query_string='exclude_userid={}&exclude_userid={}'.format(
+            catcha['creator']['id'], other_userid))
+    request.catchjwt = payload
+
+    response = search_api(request)
+    resp = json.loads(response.content.decode('utf-8'))
+    assert response.status_code == 200
+    assert resp['total'] == 4
+    assert len(resp['rows']) == 4
+
+    for a in resp['rows']:
+        assert (a['creator']['id'] != catcha['creator']['id']) and (
+            a['creator']['id'] != other_userid)
 
 
 @pytest.mark.usefixtures('wa_video')

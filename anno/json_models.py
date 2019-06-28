@@ -45,7 +45,7 @@ class AnnoJS(object):
         except ValueError:
             msg = 'anno({}) failed catcha2annojs: id is not a number'.format(
                 anno.anno_id)
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnotatorJSError(msg)
 
         try:
@@ -55,7 +55,7 @@ class AnnoJS(object):
         except KeyError as e:
             msg = 'anno({}) missing platform property: {}'.format(
                 anno.anno_id, str(e))
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnotatorJSError(msg)
 
         annojs = {
@@ -108,7 +108,7 @@ class AnnoJS(object):
             resp = cls.convert_target(anno_parent)
         except AnnotatorJSError as e:
             msg = 'anno({}) parent error: {}'.format(anno.anno_id, e)
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnotatorJSError(msg)
         resp['media'] = 'comment'
         resp['parent'] = anno_parent.anno_id
@@ -142,13 +142,13 @@ class AnnoJS(object):
                 msg = ('anno({}) is a reply to a reply({}): not '
                        'supported!').format(anno.anno_id,
                                             anno.anno_reply_to.anno_id)
-                logger.error(msg)
+                logger.error(msg, exc_info=True)
                 raise AnnotatorJSError(msg)
 
             else:
                 msg = ('anno({}) media type({}) not supported by '
                        'annotatorjs').format(anno.anno_id, t.target_media)
-                logger.error(msg)
+                logger.error(msg, exc_info=True)
                 raise AnnotatorJSError(msg)
 
             i_resp['media'] = t.target_media.lower()
@@ -160,7 +160,7 @@ class AnnoJS(object):
             # not supposed to happen!
             msg = 'anno({}) has unknown target type({})'.format(
                 anno.anno_id, t.target_type)
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnoError(msg)
 
         return i_resp
@@ -190,13 +190,13 @@ class AnnoJS(object):
                 # TODO: review to return proper exception
                 msg = 'anno({}): unknown selector type ({})'.format(
                     anno.anno_id, s['type'])
-                logger.error(msg)
+                logger.error(msg, exc_info=True)
                 raise AnnotatorJSError(msg)
         selector_no = len(resp['rangePosition'])
         if selector_no < 1:
             # TODO: review to return proper exception
             msg = 'anno({}): no selectors found for image'.format(anno.anno_id)
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnotatorJSError(msg)
 
         if selector_no == 1:
@@ -230,13 +230,13 @@ class AnnoJS(object):
                 # TODO: review to return proper exception
                 msg = ('anno({}): do not know how to treat target CHOICE for '
                        'target type({})').format(anno.anno_id, t['type'])
-                logger.error(msg)
+                logger.error(msg, exc_info=True)
                 raise AnnotatorJSError(msg)
         if i_resp is None:
             # TODO: review to return proper exception
             msg = ('anno({}): expected target media image, but none '
                    'found!').format(anno.anno_id)
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise AnnotatorJSError(msg)
         else:
             resp.update(i_resp)
@@ -277,7 +277,7 @@ class AnnoJS(object):
             else:
                 msg = 'anno({}) unknown selector({}) for `text` target'.format(
                     anno.anno_id, s['type'])
-                logger.error(msg)
+                logger.error(msg, exc_info=True)
                 raise AnnotatorJSError(msg)
         return resp
 
@@ -670,7 +670,7 @@ class Catcha(object):
             msg = ('anno({}) conflict in input creator_id({}) does not match '
                    'requesting_user({})').format(
                        catcha['id'], catcha['creator']['id'], requesting_user)
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise InvalidAnnotationCreatorError(msg)
 
         # check if creator in permissions
@@ -679,14 +679,14 @@ class Catcha(object):
                    'creator({}) must have permission for at least: '
                    'read, write, update').format(
                        catcha['id'], catcha['creator']['id'])
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise InconsistentAnnotationError(msg)
 
         # check if reply to itself
         self_target = cls.fetch_target_item_by_source(catcha, catcha['id'])
         if self_target is not None:
             msg = 'cannot be a reply to itself({})'.format(catcha['id'])
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             raise InconsistentAnnotationError(msg)
 
         # check if annotation in targets if reply
@@ -697,7 +697,7 @@ class Catcha(object):
                    'and target_source({})').format(
                        catcha['id'], catcha['platform']['target_source_id'],
                        reply_target['source'])
-            logger.error(msg)
+            logger.error(msg, exc_info=True)
             logger.debug(
                 'conflicting target_id in reply for catcha({})'.format(catcha))
             raise InconsistentAnnotationError(msg)
