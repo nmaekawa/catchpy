@@ -1,73 +1,112 @@
-Annotations Backend catchpy
-===================
+# catchpy
 
-annotations backend provides storage api for annotations in Catch WebAnnotation
-format.
+HarvardX annotations storage API
 
-for info on Catch WebAnnotation, check:
+
+## Overview
+
+catchpy is part of AnnotationsX, HarvardX implementation of annotations using
+the [W3C Web Annotation Data Model][w3c_webanno].
+
+The [OpenAPI Specification][oas2] for the catchpy annotation model can be found at:
 
 - https://raw.githubusercontent.com/nmaekawa/catchpy/master/anno/static/anno/catch_api.json
+
+A jsonld serialization of this model can be found at:
+
 - https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json
 
 
 
-quick start
-===========
+## Quick Start
 
-you're going to need a postgres 9.6 server running; you can install it locally
-via preferred method, use a docker container, or use a vagrant postgres.vm
-vagrant instance (see `using a vagrant instance` at the bottom).
+For those who want to quickly check out what catchpy does.
 
-catchpy requires _python3_: 3.5 or higher
+Make sure you have [docker][docker] installed to try this quickstart.
 
-    # clone repo
-    git clone https://github.com/nmaekawa/catchpy.git
+    # clone this repo
+    $> git clone https://github.com/nmaekawa/catchpy.git
+    $> cd catchpy
+    
+    # start docker services
+    $> docker-compose up
+    $> docker-compose exec web python manage.py migrate
+    $> docker-compese exec web python manage.py createsupersuser
+    $> open http://localhost:8000/static/anno/index.html
+    
+This last command opens the API page, where you can try the [Web
+Annotation][w3c_webanno] and the back-compat [AnnotatorJS][annotatorjs]
+APIs.
 
-    # create venv
-    cd catchpy
-    virtualenv -p python3 venv
+To actually issue rest requests, you will need a [jwt][jwt] token. Generate one
+like below:
+
+    # this generates a consumer/secret api key
+    $> docker-compose exec web python manage.py create_consumer_pair --consumer "my_consumer" --secret "super_secret" --expire_in_weeks 1
+    
+    # this generates the token that expires in 10 min
+    $> docker-compose exec web python manage.py make_token --user "exceptional_user" --api_key "my_consumer" --secret "super_secret" --ttl 3600
+
+The command spits out the token as a long string of chars. Copy that and paste
+into the API page, by clicking on the lock at the right of each API call, or on
+the `Authorize` button at the top right of the page.
+
+
+## Not So Quick Start
+
+For those who want to set up a local instance of catchpy, for tests or
+developement.
+
+Setting up catchpy locally requires:
+
+    - postgres 9.6 or higher
+    - python 3.5 or higher
+
+
+    # clone this repo
+    $> git clone https://github.com/nmaekawa/catchpy.git
+    $> cd catchpy
+
+    # use a virtualenv
+    $> virtualenv -p python3 venv
+    $> source venv/bin/activate
+    (venv) $>  # now using the venv
 
     # install requirements
-    source catchpy/bin/activate
-    (venv) pip install -r catchpy/requirements/dev.txt
+    $> (venv) pip install -r catchpy/requirements/dev.txt
 
     # edit dotenv sample or create your own, db creds etc...
-    (venv) vi catchpy/settings/sample.env
+    $> (venv) vi catchpy/settings/sample.env
 
     # custom django-commands for catchpy have help!
-    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py --help
+    $> (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py --help
+
+    # create the catchpy database
+    $> (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py migrate
 
     # create a django-admin user
-    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py create_user --username user --password password --is_admin
+    $> (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py create_user --username user --password password --is_admin
 
     # create a consumer key-pair
-    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py create_consumer_pair --consumer my_consumer --secret super_secret --expire_in_weeks 1
+    $> (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py create_consumer_pair --consumer my_consumer --secret super_secret --expire_in_weeks 1
 
     # generate a jwt token, the command below expires in 10 min
-    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py make_token --user "exceptional_user" --api_key "my_consumer" --secret "super_secret" --ttl 3600
+    $> (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py make_token --user "exceptional_user" --api_key "my_consumer" --secret "super_secret" --ttl 3600
 
     # start the server
-    (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py runserver
+    $> (venv) CATCHPY_DOTENV_PATH=path/to/dotenv/file ./manage.py runserver
 
 
-you can check the api in the link below, using the token create in the previous
-step:
+You probably know this: `./manage.py runserver` is not for production
+deployment, use for development environment only!
 
-    http://localhost:8000/static/anno/index.html
-
-and the django-admin, using the admin user created in the previous step:
-
-    http://localhost:8000/admin
-
-
-
-run unit tests
---------------
+## Run unit tests
 
 unit tests require:
 
-- a postgres 9.6 db running (and its config in `catchpy/settings/test.py`)
-  this is hard to fake because it requires postgres jsonb data type
+- a postgres 9.6 or higher db running (and its config in
+  `catchpy/settings/test.py`); this is hard to fake because it requires
+  postgres jsonb data type
 - the fortune program, ex: `brew install fortune` if you're in macos --
   `fortune` is used to create content in test annotations.
 
@@ -83,17 +122,11 @@ tests are located under each django app:
     CATCHPY_DOTENV_PATH=/path/to/dotenv/file tox
 
 
-using a vagrant instance
-========================
 
-check readme from catchpy-provisioning repo at
-https://github.com/nmaekawa/catchpy-provision
-
-usually the _master_ branch from both repos are in sync but if there are
-errors, check the tags: on provision repo a tag like _v0.1.7_ will sync with
-a tag _provision-v0.1.7_ on catchpy repo.
-
-
----eop
-
-
+[annotatorjs]: http://annotatorjs.org
+[django]: https://www.djangoproject.com
+[docker]: https://www.docker.com
+[jwt]: https://jwt.io "json web token"
+[oas2]: https://swagger.io/specification/v2/ "Open API Specification 2.0"
+[postgres]: https://www.postgresql.org "PostgreSQL Open Source Relational Database"
+[w3c_webanno]: https://www.w3.org/TR/annotation-model/ "W3C Web Annotation Data Model"
