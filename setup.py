@@ -19,9 +19,7 @@ def get_version(*file_paths):
 
 
 version = get_version("catchpy", "__init__.py")
-
-readme = open('README.md').read()
-history = open('HISTORY.md').read().replace('.. :changelog:', '')
+readme = open("README.rst").read()
 
 requirements = [
     "Django",
@@ -42,7 +40,7 @@ setup(
     name='catchpy',
     version=version,
     description="""Annotation storage backend""",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author='nmaekawa',
     author_email='nmaekawa@g.harvard.edu',
     url='https://github.com/nmaekawa/catchpy',
