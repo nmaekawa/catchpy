@@ -513,7 +513,7 @@ def process_search_params(request, query):
 
     excl_userids = request.GET.getlist('exclude_userid', [])
     if not excl_userids:
-        excl_userids = request.GET.getlist('exclued_userid[]', [])
+        excl_userids = request.GET.getlist('exclude_userid[]', [])
     if excl_userids:
         query = query.exclude(query_userid(excl_userids))
 
