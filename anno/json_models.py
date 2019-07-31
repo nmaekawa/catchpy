@@ -9,6 +9,7 @@ from .errors import AnnoError
 from .errors import AnnotatorJSError
 
 from .anno_defaults import ANNO, AUDIO, IMAGE, TEXT, THUMB, VIDEO
+from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
 from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
 from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
@@ -315,7 +316,7 @@ class AnnoJS(object):
             '@context': CATCH_JSONLD_CONTEXT_IRI,
             'id': anno_id,
             'type': 'Annotation',
-            'schema_version': 'catch v1.0',
+            'schema_version': CATCH_CURRENT_SCHEMA_VERSION,
             'created': annojs.get('created', now),
             'modified': annojs.get('updated', now),
             'creator': {
