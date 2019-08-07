@@ -348,7 +348,8 @@ def search_api(request):
             'limit({}), offset({}), size_failed({})'
             ).format(
                 resp['total'], resp['size'],
-                resp['limit'], resp['offset'], resp['size_failed'],
+                resp['limit'], resp['offset'],
+                resp.get('size_failed', 0),
             )
         )
 
