@@ -15,8 +15,10 @@ from .models import Consumer
 
 JWT_AUTH_HEADER = 'HTTP_AUTHORIZATION'
 JWT_ANNOTATOR_HEADER = 'HTTP_X_ANNOTATOR_AUTH_TOKEN'
+
 PRINT_REQUEST_TIME = getattr(settings, 'CATCH_LOG_REQUEST_TIME', False)
 PRINT_JWT_ERROR = getattr(settings, 'CATCH_LOG_JWT_ERROR', False)
+PRINT_JWT = getattr(settings, 'CATCH_LOG_JWT', False)
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,8 @@ def jwt_middleware(get_response):
         # get token from request header
         credentials = get_credentials(request)
         if credentials is not None:
+            if PRINT_JWT:
+                logger.info('jwt token: {}'.format(credentials))
             # decode token to get consumerKey
             payload = decode_token(credentials)
             if payload is not None:

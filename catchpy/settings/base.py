@@ -163,12 +163,16 @@ LOGGING = {
             'format': '%(levelname)s\t%(asctime)s.%(msecs)03dZ\t%(name)s:%(lineno)s\t%(message)s',
             'datefmt': '%Y-%m-%dT%H:%M:%S'
         },
+        'syslog': {
+            'format': ('%(levelname)s [%(filename)s:%(funcName)s:%(lineno)s]'
+                       ' [%(request_id)s] %(message)s')
+        },
     },
     'handlers': {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'formatter': 'syslog',
             'stream': 'ext://sys.stdout',
             'filters': ['request_id'],
         },
@@ -238,6 +242,12 @@ CATCH_LOG_REQUEST_TIME = os.environ.get(
     'CATCH_LOG_REQUEST_TIME', 'false').lower() == 'true'
 CATCH_LOG_SEARCH_TIME = os.environ.get(
     'CATCH_LOG_SEARCH_TIME', 'false').lower() == 'true'
+
+# log jwt and jwt error message
+CATCH_LOG_JWT = os.environ.get(
+    'CATCH_LOG_JWT', 'false').lower() == 'true'
+CATCH_LOG_JWT_ERROR = os.environ.get(
+    'CATCH_LOG_JWT_ERROR', 'false').lower() == 'true'
 
 # annotation body regexp for sanity checks
 CATCH_ANNO_SANITIZE_REGEXPS = [

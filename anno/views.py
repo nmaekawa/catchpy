@@ -83,6 +83,8 @@ def get_input_json(request):
 def process_create(request, anno_id):
     # throws MissingAnnotationInputError
     a_input = get_input_json(request)
+    logger.debug('[CREATE BODY ({})] {}'.format(anno_id, a_input))
+
     requesting_user = request.catchjwt['userId']
 
     # fill info for create-anno
@@ -105,6 +107,8 @@ def process_create(request, anno_id):
 def process_update(request, anno):
     # throws MissingAnnotationInputError
     a_input = get_input_json(request)
+    logger.debug('[UPDATE BODY ({})] {}'.format(anno.anno_id, a_input))
+
     requesting_user = request.catchjwt['userId']
 
     # throws InvalidInputWebAnnotationError
@@ -337,6 +341,17 @@ def search_api(request):
     # naomi note: always return catcha
     try:
         resp = _do_search_api(request, back_compat=False)
+
+        logger.debug(
+            (
+            '[SEARCH RESULT] total({}), size({}), '
+            'limit({}), offset({}), size_failed({})'
+            ).format(
+                resp['total'], resp['size'],
+                resp['limit'], resp['offset'], resp['size_failed'],
+            )
+        )
+
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
