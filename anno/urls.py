@@ -11,6 +11,8 @@ urlpatterns = [
         views.crud_compat_update, name='compat_update'),
     re_path(r'^delete/(?P<anno_id>[0-9]+)$',
         views.crud_compat_delete, name='compat_delete'),
+    re_path(r'^destroy/(?P<anno_id>[0-9]+)$',
+        views.crud_compat_delete, name='compat_destroy'),
     re_path(r'^read/(?P<anno_id>[0-9]+)$',
         views.crud_compat_read, name='compat_read'),
 

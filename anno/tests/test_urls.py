@@ -30,6 +30,9 @@ def test_urls():
             'url': reverse('compat_delete', kwargs={'anno_id': '123456789'}),
             'view_func': 'anno.views.crud_compat_delete'},
         {
+            'url': reverse('compat_destroy', kwargs={'anno_id': '123456789'}),
+            'view_func': 'anno.views.crud_compat_delete'},
+        {
             'url': reverse('compat_read', kwargs={'anno_id': '123456789'}),
             'view_func': 'anno.views.crud_compat_read'},
         {
