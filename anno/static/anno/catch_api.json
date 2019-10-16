@@ -1088,7 +1088,7 @@
                         "name": "parentid",
                         "required": false,
                         "in": "query",
-                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy do: ?media=Annotation&source_id=(parent_annotation_id)",
+                        "description": "internal id for parent annotation; meaning `search for replies to this parent annotation`. Note that `parentid` search parameter is valid in backward-compatible mode only; to search for replies to an annotation in catchpy do: ?media=Annotation&target_source=(parent_annotation_id)",
                         "allowEmptyValue": true,
                         "type": "integer"
                     },

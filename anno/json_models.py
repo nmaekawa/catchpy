@@ -690,18 +690,8 @@ class Catcha(object):
             logger.error(msg, exc_info=True)
             raise InconsistentAnnotationError(msg)
 
-        # check if annotation in targets if reply
-        reply_target = cls.fetch_target_item_by_media(catcha, ANNO)
-        if reply_target is not None and \
-           reply_target['source'] != catcha['platform']['target_source_id']:
-            msg = ('anno_reply({}) have conflicting target_source_id({}) '
-                   'and target_source({})').format(
-                       catcha['id'], catcha['platform']['target_source_id'],
-                       reply_target['source'])
-            logger.error(msg, exc_info=True)
-            logger.debug(
-                'conflicting target_id in reply for catcha({})'.format(catcha))
-            raise InconsistentAnnotationError(msg)
+        # see [1] at the bottom of file for removed test explanation
+
         return True
 
 
@@ -844,4 +834,15 @@ class Catcha(object):
                 return True
 
         return False
+
+"""
+[1] there used to be a test forcing target_source different from
+    target_source_id in platform to be a conflict error, but I removed it.
+    We CAN have target_source and source_id with different values: in replies,
+    target_source is the annotation-id of parent and source_id can be a url of
+    the actual target object. While in the webannotation context the target of
+    an annotation is another annotation (thus an anno_id), the platform context
+    considers the target of the reply, the actual target source of the
+    annotation is replying to.
+"""
 

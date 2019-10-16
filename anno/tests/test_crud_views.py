@@ -408,14 +408,15 @@ def test_create_reply_missing_target(wa_audio):
 
 @pytest.mark.usefixtures('wa_audio')
 @pytest.mark.django_db
-def test_create_reply_conflicting_target(wa_audio):
+def test_create_reply_internal_target_source_id_ok(wa_audio):
     to_be_created_id = '1234-5678-abcd-efgh'
     x = CRUD.create_anno(wa_audio)
     catch = make_wa_object(age_in_hours=30, media=ANNO, reply_to=x.anno_id)
     payload = make_jwt_payload(user=catch['creator']['id'])
 
-    # replace target source
-    catch['target']['items'][0]['source'] = 'fake_parent_reference'
+    # replace target source for internal hxat id
+    catch['platform']['target_source_id'] = 'internal_id_for_target_{}'.format(
+        catch['target']['items'][0]['source'])
 
     request = make_json_request(
         method='post', anno_id=to_be_created_id, data=json.dumps(catch))
@@ -423,11 +424,11 @@ def test_create_reply_conflicting_target(wa_audio):
 
     response = crud_api(request, to_be_created_id)
     resp = json.loads(response.content.decode('utf-8'))
-    assert response.status_code == 409
-    assert 'conflicting target_source_id' in resp['payload'][0]
+    assert response.status_code == 200
 
-    with pytest.raises(Anno.DoesNotExist):
-        x = Anno._default_manager.get(pk=to_be_created_id)
+    x = Anno._default_manager.get(pk=to_be_created_id)
+    assert x is not None
+    assert x.anno_reply_to.anno_id == catch['target']['items'][0]['source']
 
 
 @pytest.mark.usefixtures('js_text')
