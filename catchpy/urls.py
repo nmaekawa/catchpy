@@ -15,13 +15,14 @@ Including another URLconf
 """
 from django.urls import include
 from django.urls import path
+from django.urls import re_path
 from django.contrib import admin
 
 from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('annos', include('anno.urls')),
+    re_path(r'^annos/?', include('anno.urls')),
     path('version', views.app_version),
     path('is_alive', views.is_alive),
 ]
