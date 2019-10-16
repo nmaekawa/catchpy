@@ -6,6 +6,7 @@ import pytest
 
 from anno.crud import CRUD
 from anno.anno_defaults import ANNO
+from anno.anno_defaults import CATCH_ADMIN_GROUP_ID
 from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.errors import AnnoError
 from anno.errors import InvalidAnnotationTargetTypeError
@@ -14,6 +15,7 @@ from anno.errors import MissingAnnotationError
 from anno.models import Anno, Target
 from anno.models import PURPOSE_TAGGING
 
+from .conftest import make_jwt_payload
 from .conftest import make_wa_object
 from .conftest import make_wa_tag
 
@@ -542,6 +544,61 @@ def test_copy_except_deleted_and_reply(wa_list):
     assert int(copy_resp['total_success']) == (original_total - 2)
     assert int(copy_resp['total_failed']) == 0
 
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_serialized_private_ok(wa_text):
+    catcha = wa_text
+    x = CRUD.create_anno(catcha)
+
+    catchjwt = make_jwt_payload(apikey='key', user=catcha['creator']['id'])
+    s = x.serialized_private(catchjwt)
+    assert 'id' not in s['creator']
+    assert s['creator']['name'] == catcha['creator']['name']
+    assert(s['permissions'] == {'can_update': True, 'can_delete': True,
+                                'can_admin': True, 'can_read': True})
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_serialized_private_deleteFalse(wa_text):
+    catcha = wa_text
+    catcha['permissions']['can_delete'] = []
+    x = CRUD.create_anno(catcha)
+
+    catchjwt = make_jwt_payload(apikey='key', user=catcha['creator']['id'])
+    s = x.serialized_private(catchjwt)
+
+    assert(s['permissions'] == {'can_update': True, 'can_delete': False,
+                                'can_admin': True, 'can_read': True})
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_serialized_private_userAdmin(wa_text):
+    catcha = wa_text
+    catcha['permissions']['can_delete'] = []
+    x = CRUD.create_anno(catcha)
+
+    catchjwt = make_jwt_payload(apikey='key', user=CATCH_ADMIN_GROUP_ID)
+    s = x.serialized_private(catchjwt)
+
+    assert(s['permissions'] == {'can_update': True, 'can_delete': True,
+                                'can_admin': True, 'can_read': True})
+
+
+@pytest.mark.usefixtures('wa_text')
+@pytest.mark.django_db
+def test_serialized_private_userOther(wa_text):
+    catcha = wa_text
+    catcha['permissions']['can_delete'] = []
+    x = CRUD.create_anno(catcha)
+
+    catchjwt = make_jwt_payload(apikey='key', user='pessoa')
+    s = x.serialized_private(catchjwt)
+
+    assert 'id' not in s['creator']
+    assert s['creator']['name'] == catcha['creator']['name']
+    assert(s['permissions'] == {'can_update': False, 'can_delete': False,
+                                'can_admin': False, 'can_read': True})
 """
         resp = {
             'original_total': len(anno_list),

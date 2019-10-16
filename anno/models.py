@@ -2,6 +2,7 @@
 
 import logging
 
+from .anno_defaults import CATCH_ADMIN_GROUP_ID
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
 from .anno_defaults import PURPOSE_COMMENTING
 from .anno_defaults import PURPOSE_REPLYING
@@ -140,6 +141,38 @@ class Anno(Model):
         s['modified'] = self.modified.replace(microsecond=0).isoformat()
         s['id'] = self.anno_id
         return s
+
+
+    def serialized_private(self, catchjwt):
+        s = self.serialized
+        del(s['creator']['id'])
+        s['permissions'] = self.permissions_private(catchjwt)
+        return s
+
+    def permissions_private(self, catchjwt):
+        requesting_user = catchjwt['userId']
+        if requesting_user == CATCH_ADMIN_GROUP_ID:
+            return {'can_read': True, 'can_update': True,
+                    'can_delete': True, 'can_admin': True}
+
+        permissions = {}
+        permissions['can_read'] = \
+                not self.can_read or requesting.userId in self.can_read
+
+        if not self.can_read or requesting.userId in self.can_read or \
+           ('override' in catchjwt and 'CAN_READ' in catchpyjwt['override']):
+            permissions['can_read'] = True
+        else:
+            permissions['can_read'] = False
+
+        for op in ['can_update', 'can_delete', 'can_admin']:
+            if requesting_user in getattr(self, op) or \
+               ('override' in catchjwt and op.upper() in catchjwt['override']):
+                permissions[op] = True
+            else:
+                permissions[op] = False
+        return permissions
+
 
     def permissions_for_user(self, user):
         '''list of ops user is allowed to perform in this anno instance.
