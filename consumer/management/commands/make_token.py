@@ -30,12 +30,21 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--back-compat', dest='backcompat', action='store_true',
-            help='requesting user in jwt payload; default is "public_user"',
+            help='flag to generate token back-compatible; default is "not-back-compat"',
         )
         parser.add_argument(
             '--not-back-compat', dest='backcompat', action='store_false',
-            help='requesting user in jwt payload; default is "public_user"',
+            help='flag to generate token NOT back-compatible; default is "not-back-compat"',
         )
+        parser.add_argument(
+            '--can-copy', dest='cancopy', action='store_true',
+            help='set override to allow copy, ignored if back-compat is True; default is "DISallow copy"',
+        )
+        parser.add_argument(
+            '--cannot-copy', dest='cancopy', action='store_false',
+            help='set override to disallow copy, ignored if back-compat is True; default is "disaallow copy"',
+        )
+
 
 
     def handle(self, *args, **kwargs):
@@ -44,11 +53,24 @@ class Command(BaseCommand):
         secret = kwargs['secret_key']
         ttl = kwargs['ttl']
         user = kwargs['user']
-        backcompat = kwargs['backcompat']
+        backcompat = kwargs.get('backcompat', False)
+        can_copy = kwargs.get('cancopy', False)
+
+        override = []
+        if can_copy:
+            if backcompat:
+                pass  # ignore can-copy cause webanno api only
+            else:
+                override = ['CAN_COPY']
 
         token = encode_catchjwt(
-            apikey=api, secret=secret, user=user, ttl=ttl,
-            backcompat=backcompat).decode('utf-8')
+                apikey=api,
+                secret=secret,
+                user=user,
+                ttl=ttl,
+                backcompat=backcompat,
+                override=override,
+            ).decode('utf-8')
         print('{}'.format(token))
 
 
