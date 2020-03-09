@@ -493,7 +493,7 @@ class CRUD(object):
 
         returns a QuerySet
 
-        output list will include deleted annotations.
+        output list might include deleted annotations, if is_copy is False.
         NOT MEANT TO BE AN API ENDPOINT!
         """
 
@@ -567,3 +567,64 @@ class CRUD(object):
             'failure': discarded,
         }
         return resp
+
+
+    @classmethod
+    def delete_annos(cls,
+                     context_id,
+                     collection_id=None,
+                     platform_name=None,
+                     userid_list=None,
+                     username_list=None,
+                     ):
+        """delete in 2 phases, first soft-delete, then true-delete.
+
+        if not all annotations for that given selection is soft-deleted, then
+        soft-delete all. Only true-delete if all annotations is selection has
+        all annotations already soft-delete.
+        """
+        logger.debug('---------------------------- delete context_id: {}'.format(context_id))
+        true_delete = False
+        # returns no replies nor deleted
+        selected = cls.select_annos(
+                context_id=context_id,
+                collection_id=collection_id,
+                platform_name=platform_name,
+                userid_list=userid_list,
+                username_list=username_list,
+                is_copy=True)
+
+        if len(selected) == 0:
+            # means all annotations are soft deleted, so this is a true delete
+            true_delete = True
+            selected = cls.select_annos(
+                    context_id=context_id,
+                    collection_id=collection_id,
+                    platform_name=platform_name,
+                    userid_list=userid_list,
+                    username_list=username_list,
+                    is_copy=False)
+
+        logger.debug('---------------------------- TRUE DELETE? ({})'.format(true_delete))
+        failure = []
+        success = []
+        for a in selected:
+            try:
+                if true_delete and a.anno_deleted:
+                    a.delete()
+                else:
+                    cls.delete_anno(a)
+
+            except Exception as e:
+                failure.append(a.serialized)
+                logger.error('failed to delete annotation({}): {}'.format(
+                    a.anno_id, e))
+            else:
+                success.append(a.serialized)
+
+        return {'failed': len(failure),
+                'succeeded': len(success),
+                'failure': failure,
+                'success': success}
+
+
