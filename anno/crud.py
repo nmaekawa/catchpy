@@ -496,7 +496,6 @@ class CRUD(object):
         output list might include deleted annotations, if is_copy is False.
         NOT MEANT TO BE AN API ENDPOINT!
         """
-
         if platform_name is None:  # default platform_name
             platform_name = CATCH_DEFAULT_PLATFORM_NAME
 
@@ -513,11 +512,14 @@ class CRUD(object):
         if userid_list:
             query = query.filter(query_userid(userid_list))
 
+        logger.debug('*************** select context_id={}, collection_id={}, platform_name={}, userid={}, username={}'.format(
+            context_id, collection_id, platform_name, userid_list, username_list))
+
         # custom searches for platform params
         # TODO ATTENTION: assumes custom_manager extends the defaullt one,
         # provided by catchpy anno.managers.SearchManager
         q = Anno.custom_manager.search_expression({
-            'platform_name': platform_name,
+            'platform': platform_name,
             'context_id': context_id,
             'collection_id': collection_id,
         })
@@ -525,6 +527,8 @@ class CRUD(object):
             query = query.filter(q)
 
         query = query.order_by('-created')
+
+        logger.debug('*************** query_len={}'.format(len(query)))
 
         return query
 

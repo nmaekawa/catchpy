@@ -42,9 +42,9 @@ class Command(BaseCommand):
         platform_name = kwargs['platform_name']
         userid_list = None
         username_list = None
-        if userid_list:
+        if kwargs['userid_list']:
             userid_list = kwargs['userid_list'].strip().split(',')
-        if username_list:
+        if kwargs['username_list']:
             username_list = kwargs['username_list'].strip().split(',')
 
         # search by params
