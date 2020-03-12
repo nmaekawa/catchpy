@@ -1,8 +1,9 @@
 -r base.txt
 
 mock
-model-mommy
+model-bakery
 pytest
 pytest-django
+pytest-mock
 
 tox

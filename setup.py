@@ -23,13 +23,22 @@ readme = open("README.rst").read()
 
 requirements = [
     "Django",
-    "python-dotenv",
+    "iso8601",
+    "jsonschema",
     "psycopg2",
+    "pyjwt",
+    "pyld",
+    "python-dateutil",
+    "python-dotenv",
+    "pytz",
+    "requests",
+    "django-log-request-id",
+    "django-cors-headers",
 ]
 
 test_requirements = [
     "mock",
-    "model_mommy",
+    "model_bakery",
     "pytest",
     "pytest-django",
     "pytest-mock",
