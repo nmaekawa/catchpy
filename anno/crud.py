@@ -632,3 +632,63 @@ class CRUD(object):
                 'success': success}
 
 
+    @classmethod
+    def copy_annos_with_replies(cls,
+                   anno_list,
+                   target_context_id,
+                   target_collection_id,
+                   back_compat=False):
+        """
+
+        ATT: anno_list should not contain replies nor deleted annatations!
+        """
+
+        discarded = []
+        copied = []
+        for a in anno_list:
+            catcha = a.serialized
+            catcha['id'] = generate_uid(must_be_int=back_compat)  # create new id
+            catcha['platform']['context_id'] = target_context_id
+            catcha['platform']['collection_id'] = target_collection_id
+            catcha['totalReplies'] = 0
+            try:
+                anno = cls.create_anno(catcha, preserve_create=True)
+            except AnnoError as e:
+                msg = 'error during copy of anno({}): {}'.format(
+                    a.anno_id, str(e))
+                logger.error(msg, exc_info=True)
+                catcha['error'] = msg
+                discarded.append(catcha)
+            else:
+                copied.append(a.serialized)
+
+            # shallow copy replies because too stressed to test recursion
+            # TODO: make it a recursion (for threads)
+            for r in a.replies:
+                reply = r.serialized
+                reply['id'] = generate_uid(must_be_int=back_compat)
+                reply['platform']['context_id'] = target_context_id
+                reply['platform']['collection_id'] = target_collection_id
+                reply['platform']['target_source_id'] = catcha['id']
+                reply['target']['items'][0]['source'] = catcha['id']
+                reply['totalReplies'] = 0
+
+                try:
+                    anno = cls.create_anno(reply, preserve_create=True)
+                except AnnoError as e:
+                    msg = 'error during copy of reply({}): {}'.format(
+                            r.anno_id, str(e))
+                    logger.error(msg, exc_info=True)
+                    reply['error'] = msg
+                    discarded.append(reply)
+                else:
+                    copied.append(r.serialized)
+
+        resp = {
+            'original_total': len(anno_list),
+            'total_success': len(copied),
+            'total_failed': len(discarded),
+            'success': copied,
+            'failure': discarded,
+        }
+        return resp
