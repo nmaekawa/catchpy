@@ -7,6 +7,7 @@ from django.db import DatabaseError
 from django.db import DataError
 from django.db import IntegrityError
 from django.db import transaction
+from django.db.models import Q
 
 from .errors import AnnoError
 from .errors import DuplicateAnnotationIdError
@@ -488,6 +489,7 @@ class CRUD(object):
                         collection_id=None,
                         platform_name=None,
                         userid_list=None, username_list=None,
+                        start_datetime=None,
                         is_copy=True):
         """ select a list of annotations directly from db.
 
@@ -511,9 +513,11 @@ class CRUD(object):
             query = query.filter(query_username(username_list))
         if userid_list:
             query = query.filter(query_userid(userid_list))
+        if start_datetime:
+            query = query.filter(Q(created__gt=start_datetime))
 
-        logger.debug('*************** select context_id={}, collection_id={}, platform_name={}, userid={}, username={}'.format(
-            context_id, collection_id, platform_name, userid_list, username_list))
+        logger.debug('*************** select context_id={}, collection_id={}, platform_name={}, userid={}, username={}, start_datetime={}'.format(
+            context_id, collection_id, platform_name, userid_list, username_list, start_datetime))
 
         # custom searches for platform params
         # TODO ATTENTION: assumes custom_manager extends the defaullt one,
@@ -645,6 +649,8 @@ class CRUD(object):
 
         discarded = []
         copied = []
+        total_replies = 0
+        total_success_replies = 0
         for a in anno_list:
             catcha = a.serialized
             catcha['id'] = generate_uid(must_be_int=back_compat)  # create new id
@@ -660,11 +666,15 @@ class CRUD(object):
                 catcha['error'] = msg
                 discarded.append(catcha)
             else:
-                copied.append(a.serialized)
+                c = anno.serialized
+                c['copied_from_id'] = a.anno_id
+                copied.append(c)
 
-            # shallow copy replies because too stressed to test recursion
-            # TODO: make it a recursion (for threads)
-            for r in a.replies:
+            total_replies = len(a.replies)
+            for r in a.replies:  # copy replies
+                if r.anno_deleted:  # skip deleted
+                    continue
+
                 reply = r.serialized
                 reply['id'] = generate_uid(must_be_int=back_compat)
                 reply['platform']['context_id'] = target_context_id
@@ -674,7 +684,7 @@ class CRUD(object):
                 reply['totalReplies'] = 0
 
                 try:
-                    anno = cls.create_anno(reply, preserve_create=True)
+                    rep = cls.create_anno(reply, preserve_create=True)
                 except AnnoError as e:
                     msg = 'error during copy of reply({}): {}'.format(
                             r.anno_id, str(e))
@@ -682,11 +692,16 @@ class CRUD(object):
                     reply['error'] = msg
                     discarded.append(reply)
                 else:
-                    copied.append(r.serialized)
+                    total_success_replies += 1
+                    a_rep = rep.serialized
+                    a_rep['copied_from_id'] = r.anno_id
+                    copied.append(a_rep)
 
         resp = {
             'original_total': len(anno_list),
             'total_success': len(copied),
+            'total_replies': total_replies,
+            'total_success_replies': total_success_replies,
             'total_failed': len(discarded),
             'success': copied,
             'failure': discarded,
