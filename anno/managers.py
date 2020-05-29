@@ -11,27 +11,28 @@ class SearchManager(Manager):
 
     def search_expression(self, params):
         '''builds Q expression for `platform` according to params.'''
-        q = Q()
-
+        data = {'platform': {}}
         platform_name = params.get('platform', None)
         if platform_name:
-            kwargs = {'raw__platform__platform_name': str(platform_name)}
-            q = q & Q(**kwargs)
+            data['platform']['platform_name'] = platform_name
 
         context_id = params.get('context_id', None)
         if context_id:
-            kwargs = {'raw__platform__context_id': str(context_id)}
-            q = q & Q(**kwargs)
+            data['platform']['context_id'] = context_id
 
-            collection_id = params.get('collection_id', None)
-            if collection_id:
-                kwargs = {'raw__platform__collection_id': str(collection_id)}
-                q = q & Q(**kwargs)
+        collection_id = params.get('collection_id', None)
+        if collection_id:
+            data['platform']['collection_id'] = collection_id
 
         target_source_id = params.get('source_id', None)
         if target_source_id:
-            kwargs = {
-                'raw__platform__target_source_id': str(target_source_id)}
-            q = q & Q(**kwargs)
+            data['platform']['target_source_id'] = target_source_id
+
+        if data['platform']:
+            # writing the query like this helps postgres to use indices
+            kwargs = {'raw__contains': data}
+            q = Q(**kwargs)
+        else:
+            q = Q()
 
         return q
