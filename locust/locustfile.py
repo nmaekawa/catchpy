@@ -1,5 +1,5 @@
-import os
 import django
+import os
 os.environ.setdefault("CATCHPY_COMPAT_MODE", "false")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
 django.setup()
@@ -16,11 +16,12 @@ from anno.tests.conftest import make_wa_tag
 from anno.tests.conftest import make_annotatorjs_object
 from consumer.catchjwt import encode_catchjwt
 
+from locust import between
 from locust import HttpLocust
 from locust import TaskSet
 from locust import task
 
-PAGE_SIZE = 100
+PAGE_SIZE = 200
 
 APIKEY=os.environ.get('APIKEY', 'apikey')
 SECRET=os.environ.get('SECRETKEY', 'secret')
@@ -41,7 +42,6 @@ def make_token_for_user(user, backcompat=False):
     return encode_catchjwt(
         apikey=APIKEY, secret=SECRET,
         user=user, ttl=86400, backcompat=backcompat).decode('utf-8')
-
 
 def random_user():
     return user_pool[randint(0, len(user_pool)-1)]
@@ -65,10 +65,10 @@ class UserBehavior_WebAnnotation(TaskSet):
     def on_start(self):
         x = make_wa_object(age_in_hours=1)
         self.platform = x['platform']['platform_name']
-        self.context = x['platform']['context_id']
-        self.collection = x['platform']['collection_id']
+        self.context = 'fake_context'
+        self.collection = 'fake_collection'
 
-    @task(0)
+    @task(10)
     def add_annotation_then_tag(self):
         # pick random user
         user = random_user()
@@ -86,7 +86,7 @@ class UserBehavior_WebAnnotation(TaskSet):
             headers={
                 'Content-Type': 'Application/json',
                 'Authorization': auth_header,
-            })
+            }, verify=False)
         if response.content == '':
             response.failure('no data')
         else:
@@ -104,7 +104,7 @@ class UserBehavior_WebAnnotation(TaskSet):
                 return
             else:
                 response.success()
-
+        '''
         # make new tags
         for i in range(1, randint(2, 8)):
             tag = make_wa_tag(random_tag())
@@ -115,83 +115,15 @@ class UserBehavior_WebAnnotation(TaskSet):
             headers={
                 'Content-Type': 'Application/json',
                 'Authorization': auth_header,
-            }, name='/annos/[id]')
+            }, name='/annos/[id]', verify=False)
         if response.status_code == 200:
             response.success()
         else:
             response.failure(response.json()['payload'])
+        '''
 
 
-    @task(0)
-    def search_annotation_fullset(self):
-        # pick random user
-        user = random_user()
-        # generate token for user
-        token = make_token_for_user(user)
-        auth_header = 'token {}'.format(token)
-
-        # search all annotation for this assignment
-        search_query = ('context_id={}&collection_id={}'
-                        '&limit={}').format(
-                            self.context, self.collection, PAGE_SIZE)
-
-        response = self.client.get(
-            '/annos/?{}'.format(search_query),
-            catch_response=True,
-            headers={
-                'Authorization': auth_header,
-            })
-
-        try:
-            if response.status_code == 200:
-                response.success()
-            else:
-                response.failure(response.status_code)
-                return
-            r = response.json()
-            logging.getLogger(__name__).debug('total={}; size={}'.format(
-                r['total'],r['size']))
-        except ValueError as e:
-            response.failure('[JSON ERROR]: {}'.format(e))
-            logging.getLogger(__name__).debug('[___________________ JSON ERROR]: ({}) - {}'.format(response.status_code, e))
-            return
-
-        # need to pull slices of result
-        if r['total'] > PAGE_SIZE:
-            total_len = r['total']
-            current_len = int(r['size'])
-            offset = int(r['size'])
-            while current_len < total_len:
-                squery = '{}&offset={}'.format(search_query, offset)
-                response = self.client.get(
-                    '/annos/?{}'.format(squery),
-                    catch_response=True,
-                    headers={
-                        'Authorization': auth_header,
-                    })
-                try:
-                    if response.status_code == 200:
-                        response.success()
-                    else:
-                        response.failure(response.status_code)
-                        continue
-                    r = response.json()
-                    logging.getLogger(__name__).debug('total={}; size={}'.format(
-                        r['total'], r['size']))
-                    current_len += int(r['size'])
-                    offset += int(r['size'])
-                except ValueError as e:
-                    response.failure('[JSON ERROR]: {}'.format(e))
-                    logging.getLogger(__name__).debug('[+++++++++++++++++++ JSON ERROR]: {}'.format(e))
-                    continue  # this potentially can lead to infinite loop!
-
-            logging.getLogger(__name__).debug(
-                ('***************************** FINISHED WHOLE SET:'
-                'current:total {}:{} *************************************').format(
-                    current_len, total_len))
-
-
-    @task(10)
+    @task(40)
     def search_annotation(self):
         # pick random user
         user = random_user()
@@ -209,7 +141,7 @@ class UserBehavior_WebAnnotation(TaskSet):
             catch_response=True,
             headers={
                 'Authorization': auth_header,
-            }, name='/annos/?offset=[random]')
+            }, name='/annos/?offset=[random]', verify=False)
 
         if response.status_code == 200:
             response.success()
@@ -221,10 +153,10 @@ class UserBehavior_AnnotatorJS(TaskSet):
     def on_start(self):
         x = make_annotatorjs_object(age_in_hours=1)
         self.platform = CATCH_DEFAULT_PLATFORM_NAME
-        self.context = x['contextId']
-        self.collection = x['collectionId']
+        self.context = 'fake_context'
+        self.collection = 'fake_collection'
 
-    @task(0)
+    @task(10)
     def add_annotation_then_tag(self):
         # pick random user
         user = random_user()
@@ -241,7 +173,7 @@ class UserBehavior_AnnotatorJS(TaskSet):
             headers={
                 'Content-Type': 'Application/json',
                 'x-annotator-auth-token': token,
-            })
+            }, verify=False)
         if response.content == '':
             response.failure('no data')
             return
@@ -259,7 +191,7 @@ class UserBehavior_AnnotatorJS(TaskSet):
             return
         else:
             response.success()
-
+        '''
         # make new tags
         for i in range(1, randint(2, 8)):
             a['tags'].append(random_tag())
@@ -269,14 +201,15 @@ class UserBehavior_AnnotatorJS(TaskSet):
             headers={
                 'Content-Type': 'Application/json',
                 'x-annotator-auth-token': token,
-            }, name='/anno/update/[id]')
+            }, name='/anno/update/[id]', verify=False)
         if response.status_code == 200:
             response.success()
         else:
             response.failure(response.json()['payload'])
+        '''
 
 
-    @task(100)
+    @task(40)
     def search_annotation(self):
         # pick random user
         user = random_user()
@@ -294,7 +227,7 @@ class UserBehavior_AnnotatorJS(TaskSet):
             catch_response=True,
             headers={
                 'x-annotator-auth-token': token,
-            }, name='/annos/search?offset=[random]')
+            }, name='/annos/search?offset=[random]', verify=False)
 
         if response.status_code == 200:
             response.success()
@@ -305,7 +238,7 @@ class UserBehavior_AnnotatorJS(TaskSet):
 class UserBehavior_CreateWebAnnotation(TaskSet):
     def on_start(self):
         self.catcha = fresh_wa_object(
-            'yoohoo', 'perf_context', 'perf_collection')
+            'yoohoo', 'perf_context_99', 'perf_collection')
         self.catcha['platform']['platform_name'] = 'perf_platform'
 
     @task(1)
@@ -322,7 +255,7 @@ class UserBehavior_CreateWebAnnotation(TaskSet):
             headers={
                 'Content-Type': 'Application/json',
                 'Authorization': auth_header,
-            })
+            }, verify=False)
         if response.content == '':
             response.failure('no data')
         else:
@@ -344,5 +277,5 @@ class UserBehavior_CreateWebAnnotation(TaskSet):
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior_WebAnnotation
-    min_wait = 2000
-    max_wait = 300000
+    #task_set = UserBehavior_AnnotatorJS
+    wait_time = between(60, 120)
