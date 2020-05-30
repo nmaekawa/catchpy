@@ -76,6 +76,12 @@ class Anno(Model):
     # note that rich text can have binaries embedded (like images)
     body_format = CharField(max_length=128, null=False, default='text/html')
 
+    # extracting jsonb fields into relational columns for search
+    #platform_name = CharField( max_length=128, null=False,
+    #        default=CATCH_DEFAULT_PLATFORM_NAME)
+    #context_id = Charfield(max_length=1024, null=False, blank=False)
+    #collection_id = Charfield(max_length=1024, null=False, blank=False)
+
     target_type = CharField(
             max_length=16,
             choices=RESOURCE_TYPE_CHOICES,
@@ -100,6 +106,7 @@ class Anno(Model):
     class Meta:
         indexes = [
             GinIndex(
+                fastupdate=False,
                 fields=['raw'],
                 name='anno_raw_gin',
             ),
