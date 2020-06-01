@@ -178,6 +178,10 @@ class CRUD(object):
                     can_admin=catcha['permissions']['can_admin'],
                     body_text=body['text'],
                     body_format=body['format'],
+                    platform_name=catcha['platform']['platform_name'],
+                    context_id=catcha['platform']['context_id'],
+                    collection_id=catcha['platform']['collection_id'],
+                    target_source_id=catcha['platform']['target_source_id'],
                     raw=catcha,
                 )
 

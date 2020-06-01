@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 import logging
 
 from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
@@ -77,10 +78,15 @@ class Anno(Model):
     body_format = CharField(max_length=128, null=False, default='text/html')
 
     # extracting jsonb fields into relational columns for search
-    #platform_name = CharField( max_length=128, null=False,
-    #        default=CATCH_DEFAULT_PLATFORM_NAME)
-    #context_id = Charfield(max_length=1024, null=False, blank=False)
-    #collection_id = Charfield(max_length=1024, null=False, blank=False)
+    platform_name = CharField(max_length=128, null=False, blank=False,
+            default='default')
+    context_id = CharField(max_length=1024, null=False, blank=False,
+            default='default')
+    collection_id = CharField(max_length=1024, null=False, blank=False,
+            default='default')
+    # check target_source column on Target object below for length explanation
+    target_source_id = CharField(max_length=2048, null=False, blank=False,
+            default='default')
 
     target_type = CharField(
             max_length=16,
@@ -94,14 +100,23 @@ class Anno(Model):
 
     # TODO: manager for custom searches
     # http://stackoverflow.com/a/30941292
-    # _c_manager = getattr(settings, 'CATCHA_CUSTOM_MANANGER', None)
-    # if _c_manager:
-    #     module_name, class_name = _c_manager.rsplit('.', 1)
-    #     CustomClass = getattr(importlib.import_modUle(module_name), class_name)
-    #     custom_manager = CustomClass()
-    # else:
-    #     custom_manager = SearchManager()
-    custom_manager = SearchManager()
+    _c_manager = getattr(settings, 'CATCH_CUSTOM_MANAGER', None)
+    if _c_manager:
+        module_name, class_name = _c_manager.rsplit('.', 1)
+
+        logger.debug('*************** manager: module({}) class({})'.format(
+            module_name, class_name))
+
+        CustomClass = getattr(importlib.import_module(module_name), class_name)
+
+        custom_manager = CustomClass()
+
+        logger.debug('*************** manager: CustomManager({})'.format(
+            type(custom_manager)))
+
+    else:
+        custom_manager = SearchManager()
+    #custom_manager = SearchManager()
 
     class Meta:
         indexes = [
