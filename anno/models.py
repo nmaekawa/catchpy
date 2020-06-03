@@ -29,6 +29,7 @@ from django.db.models import CASCADE
 from django.db.models import BooleanField
 from django.db.models import CharField
 from django.db.models import DateTimeField
+from django.db.models import Index
 from django.db.models import ForeignKey
 from django.db.models import Manager
 from django.db.models import ManyToManyField
@@ -78,15 +79,11 @@ class Anno(Model):
     body_format = CharField(max_length=128, null=False, default='text/html')
 
     # extracting jsonb fields into relational columns for search
-    platform_name = CharField(max_length=128, null=False, blank=False,
-            default='default')
-    context_id = CharField(max_length=1024, null=False, blank=False,
-            default='default')
-    collection_id = CharField(max_length=1024, null=False, blank=False,
-            default='default')
+    platform_name = CharField(max_length=128, null=False, blank=False)
+    context_id = CharField(max_length=1024, null=False, blank=False)
+    collection_id = CharField(max_length=1024, null=False, blank=False)
     # check target_source column on Target object below for length explanation
-    target_source_id = CharField(max_length=2048, null=False, blank=False,
-            default='default')
+    target_source_id = CharField(max_length=2048, null=False, blank=False)
 
     target_type = CharField(
             max_length=16,
@@ -121,9 +118,21 @@ class Anno(Model):
     class Meta:
         indexes = [
             GinIndex(
-                fastupdate=False,
+                fastupdate=True,
                 fields=['raw'],
                 name='anno_raw_gin',
+            ),
+            Index(
+                fields=[
+                    'platform_name', 'context_id', 'collection_id',
+                    'target_source_id'],
+                name='platform_items_idx',
+            ),
+            Index(
+                fields=[
+                    'context_id', 'collection_id',
+                    'target_source_id', '-created'],
+                name='context_collection_target_idx',
             ),
         ]
 
@@ -232,6 +241,20 @@ class Target(Model):
 
     def __str__(self):
         return self.__repr__()
+
+    class Meta:
+        indexes = [
+            Index(
+                fields=[
+                    'target_source', 'target_media'],
+                name='target_source_media_idx',
+            ),
+            Index(
+                fields=[
+                    'target_media'],
+                name='target_media_idx',
+            ),
+        ]
 
 
 """

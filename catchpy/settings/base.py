@@ -255,7 +255,8 @@ CATCH_ANNO_SANITIZE_REGEXPS = [
 ]
 
 # custom manager for Anno object, compatible with catchpy >= 3.0.0
-CATCH_CUSTOM_MANAGER = os.environ.get('CATCH_CUSTOM_MANAGER', None)
+CATCH_CUSTOM_MANAGER = os.environ.get(
+        'CATCH_CUSTOM_MANAGER', 'anno.managers.SearchManager')
 
 
 #
