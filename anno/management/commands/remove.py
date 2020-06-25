@@ -10,7 +10,7 @@ from anno.views import _format_response
 
 
 class Command(BaseCommand):
-    help = 'export a list of json catcha objects'
+    help = 'delete a selection of annotations in 2 steps: first pass, soft-delete; second pass, true-delete.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -48,23 +48,14 @@ class Command(BaseCommand):
             username_list = kwargs['username_list'].strip().split(',')
 
         # search by params
-        qset = CRUD.select_annos(
-            context_id=context_id,
-            collection_id=collection_id,
-            platform_name=platform_name,
-            userid_list=userid_list,
-            username_list=username_list,
-            is_copy=False)  # return replies and deleted
+        result = CRUD.delete_annos(
+                context_id=context_id,
+                collection_id=collection_id,
+                platform_name=platform_name,
+                userid_list=userid_list,
+                username_list=username_list)
 
-        # serialize results as in api search
-        resp = []
-        for a in qset:
-            catcha = a.serialized
-            if a.anno_deleted:  # hack! have to flag it's a deleted
-                catcha['platform']['deleted'] = True
-            resp.append(catcha)
-
-        print(json.dumps(resp, indent=4))
+        print(json.dumps(result, indent=4))
 
 
 

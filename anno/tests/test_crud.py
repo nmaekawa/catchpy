@@ -542,6 +542,52 @@ def test_copy_except_deleted_and_reply(wa_list):
     assert int(copy_resp['total_success']) == (original_total - 2)
     assert int(copy_resp['total_failed']) == 0
 
+
+@pytest.mark.usefixtures('wa_list')
+@pytest.mark.django_db
+def test_remove_in_2step(wa_list):
+    # insert a reply
+    wa_list.append(make_wa_object(
+        age_in_hours=8, reply_to=wa_list[0]['id']))
+    # add a deleted
+    wa_list[1]['platform']['deleted'] = True
+    original_total = len(wa_list)
+
+    # import catcha list
+    import_resp = CRUD.import_annos(wa_list)
+    assert int(import_resp['original_total']) == original_total
+    assert int(import_resp['total_success']) == original_total
+    assert int(import_resp['total_failed']) == 0
+
+    # delete annotations (not all soft-deleted)
+    delete_resp = CRUD.delete_annos(
+            context_id=wa_list[1]['platform']['context_id'])
+    assert int(delete_resp['failed']) == 0
+    # discount the deleted and reply
+    assert int(delete_resp['succeeded']) == (original_total -2)
+
+    anno_list = CRUD.select_annos(
+            context_id=wa_list[0]['platform']['context_id'],
+            is_copy=False
+            )
+    # didn't true-delete anything yet
+    assert len(anno_list) == original_total
+
+    # delete annotations (true-delete)
+    delete2_resp = CRUD.delete_annos(
+            context_id=wa_list[1]['platform']['context_id'])
+    assert int(delete2_resp['failed']) == 0
+    assert int(delete2_resp['succeeded']) == original_total
+
+    anno_list = CRUD.select_annos(
+            context_id=wa_list[0]['platform']['context_id'],
+            is_copy=False
+            )
+    # true-delete all annotations
+    assert len(anno_list) == 0
+
+
+
 """
         resp = {
             'original_total': len(anno_list),

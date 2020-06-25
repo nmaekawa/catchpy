@@ -7,6 +7,7 @@ from django.db import DatabaseError
 from django.db import DataError
 from django.db import IntegrityError
 from django.db import transaction
+from django.db.models import Q
 
 from .errors import AnnoError
 from .errors import DuplicateAnnotationIdError
@@ -488,15 +489,15 @@ class CRUD(object):
                         collection_id=None,
                         platform_name=None,
                         userid_list=None, username_list=None,
+                        start_datetime=None,
                         is_copy=True):
         """ select a list of annotations directly from db.
 
         returns a QuerySet
 
-        output list will include deleted annotations.
+        output list might include deleted annotations, if is_copy is False.
         NOT MEANT TO BE AN API ENDPOINT!
         """
-
         if platform_name is None:  # default platform_name
             platform_name = CATCH_DEFAULT_PLATFORM_NAME
 
@@ -512,12 +513,17 @@ class CRUD(object):
             query = query.filter(query_username(username_list))
         if userid_list:
             query = query.filter(query_userid(userid_list))
+        if start_datetime:
+            query = query.filter(Q(created__gt=start_datetime))
+
+        logger.debug('*************** select context_id={}, collection_id={}, platform_name={}, userid={}, username={}, start_datetime={}'.format(
+            context_id, collection_id, platform_name, userid_list, username_list, start_datetime))
 
         # custom searches for platform params
         # TODO ATTENTION: assumes custom_manager extends the defaullt one,
         # provided by catchpy anno.managers.SearchManager
         q = Anno.custom_manager.search_expression({
-            'platform_name': platform_name,
+            'platform': platform_name,
             'context_id': context_id,
             'collection_id': collection_id,
         })
@@ -525,6 +531,8 @@ class CRUD(object):
             query = query.filter(q)
 
         query = query.order_by('-created')
+
+        logger.debug('*************** query_len={}'.format(len(query)))
 
         return query
 
@@ -562,6 +570,138 @@ class CRUD(object):
         resp = {
             'original_total': len(anno_list),
             'total_success': len(copied),
+            'total_failed': len(discarded),
+            'success': copied,
+            'failure': discarded,
+        }
+        return resp
+
+
+    @classmethod
+    def delete_annos(cls,
+                     context_id,
+                     collection_id=None,
+                     platform_name=None,
+                     userid_list=None,
+                     username_list=None,
+                     ):
+        """delete in 2 phases, first soft-delete, then true-delete.
+
+        if not all annotations for that given selection is soft-deleted, then
+        soft-delete all. Only true-delete if all annotations is selection has
+        all annotations already soft-delete.
+        """
+        logger.debug('---------------------------- delete context_id: {}'.format(context_id))
+        true_delete = False
+        # returns no replies nor deleted
+        selected = cls.select_annos(
+                context_id=context_id,
+                collection_id=collection_id,
+                platform_name=platform_name,
+                userid_list=userid_list,
+                username_list=username_list,
+                is_copy=True)
+
+        if len(selected) == 0:
+            # means all annotations are soft deleted, so this is a true delete
+            true_delete = True
+            selected = cls.select_annos(
+                    context_id=context_id,
+                    collection_id=collection_id,
+                    platform_name=platform_name,
+                    userid_list=userid_list,
+                    username_list=username_list,
+                    is_copy=False)
+
+        logger.debug('---------------------------- TRUE DELETE? ({})'.format(true_delete))
+        failure = []
+        success = []
+        for a in selected:
+            try:
+                if true_delete and a.anno_deleted:
+                    a.delete()
+                else:
+                    cls.delete_anno(a)
+
+            except Exception as e:
+                failure.append(a.serialized)
+                logger.error('failed to delete annotation({}): {}'.format(
+                    a.anno_id, e))
+            else:
+                success.append(a.serialized)
+
+        return {'failed': len(failure),
+                'succeeded': len(success),
+                'failure': failure,
+                'success': success}
+
+
+    @classmethod
+    def copy_annos_with_replies(cls,
+                   anno_list,
+                   target_context_id,
+                   target_collection_id,
+                   back_compat=False):
+        """
+
+        ATT: anno_list should not contain replies nor deleted annatations!
+        """
+
+        discarded = []
+        copied = []
+        total_replies = 0
+        total_success_replies = 0
+        for a in anno_list:
+            catcha = a.serialized
+            catcha['id'] = generate_uid(must_be_int=back_compat)  # create new id
+            catcha['platform']['context_id'] = target_context_id
+            catcha['platform']['collection_id'] = target_collection_id
+            catcha['totalReplies'] = 0
+            try:
+                anno = cls.create_anno(catcha, preserve_create=True)
+            except AnnoError as e:
+                msg = 'error during copy of anno({}): {}'.format(
+                    a.anno_id, str(e))
+                logger.error(msg, exc_info=True)
+                catcha['error'] = msg
+                discarded.append(catcha)
+            else:
+                c = anno.serialized
+                c['copied_from_id'] = a.anno_id
+                copied.append(c)
+
+            total_replies = len(a.replies)
+            for r in a.replies:  # copy replies
+                if r.anno_deleted:  # skip deleted
+                    continue
+
+                reply = r.serialized
+                reply['id'] = generate_uid(must_be_int=back_compat)
+                reply['platform']['context_id'] = target_context_id
+                reply['platform']['collection_id'] = target_collection_id
+                reply['platform']['target_source_id'] = catcha['id']
+                reply['target']['items'][0]['source'] = catcha['id']
+                reply['totalReplies'] = 0
+
+                try:
+                    rep = cls.create_anno(reply, preserve_create=True)
+                except AnnoError as e:
+                    msg = 'error during copy of reply({}): {}'.format(
+                            r.anno_id, str(e))
+                    logger.error(msg, exc_info=True)
+                    reply['error'] = msg
+                    discarded.append(reply)
+                else:
+                    total_success_replies += 1
+                    a_rep = rep.serialized
+                    a_rep['copied_from_id'] = r.anno_id
+                    copied.append(a_rep)
+
+        resp = {
+            'original_total': len(anno_list),
+            'total_success': len(copied),
+            'total_replies': total_replies,
+            'total_success_replies': total_success_replies,
             'total_failed': len(discarded),
             'success': copied,
             'failure': discarded,
