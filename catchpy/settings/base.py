@@ -144,7 +144,7 @@ STATIC_ROOT = os.environ.get('CATCHPY_STATIC_ROOT', os.path.join(BASE_DIR, _STAT
 
 # Logging config
 _DEFAULT_LOG_LEVEL = os.environ.get('CATCHPY_LOG_LEVEL', 'DEBUG')
-_LOG_ROOT = os.environ.get('CATCHPY_LOG_ROOT', '')
+_LOG_ROOT = os.environ.get('CATCHPY_LOG_ROOT', BASE_DIR)
 
 LOGGING = {
     'version': 1,
