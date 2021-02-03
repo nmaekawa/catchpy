@@ -542,10 +542,12 @@ class CRUD(object):
                    anno_list,
                    target_context_id,
                    target_collection_id,
+                   userid_map=None,
                    back_compat=False):
         """
 
         ATT: anno_list should not contain replies nor deleted annatations!
+        for userid_map addition, see [A] below
         """
 
         discarded = []
@@ -556,6 +558,14 @@ class CRUD(object):
             catcha['platform']['context_id'] = target_context_id
             catcha['platform']['collection_id'] = target_collection_id
             catcha['totalReplies'] = 0
+            if userid_map:  # able to swap userid OR keep original, see [A] below
+                src_userid = catcha['creator']['id']
+                tgt_userid = userid_map.get(src_userid, src_userid)
+                catcha['creator']['id'] = tgt_userid
+                catcha['permissions']['can_read'] = []  # makes annotation public
+                catcha['permissions']['can_update'] = [tgt_userid]
+                catcha['permissions']['can_delete'] = [tgt_userid]
+                catcha['permissions']['can_admin'] = [tgt_userid]
             try:
                 anno = cls.create_anno(catcha, preserve_create=True)
             except AnnoError as e:
@@ -707,3 +717,23 @@ class CRUD(object):
             'failure': discarded,
         }
         return resp
+
+
+"""
+[A] 05feb21 naomi: one use-case for copy_annos() is copying instructor annotations from
+    one course to its re-run or v2. In edx, userids are unique within a course, so the
+    instructor userid from the source course is different from the instructors in the
+    target course, thus the userid swap. As consequence, permissions have also to be
+    swapped and, to make it simple and assuming these are instructor annotations, all
+    copied annotations are made PUBLIC. Also, when the list of annotations to be copied
+    has userids not in the userid_map, they are going to be kept as the original and
+    this is probably not what you want to do. Be mindful that is is implied that all
+    annotations to be copied have userids in the userid_map.
+    Other thing to notice is that, as the annotations list to be copied passed as
+    input argument is usually Annotation objects binded to the database, any change in
+    the target annotation must be done in the catcha object. Do not change the
+    Annotation object before passing it to copy_annos() (or try to save it, you'll be
+    updating the original annotation!)... Changes to the target object must be done in
+    copy_annos().
+
+"""
