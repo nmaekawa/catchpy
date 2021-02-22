@@ -3,10 +3,8 @@ import logging
 from datetime import datetime
 from http import HTTPStatus
 
-import dateutil
-from django.conf import settings
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -16,8 +14,6 @@ from .anno_defaults import (
     ANNOTATORJS_FORMAT,
     CATCH_ADMIN_GROUP_ID,
     CATCH_ANNO_FORMAT,
-    CATCH_CURRENT_SCHEMA_VERSION,
-    CATCH_JSONLD_CONTEXT_IRI,
     CATCH_LOG_SEARCH_TIME,
     CATCH_RESPONSE_LIMIT,
 )
@@ -28,7 +24,6 @@ from .errors import (
     AnnotatorJSError,
     DuplicateAnnotationIdError,
     InconsistentAnnotationError,
-    InvalidAnnotationCreatorError,
     MethodNotAllowedError,
     MissingAnnotationError,
     MissingAnnotationInputError,
@@ -379,7 +374,7 @@ def search_api(request):
         return JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
-        logger.error("search failed: {}".format(e, exc_info=True))
+        logger.error("search failed: {}".format(e), exc_info=True)
         return JsonResponse(
             status=e.status, data={"status": e.status, "payload": [str(e)]}
         )
@@ -401,7 +396,7 @@ def search_back_compat_api(request):
         response = JsonResponse(status=HTTPStatus.OK, data=resp)
 
     except AnnoError as e:
-        logger.error("search failed: {}".format(e, exc_info=True))
+        logger.error("search failed: {}".format(e), exc_info=True)
         response = JsonResponse(
             status=e.status, data={"status": e.status, "payload": [str(e)]}
         )

@@ -1,6 +1,4 @@
 import json
-import os
-import sys
 
 from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.crud import CRUD

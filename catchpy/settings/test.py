@@ -8,7 +8,7 @@ if dotenv_path:
     load_dotenv(dotenv_path)
 
 
-from .base import *
+from .base import *  # noqa
 
 DEBUG = True
 

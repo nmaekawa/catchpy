@@ -1,6 +1,4 @@
 import json
-import os
-import sys
 
 from anno.crud import CRUD
 from django.core.management import BaseCommand

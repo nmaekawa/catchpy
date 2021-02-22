@@ -1,8 +1,5 @@
 import json
-import os
-import sys
 
-from anno.crud import CRUD
 from anno.json_models import Catcha
 from django.core.management import BaseCommand
 

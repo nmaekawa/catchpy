@@ -437,7 +437,7 @@ class AnnoJS(object):
         selector = {"type": "List", "items": []}
         try:
             ranges = annojs["ranges"]
-        except KeyError as e:
+        except KeyError:
             raise AnnotatorJSError(
                 "anno({}): expected `ranges` property for `text` media".format(
                     annojs["id"]
@@ -519,7 +519,7 @@ class AnnoJS(object):
                 rangePositionList = annojs["rangePosition"]
             else:
                 rangePositionList = [annojs["rangePosition"]]
-        except KeyError as e:
+        except KeyError:
             raise AnnotatorJSError(
                 'anno({}): missing rangePosition in media="image"'.format(annojs["id"])
             )
@@ -754,7 +754,7 @@ class Catcha(object):
             compacted = jsonld.compact(annotation, CATCH_JSONLD_CONTEXT_OBJECT)
         except Exception as e:
             msg = "compaction for context({}) of anno({}) failed: {}".format(
-                local_context, annotation["id"], str(e)
+                CATCH_JSONLD_CONTEXT_OBJECT, annotation["id"], str(e)
             )
             logger.error(msg, exc_info=True)
             annotation["@context"] = original_context

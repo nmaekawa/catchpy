@@ -19,13 +19,11 @@ from .anno_defaults import (
 from .errors import (
     AnnoError,
     DuplicateAnnotationIdError,
-    InconsistentAnnotationError,
     InvalidAnnotationPurposeError,
     InvalidAnnotationTargetTypeError,
     InvalidInputWebAnnotationError,
     InvalidTargetMediaTypeError,
     MissingAnnotationError,
-    NoPermissionForOperationError,
     TargetAnnotationForReplyMissingError,
 )
 from .json_models import Catcha
@@ -49,7 +47,7 @@ class CRUD(object):
         """filters out the soft deleted instances."""
         try:
             anno = Anno._default_manager.get(pk=anno_id)
-        except Anno.DoesNotExist as e:
+        except Anno.DoesNotExist:
             return None
         if anno.anno_deleted:
             return None
@@ -205,7 +203,7 @@ class CRUD(object):
             msg = "integrity error creating anno({}): {}".format(catcha["id"], e)
             logger.error(msg, exc_info=True)
             raise DuplicateAnnotationIdError(msg)
-        except DataError as e:
+        except DataError:
             msg = "tag too long for anno({})".format(catcha["id"])
             logger.error(msg, exc_info=True)
             raise InvalidInputWebAnnotationError(msg)
@@ -447,8 +445,8 @@ class CRUD(object):
                 continue
 
             try:
-                anno_deleted = cls.delete_anno(anno)
-            except MissingAnnotationError as e:
+                _ = cls.delete_anno(anno)
+            except MissingAnnotationError:
                 # ok to be already deleted
                 continue
             except AnnoError as e:
@@ -572,7 +570,7 @@ class CRUD(object):
                 catcha["permissions"]["can_delete"] = [tgt_userid]
                 catcha["permissions"]["can_admin"] = [tgt_userid]
             try:
-                anno = cls.create_anno(catcha, preserve_create=True)
+                _ = cls.create_anno(catcha, preserve_create=True)
             except AnnoError as e:
                 msg = "error during copy of anno({}): {}".format(a.anno_id, str(e))
                 logger.error(msg, exc_info=True)

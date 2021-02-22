@@ -1,10 +1,7 @@
 import json
-import os
-import sys
 
-from anno.anno_defaults import CATCH_ANNO_FORMAT, CATCH_DEFAULT_PLATFORM_NAME
+from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.crud import CRUD
-from anno.views import _format_response
 from django.core.management import BaseCommand
 
 

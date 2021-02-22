@@ -2,7 +2,6 @@
 
 import logging
 
-from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.contrib.postgres.indexes import GinIndex
 from django.db.models import (
@@ -17,7 +16,7 @@ from django.db.models import (
     TextField,
 )
 
-from .anno_defaults import (
+from .anno_defaults import (  # noqa
     ANNO,
     AUDIO,
     CATCH_CURRENT_SCHEMA_VERSION,

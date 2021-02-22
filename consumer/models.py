@@ -1,23 +1,15 @@
-import logging
 from datetime import datetime, timedelta
-from random import randint
 from uuid import uuid4
 
 import pytz
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import JSONField
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import (
     CASCADE,
-    PROTECT,
-    BooleanField,
     CharField,
     DateTimeField,
     ForeignKey,
-    ManyToManyField,
     Model,
     OneToOneField,
-    TextField,
 )
 from django.db.models.signals import post_save
 from django.dispatch import receiver

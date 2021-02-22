@@ -1,7 +1,4 @@
 import json
-import os
-import sys
-from datetime import datetime
 
 import dateutil
 from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME

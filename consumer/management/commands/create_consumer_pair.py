@@ -1,4 +1,3 @@
-import os
 import sys
 
 from consumer.models import Consumer, expire_in_weeks
