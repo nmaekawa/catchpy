@@ -495,7 +495,7 @@ def _do_search_api(request, back_compat=False):
 
     if CATCH_LOG_SEARCH_TIME:
         logger.info(('[SEARCH_TIME] (prep, count, eval, -, format, total) '
-                     '{0:12.3f} {1:12.3f} {2:12.3f} {3:12.3f} {4:12.3f} {4:12.3f}').format(
+                     '{0:12.3f} {1:12.3f} {2:12.3f} {3:12.3f} {4:12.3f} {5:12.3f}').format(
                          (ts_deltas[1][1].total_seconds()),
                          (ts_deltas[2][1].total_seconds()),
                          (ts_deltas[3][1].total_seconds()),
