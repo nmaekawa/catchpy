@@ -23,6 +23,9 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+bin
+node_modules
+include
 
 # Installer logs
 pip-log.txt
@@ -31,6 +34,9 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 .tox/
 .cache
+.coverage
+htmlcov
+reports
 
 # Django stuff:
 *.log
@@ -39,12 +45,30 @@ logs
 
 # dotenv
 .env
+*.env
+.python_version
+
 
 # db
 db.sqlite3
 
-# local django settings
-catch/settings/local.py
-
 # static root
 public/
+http_static
+
+# virtualenvs
+/pyenv
+.venv
+env
+env3
+
+# other
+*.DS_Store
+secure.py
+production.py
+*-annotation-list.json
+*-old.json
+*.srt
+/.idea
+/pycharm-debug.egg
+.vscode
