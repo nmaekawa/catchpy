@@ -8,24 +8,24 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('anno', '0002_auto_20171010_1153'),
+        ("anno", "0002_auto_20171010_1153"),
     ]
 
     operations = [
         migrations.RunSQL(
             "CREATE INDEX idx_raw_contextid on anno_anno((raw->'platform'->'context_id'))",
-            "DROP INDEX idx_raw_contextid"
+            "DROP INDEX idx_raw_contextid",
         ),
         migrations.RunSQL(
             "CREATE INDEX idx_raw_collectionid on anno_anno((raw->'platform'->'collection_id'))",
-            "DROP INDEX idx_raw_collectionid"
+            "DROP INDEX idx_raw_collectionid",
         ),
         migrations.RunSQL(
             "CREATE INDEX idx_raw_targetsourceid on anno_anno((raw->'platform'->'target_source_id'))",
-            "DROP INDEX idx_raw_targetsourceid"
+            "DROP INDEX idx_raw_targetsourceid",
         ),
         migrations.RunSQL(
             "CREATE INDEX idx_can_read on anno_anno USING GIN (can_read)",
-            "DROP INDEX idx_can_read"
+            "DROP INDEX idx_can_read",
         ),
     ]

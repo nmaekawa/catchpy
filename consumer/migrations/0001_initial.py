@@ -18,28 +18,71 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Consumer',
+            name="Consumer",
             fields=[
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('modified', models.DateTimeField(auto_now=True)),
-                ('consumer', models.CharField(default=consumer.models.generate_id, max_length=128, primary_key=True, serialize=False)),
-                ('secret_key', models.CharField(default=consumer.models.generate_id, max_length=128)),
-                ('expire_on', models.DateTimeField(default=consumer.models.expire_in_weeks)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("modified", models.DateTimeField(auto_now=True)),
+                (
+                    "consumer",
+                    models.CharField(
+                        default=consumer.models.generate_id,
+                        max_length=128,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "secret_key",
+                    models.CharField(
+                        default=consumer.models.generate_id, max_length=128
+                    ),
+                ),
+                (
+                    "expire_on",
+                    models.DateTimeField(default=consumer.models.expire_in_weeks),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('modified', models.DateTimeField(auto_now=True)),
-                ('prime_consumer', models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='prime_profile', to='consumer.Consumer')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("modified", models.DateTimeField(auto_now=True)),
+                (
+                    "prime_consumer",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="prime_profile",
+                        to="consumer.Consumer",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='consumer',
-            name='parent_profile',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='consumers', to='consumer.Profile'),
+            model_name="consumer",
+            name="parent_profile",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="consumers",
+                to="consumer.Profile",
+            ),
         ),
     ]

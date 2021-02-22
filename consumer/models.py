@@ -28,10 +28,8 @@ class Profile(Model):
     modified = DateTimeField(auto_now=True, null=False)
     user = OneToOneField(User, on_delete=CASCADE)
     prime_consumer = OneToOneField(
-        'Consumer',
-        related_name='prime_profile',
-        null=True,
-        on_delete=CASCADE)
+        "Consumer", related_name="prime_profile", null=True, on_delete=CASCADE
+    )
 
     def __repr__(self):
         return self.user.username
@@ -62,11 +60,8 @@ class Consumer(Model):
     secret_key = CharField(max_length=128, default=generate_id)
     expire_on = DateTimeField(default=expire_in_weeks)
     parent_profile = ForeignKey(
-        'Profile',
-        related_name='consumers',
-        null=True,
-        on_delete=CASCADE)
-
+        "Profile", related_name="consumers", null=True, on_delete=CASCADE
+    )
 
     def has_expired(self, now=None):
         if now is None:
@@ -80,12 +75,8 @@ class Consumer(Model):
         return self.__repr__()
 
 
-
 @receiver(post_save, sender=Profile)
 def create_or_update_profile_consumer(sender, instance, created, **kwargs):
     if created:
         Consumer.objects.create(prime_profile=instance)
     instance.prime_consumer.save()
-
-
-

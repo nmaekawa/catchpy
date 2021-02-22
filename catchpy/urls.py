@@ -19,8 +19,8 @@ from django.urls import include, path, re_path
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    re_path(r'^annos/?', include('anno.urls')),
-    path('version', views.app_version),
-    path('is_alive', views.is_alive),
+    path("admin/", admin.site.urls),
+    re_path(r"^annos/?", include("anno.urls")),
+    path("version", views.app_version),
+    path("is_alive", views.is_alive),
 ]

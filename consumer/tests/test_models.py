@@ -10,12 +10,10 @@ from ..models import Consumer, Profile
 
 @pytest.mark.django_db
 class TestConsumer(object):
-
     def test_create_user_profile_consumer_ok(self):
         u = User._default_manager.create(
-                username='fake_user',
-                password='fake_pwd',
-                email='fake_email@fake.org')
+            username="fake_user", password="fake_pwd", email="fake_email@fake.org"
+        )
         assert u.profile is not None
         assert u.profile.prime_consumer is not None
         assert u.profile.prime_consumer.prime_profile == u.profile
@@ -28,8 +26,7 @@ class TestConsumer(object):
 
     def test_create_consumer_with_parent_profile_ok(self):
         u = User._default_manager.create(
-                username='fake_user',
-                password='fake_pwd',
-                email='fake_email@fake.org')
+            username="fake_user", password="fake_pwd", email="fake_email@fake.org"
+        )
         c = Consumer._default_manager.create(parent_profile=u.profile)
         assert c.parent_profile == u.profile

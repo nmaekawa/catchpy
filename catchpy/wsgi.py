@@ -14,10 +14,10 @@ from dotenv import load_dotenv
 
 # if dotenv file, load it
 dotenv_path = None
-if 'CATCHPY_DOTENV_PATH' in os.environ:
-    dotenv_path = os.environ['CATCHPY_DOTENV_PATH']
-elif os.path.exists(os.path.join('catchpy', 'settings', '.env')):
-    dotenv_path = os.path.join('catchpy', 'settings', '.env')
+if "CATCHPY_DOTENV_PATH" in os.environ:
+    dotenv_path = os.environ["CATCHPY_DOTENV_PATH"]
+elif os.path.exists(os.path.join("catchpy", "settings", ".env")):
+    dotenv_path = os.path.join("catchpy", "settings", ".env")
 if dotenv_path:
     load_dotenv(dotenv_path)
 

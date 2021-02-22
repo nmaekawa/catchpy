@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('anno', '0001_initial'),
+        ("anno", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='anno',
-            name='schema_version',
-            field=models.CharField(default='catch_v2.0', max_length=128),
+            model_name="anno",
+            name="schema_version",
+            field=models.CharField(default="catch_v2.0", max_length=128),
         ),
     ]

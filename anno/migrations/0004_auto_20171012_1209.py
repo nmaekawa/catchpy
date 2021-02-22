@@ -8,18 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('anno', '0003_create_custom_index'),
+        ("anno", "0003_create_custom_index"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='anno',
-            name='anno_deleted',
+            model_name="anno",
+            name="anno_deleted",
             field=models.BooleanField(db_index=True, default=False),
         ),
         migrations.AlterField(
-            model_name='anno',
-            name='created',
+            model_name="anno",
+            name="created",
             field=models.DateTimeField(auto_now_add=True, db_index=True),
         ),
     ]
