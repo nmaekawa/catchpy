@@ -1,14 +1,14 @@
 
 
-import dateutil
 import json
 import os
 import sys
 from datetime import datetime
-from django.core.management import BaseCommand
 
+import dateutil
 from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.crud import CRUD
+from django.core.management import BaseCommand
 
 
 class Command(BaseCommand):

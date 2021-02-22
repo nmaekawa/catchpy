@@ -1,18 +1,14 @@
 import json
-import pytest
 import os
 
-from django.urls import reverse
-from django.test import Client
-
-from anno.json_models import AnnoJS
-from anno.json_models import Catcha
+import pytest
+from anno.json_models import AnnoJS, Catcha
 from anno.models import Anno
 from consumer.models import Consumer
+from django.test import Client
+from django.urls import reverse
 
-from .conftest import make_encoded_token
-from .conftest import make_jwt_payload
-from .conftest import readfile_into_jsonobj
+from .conftest import make_encoded_token, make_jwt_payload, readfile_into_jsonobj
 
 
 #

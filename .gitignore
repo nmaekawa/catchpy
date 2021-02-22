@@ -46,7 +46,7 @@ logs
 # dotenv
 .env
 *.env
-.python_version
+.python-version
 
 
 # db

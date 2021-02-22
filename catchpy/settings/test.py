@@ -1,7 +1,9 @@
 
 # so it works with pytest
 import os
+
 from dotenv import load_dotenv
+
 dotenv_path = os.environ.get('CATCHPY_DOTENV_PATH', None)
 if dotenv_path:
     load_dotenv(dotenv_path)

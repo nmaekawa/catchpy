@@ -1,19 +1,18 @@
-from datetime import datetime
-from datetime import timedelta
-import pytest
-import pytz
+from datetime import datetime, timedelta
 from uuid import uuid4
 
+import pytest
+import pytz
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from ..catchjwt import decode_token
-from ..catchjwt import encode_catchjwt
-from ..catchjwt import encode_token
-from ..catchjwt import validate_token
-from ..jwt_middleware import JWT_AUTH_HEADER, JWT_ANNOTATOR_HEADER
-from ..jwt_middleware import get_credentials
-from ..jwt_middleware import jwt_middleware
+from ..catchjwt import decode_token, encode_catchjwt, encode_token, validate_token
+from ..jwt_middleware import (
+    JWT_ANNOTATOR_HEADER,
+    JWT_AUTH_HEADER,
+    get_credentials,
+    jwt_middleware,
+)
 from ..models import Consumer
 
 

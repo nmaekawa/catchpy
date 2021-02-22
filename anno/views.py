@@ -1,48 +1,50 @@
-from datetime import datetime
-import dateutil
 import json
 import logging
-
-from django.db.models import Q
-from django.conf import settings
-from django.http import HttpResponse
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from django.urls import reverse
+from datetime import datetime
 from http import HTTPStatus
 
-from .json_models import AnnoJS
-from .json_models import Catcha
+import dateutil
+from django.conf import settings
+from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
+from .anno_defaults import (
+    ANNO,
+    ANNOTATORJS_FORMAT,
+    CATCH_ADMIN_GROUP_ID,
+    CATCH_ANNO_FORMAT,
+    CATCH_CURRENT_SCHEMA_VERSION,
+    CATCH_JSONLD_CONTEXT_IRI,
+    CATCH_LOG_SEARCH_TIME,
+    CATCH_RESPONSE_LIMIT,
+)
 from .crud import CRUD
 from .decorators import require_catchjwt
-from .errors import AnnoError
-from .errors import AnnotatorJSError
-from .errors import InconsistentAnnotationError
-from .errors import InvalidAnnotationCreatorError
-from .errors import DuplicateAnnotationIdError
-from .errors import MethodNotAllowedError
-from .errors import MissingAnnotationError
-from .errors import MissingAnnotationInputError
-from .errors import NoPermissionForOperationError
-from .errors import UnknownResponseFormatError
-from .search import query_username
-from .search import query_userid
-from .search import query_tags
-from .search import query_target_medias
-from .search import query_target_sources
+from .errors import (
+    AnnoError,
+    AnnotatorJSError,
+    DuplicateAnnotationIdError,
+    InconsistentAnnotationError,
+    InvalidAnnotationCreatorError,
+    MethodNotAllowedError,
+    MissingAnnotationError,
+    MissingAnnotationInputError,
+    NoPermissionForOperationError,
+    UnknownResponseFormatError,
+)
+from .json_models import AnnoJS, Catcha
 from .models import Anno
+from .search import (
+    query_tags,
+    query_target_medias,
+    query_target_sources,
+    query_userid,
+    query_username,
+)
 from .utils import generate_uid
-
-from .anno_defaults import ANNO
-from .anno_defaults import ANNOTATORJS_FORMAT
-from .anno_defaults import CATCH_ADMIN_GROUP_ID
-from .anno_defaults import CATCH_ANNO_FORMAT
-from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
-from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
-from .anno_defaults import CATCH_RESPONSE_LIMIT
-from .anno_defaults import CATCH_LOG_SEARCH_TIME
-
 
 logger = logging.getLogger(__name__)
 

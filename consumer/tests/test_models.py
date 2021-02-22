@@ -1,12 +1,12 @@
 import json
-import pdb
-import pytest
 import os
+import pdb
 
+import pytest
 from django.contrib.auth.models import User
 
-from ..models import Consumer
-from ..models import Profile
+from ..models import Consumer, Profile
+
 
 @pytest.mark.django_db
 class TestConsumer(object):

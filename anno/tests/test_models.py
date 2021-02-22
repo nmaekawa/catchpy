@@ -1,10 +1,8 @@
 import pytest
-
+from anno.anno_defaults import CATCH_CURRENT_SCHEMA_VERSION, MEDIA_TYPES
+from anno.models import Anno, Tag, Target
 from model_bakery import baker
 
-from anno.anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
-from anno.anno_defaults import MEDIA_TYPES
-from anno.models import Anno, Tag, Target
 
 @pytest.mark.django_db
 def test_relationships_ok():

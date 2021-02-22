@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from .models import Consumer
-from .models import Profile
+from .models import Consumer, Profile
 
 # Register your models here.
 admin.site.register(Consumer)

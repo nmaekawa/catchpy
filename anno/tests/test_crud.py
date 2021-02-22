@@ -1,21 +1,20 @@
-from datetime import datetime
-from datetime import timedelta
-from dateutil import tz
 import json
+from datetime import datetime, timedelta
+
 import pytest
-
+from anno.anno_defaults import ANNO, CATCH_DEFAULT_PLATFORM_NAME
 from anno.crud import CRUD
-from anno.anno_defaults import ANNO
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from anno.errors import AnnoError
-from anno.errors import InvalidAnnotationTargetTypeError
-from anno.errors import InvalidInputWebAnnotationError
-from anno.errors import MissingAnnotationError
-from anno.models import Anno, Target
-from anno.models import PURPOSE_TAGGING
+from anno.errors import (
+    AnnoError,
+    InvalidAnnotationTargetTypeError,
+    InvalidInputWebAnnotationError,
+    MissingAnnotationError,
+)
+from anno.models import PURPOSE_TAGGING, Anno, Target
+from dateutil import tz
 
-from .conftest import make_wa_object
-from .conftest import make_wa_tag
+from .conftest import make_wa_object, make_wa_tag
+
 
 @pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db

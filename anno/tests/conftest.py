@@ -1,27 +1,29 @@
-from datetime import datetime
-from datetime import timedelta
-from dateutil import tz
 import json
-import pytest
+from datetime import datetime, timedelta
 from random import randint
-from subprocess import Popen
-from subprocess import PIPE
+from subprocess import PIPE, Popen
 from uuid import uuid4
 
-from django.test import RequestFactory
-
-from anno.anno_defaults import ANNO, AUDIO, TEXT, THUMB, VIDEO, IMAGE
-from anno.anno_defaults import PURPOSE_COMMENTING
-from anno.anno_defaults import PURPOSE_REPLYING
-from anno.anno_defaults import PURPOSE_TAGGING
-from anno.anno_defaults import RESOURCE_TYPE_LIST
-from anno.anno_defaults import RESOURCE_TYPE_CHOICE
-from anno.anno_defaults import CATCH_JSONLD_CONTEXT_IRI
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
+import pytest
+from anno.anno_defaults import (
+    ANNO,
+    AUDIO,
+    CATCH_DEFAULT_PLATFORM_NAME,
+    CATCH_JSONLD_CONTEXT_IRI,
+    IMAGE,
+    PURPOSE_COMMENTING,
+    PURPOSE_REPLYING,
+    PURPOSE_TAGGING,
+    RESOURCE_TYPE_CHOICE,
+    RESOURCE_TYPE_LIST,
+    TEXT,
+    THUMB,
+    VIDEO,
+)
 from anno.utils import generate_uid
-
 from consumer.catchjwt import encode_token
-
+from dateutil import tz
+from django.test import RequestFactory
 
 MEDIAS = [ANNO, AUDIO, TEXT, VIDEO, IMAGE]
 

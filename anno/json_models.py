@@ -1,28 +1,36 @@
-from datetime import datetime
-from dateutil import tz
 import json
-import jsonschema
 import logging
+from datetime import datetime
+
+import jsonschema
+from dateutil import tz
 from pyld import jsonld
 
-from .errors import AnnoError
-from .errors import AnnotatorJSError
-
-from .anno_defaults import ANNO, AUDIO, IMAGE, TEXT, THUMB, VIDEO
-from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
-from .anno_defaults import CATCH_JSONLD_CONTEXT_IRI
-from .anno_defaults import RESOURCE_TYPE_LIST, RESOURCE_TYPE_CHOICE
-from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from .anno_defaults import PURPOSE_REPLYING
-from .anno_defaults import PURPOSE_TAGGING
-from .anno_defaults import CATCH_ANNO_REGEXPS
-from .catch_json_schema import CATCH_JSON_SCHEMA
-from .catch_json_schema import CATCH_JSONLD_CONTEXT_OBJECT
-from .errors import InconsistentAnnotationError
-from .errors import InvalidAnnotationCreatorError
-from .errors import InvalidInputWebAnnotationError
-from .errors import InvalidAnnotationBodyTypeError
-
+from .anno_defaults import (
+    ANNO,
+    AUDIO,
+    CATCH_ANNO_REGEXPS,
+    CATCH_CURRENT_SCHEMA_VERSION,
+    CATCH_DEFAULT_PLATFORM_NAME,
+    CATCH_JSONLD_CONTEXT_IRI,
+    IMAGE,
+    PURPOSE_REPLYING,
+    PURPOSE_TAGGING,
+    RESOURCE_TYPE_CHOICE,
+    RESOURCE_TYPE_LIST,
+    TEXT,
+    THUMB,
+    VIDEO,
+)
+from .catch_json_schema import CATCH_JSON_SCHEMA, CATCH_JSONLD_CONTEXT_OBJECT
+from .errors import (
+    AnnoError,
+    AnnotatorJSError,
+    InconsistentAnnotationError,
+    InvalidAnnotationBodyTypeError,
+    InvalidAnnotationCreatorError,
+    InvalidInputWebAnnotationError,
+)
 from .utils import string_to_number
 
 logger = logging.getLogger(__name__)

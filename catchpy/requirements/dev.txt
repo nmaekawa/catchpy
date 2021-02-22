@@ -1,6 +1,2 @@
 -r test.txt
 
-pytest
-pytest-django
-tox
-

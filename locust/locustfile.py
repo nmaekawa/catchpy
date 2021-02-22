@@ -1,25 +1,23 @@
-import django
 import os
+
+import django
+
 os.environ.setdefault("CATCHPY_COMPAT_MODE", "false")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "catchpy.settings.dev")
 django.setup()
 
 import json
-from random import randint
 import logging
+from random import randint
 
-from anno.anno_defaults import ANNOTATORJS_FORMAT
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from anno.anno_defaults import CATCH_RESPONSE_LIMIT
-from anno.tests.conftest import make_wa_object
-from anno.tests.conftest import make_wa_tag
-from anno.tests.conftest import make_annotatorjs_object
+from anno.anno_defaults import (
+    ANNOTATORJS_FORMAT,
+    CATCH_DEFAULT_PLATFORM_NAME,
+    CATCH_RESPONSE_LIMIT,
+)
+from anno.tests.conftest import make_annotatorjs_object, make_wa_object, make_wa_tag
 from consumer.catchjwt import encode_catchjwt
-
-from locust import between
-from locust import HttpLocust
-from locust import TaskSet
-from locust import task
+from locust import HttpLocust, TaskSet, between, task
 
 PAGE_SIZE = 200
 

@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from datetime import timedelta
+import logging
+from datetime import datetime, timedelta
+
 import iso8601
 import jwt
-import logging
 import pytz
-
 from django.conf import settings
 
-from .catchjwt import decode_token
-from .catchjwt import validate_token
+from .catchjwt import decode_token, validate_token
 from .models import Consumer
-
 
 JWT_AUTH_HEADER = 'HTTP_AUTHORIZATION'
 JWT_ANNOTATOR_HEADER = 'HTTP_X_ANNOTATOR_AUTH_TOKEN'

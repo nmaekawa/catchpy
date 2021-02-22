@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from datetime import timedelta
-from dateutil import tz
-import iso8601
-import jwt
 import logging
+from datetime import datetime, timedelta
 from uuid import uuid4
 
+import iso8601
+import jwt
+from dateutil import tz
 
 logger = logging.getLogger(__name__)
 

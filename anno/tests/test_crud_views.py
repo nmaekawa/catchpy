@@ -1,29 +1,29 @@
 import json
+
 import pytest
-
-from django.urls import reverse
-from django.test import Client
-
-from anno.anno_defaults import ANNO, TEXT
-from anno.anno_defaults import ANNOTATORJS_FORMAT
-from anno.anno_defaults import CATCH_ANNO_FORMAT
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
+from anno.anno_defaults import (
+    ANNO,
+    ANNOTATORJS_FORMAT,
+    CATCH_ANNO_FORMAT,
+    CATCH_DEFAULT_PLATFORM_NAME,
+    TEXT,
+)
 from anno.crud import CRUD
 from anno.errors import AnnotatorJSError
-from anno.json_models import AnnoJS
-from anno.json_models import Catcha
+from anno.json_models import AnnoJS, Catcha
 from anno.models import Anno
-from anno.views import crud_api
-from anno.views import crud_compat_api
-from anno.views import _format_response
-
+from anno.views import _format_response, crud_api, crud_compat_api
 from consumer.models import Consumer
+from django.test import Client
+from django.urls import reverse
 
-from .conftest import make_encoded_token
-from .conftest import make_jwt_payload
-from .conftest import make_json_request
-from .conftest import make_request
-from .conftest import make_wa_object
+from .conftest import (
+    make_encoded_token,
+    make_json_request,
+    make_jwt_payload,
+    make_request,
+    make_wa_object,
+)
 
 
 @pytest.mark.skip('not implemented yet')

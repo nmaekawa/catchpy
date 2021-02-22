@@ -1,26 +1,26 @@
 import logging
-from datetime import datetime
-from datetime import timedelta
-import pytz
+from datetime import datetime, timedelta
 from random import randint
 from uuid import uuid4
 
-from django.core.exceptions import ObjectDoesNotExist
+import pytz
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-
-from django.db.models import CASCADE, PROTECT
-from django.db.models import BooleanField
-from django.db.models import CharField
-from django.db.models import DateTimeField
-from django.db.models import ForeignKey
-from django.db.models import ManyToManyField
-from django.db.models import Model
-from django.db.models import OneToOneField
-from django.db.models import TextField
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import (
+    CASCADE,
+    PROTECT,
+    BooleanField,
+    CharField,
+    DateTimeField,
+    ForeignKey,
+    ManyToManyField,
+    Model,
+    OneToOneField,
+    TextField,
+)
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 
 
 class Profile(Model):

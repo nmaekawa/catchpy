@@ -1,7 +1,6 @@
 import json
 import os
 
-
 # read api spec from file
 here = os.path.abspath(os.path.dirname(__file__))
 filepath = os.path.join(here, 'static/anno/catch_api.json')

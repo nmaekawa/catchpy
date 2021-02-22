@@ -1,38 +1,37 @@
+import logging
 from datetime import datetime
+
 import dateutil
 import dateutil.parser
-import logging
-
-from django.db import DatabaseError
-from django.db import DataError
-from django.db import IntegrityError
-from django.db import transaction
+from django.db import DatabaseError, DataError, IntegrityError, transaction
 from django.db.models import Q
 
-from .errors import AnnoError
-from .errors import DuplicateAnnotationIdError
-from .errors import InconsistentAnnotationError
-from .errors import InvalidAnnotationPurposeError
-from .errors import InvalidAnnotationTargetTypeError
-from .errors import InvalidInputWebAnnotationError
-from .errors import InvalidTargetMediaTypeError
-from .errors import MissingAnnotationError
-from .errors import NoPermissionForOperationError
-from .errors import TargetAnnotationForReplyMissingError
-
-from .anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from .anno_defaults import MEDIA_TYPES, ANNO
-from .anno_defaults import PURPOSES
-from .anno_defaults import PURPOSE_COMMENTING, PURPOSE_REPLYING, PURPOSE_TAGGING
-from .anno_defaults import RESOURCE_TYPES
-
+from .anno_defaults import (
+    ANNO,
+    CATCH_DEFAULT_PLATFORM_NAME,
+    MEDIA_TYPES,
+    PURPOSE_COMMENTING,
+    PURPOSE_REPLYING,
+    PURPOSE_TAGGING,
+    PURPOSES,
+    RESOURCE_TYPES,
+)
+from .errors import (
+    AnnoError,
+    DuplicateAnnotationIdError,
+    InconsistentAnnotationError,
+    InvalidAnnotationPurposeError,
+    InvalidAnnotationTargetTypeError,
+    InvalidInputWebAnnotationError,
+    InvalidTargetMediaTypeError,
+    MissingAnnotationError,
+    NoPermissionForOperationError,
+    TargetAnnotationForReplyMissingError,
+)
 from .json_models import Catcha
-
-from .search import query_userid
-from .search import query_username
 from .models import Anno, Tag, Target
+from .search import query_userid, query_username
 from .utils import generate_uid
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,9 @@
 import json
-import pytest
 
+import pytest
 from anno.crud import CRUD
 from anno.errors import InvalidInputWebAnnotationError
-from anno.json_models import AnnoJS
-from anno.json_models import Catcha
+from anno.json_models import AnnoJS, Catcha
 
 from .conftest import make_wa_object
 

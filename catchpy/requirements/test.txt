@@ -7,3 +7,7 @@ pytest-django
 pytest-mock
 
 tox
+
+black
+isort
+flake8
