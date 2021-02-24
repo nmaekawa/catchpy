@@ -64,3 +64,9 @@ CATCH_LOG_SEARCH_TIME = getattr(settings, "CATCH_LOG_SEARCH_TIME")
 
 # regexps to sanitize anno text body
 CATCH_ANNO_REGEXPS = getattr(settings, "CATCH_ANNO_SANITIZE_REGEXPS")
+
+
+# moderation text and format for hidden items
+MODERATED_MESSAGE_TEXT = "content moderated by instructor"
+MODERATED_MESSAGE_FORMAT = "text/plain"
+

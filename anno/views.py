@@ -16,6 +16,10 @@ from .anno_defaults import (
     CATCH_ANNO_FORMAT,
     CATCH_LOG_SEARCH_TIME,
     CATCH_RESPONSE_LIMIT,
+    MODERATED_MESSAGE_TEXT,
+    MODERATED_MESSAGE_FORMAT,
+    PURPOSE_COMMENTING,
+    PURPOSE_REPLYING,
 )
 from .crud import CRUD
 from .decorators import require_catchjwt
@@ -302,6 +306,11 @@ def _do_crud_api(request, anno_id):
     assert r is not None
     return r
 
+def _do_overwrite():
+    # if anno.is_hidden and
+    # request.catchjwt["userId"] in [CATCH_ADMIN_GROUP_ID, anno.creator_id]
+    # and not req.QUERYSTRING has everwrite
+    return True
 
 def _format_response(anno_result, response_format):
     # is it single anno or a QuerySet from search?
@@ -312,7 +321,21 @@ def _format_response(anno_result, response_format):
             response = AnnoJS.convert_from_anno(anno_result)
         elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
-            response = anno_result.serialized
+            ###################################################################>>
+            # MODERATION
+            #
+            catcha = anno_result.serialized
+            if _do_overwrite():
+                # if anno.is_hidden and
+                # request.catchjwt["userId"] in [CATCH_ADMIN_GROUP_ID, anno.creator_id]
+                # and not req.QUERYSTRING has everwrite
+                for bi in catcha["body"]["items"]:
+                    if bi["purpose"] in [PURPOSE_COMMENTING, PURPOSE_REPLYING]:
+                        bi["value"] = MODERATED_MESSAGE_TEXT
+                        bi["format"] = MODERATED_MESSAGE_FORMAT
+            #
+            ###################################################################>>
+            response = catcha
         else:
             # worked hard and have nothing to show: format UNKNOWN
             raise UnknownResponseFormatError(
@@ -337,7 +360,21 @@ def _format_response(anno_result, response_format):
         elif response_format == CATCH_ANNO_FORMAT:
             # doesn't need formatting! SERIALIZE as webannotation
             for anno in anno_result:
-                response["rows"].append(anno.serialized)
+                ###################################################################>>
+                # MODERATION
+                #
+                catcha = anno.serialized
+                if _do_overwrite():
+                    # if anno.is_hidden and
+                    # request.catchjwt["userId"] in [CATCH_ADMIN_GROUP_ID, anno.creator_id]
+                    # and not req.QUERYSTRING has everwrite
+                    for bi in catcha["body"]["items"]:
+                        if bi["purpose"] in [PURPOSE_COMMENTING, PURPOSE_REPLYING]:
+                            bi["value"] = MODERATED_MESSAGE_TEXT
+                            bi["format"] = MODERATED_MESSAGE_FORMAT
+                #
+                ###################################################################>>
+                response["rows"].append(catcha)
             response["size"] = len(response["rows"])
 
         else:
