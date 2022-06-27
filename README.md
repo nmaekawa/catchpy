@@ -10,11 +10,11 @@ the [`W3C Web Annotation Data Model`](https://www.w3.org/TR/annotation-model/).
 
 The [`OpenAPI Specification`](https://swagger.io/specification/v2/) for the catchpy annotation model can be found at:
 
-    - [/anno/static/anno/catch_api.json](/anno/static/anno/catch_api.json)
+- [/anno/static/anno/catch_api.json](/anno/static/anno/catch_api.json)
 
 A jsonld serialization of this model can be found at:
 
-    - [catch_context_jsonld.json](https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json)
+- [catch_context_jsonld.json](https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json)
 
 
 
