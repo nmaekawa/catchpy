@@ -12,7 +12,7 @@ the `W3C Web Annotation Data Model`_.
 
 The `OpenAPI Specification`_ for the catchpy annotation model can be found at:
 
-    - https://raw.githubusercontent.com/nmaekawa/catchpy/master/anno/static/anno/catch_api.json
+    - [/anno/static/anno/catch_api.json](/anno/static/anno/catch_api.json)
 
 A jsonld serialization of this model can be found at:
 
