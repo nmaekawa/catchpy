@@ -10,3 +10,4 @@ pytz==2019.3
 requests==2.23.0
 django-log-request-id==1.4.1
 django-cors-headers==3.2.1
+django-allow-cidr==0.4.0
