@@ -11,3 +11,5 @@ requests==2.23.0
 django-log-request-id==1.4.1
 django-cors-headers==3.2.1
 django-allow-cidr==0.4.0
+
+git+https://github.com/Harvard-University-iCommons/django-ssm-parameter-store.git@v0.6#egg=django-ssm-parameter-store==0.6
