@@ -25,13 +25,14 @@ PROJECT_NAME = 'catchpy'
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('CATCHPY_DJANGO_SECRET_KEY', 'CHANGE_ME')
+SECRET_KEY = SECURE_SETTINGS.get('catchpy_django_secret_key', 'CHANGE_ME')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = ['localhost',  '127.0.0.1']
-allowed_hosts_other = os.environ.get('CATCHPY_ALLOWED_HOSTS', '')
+# allowed_hosts_other = os.environ.get('CATCHPY_ALLOWED_HOSTS', '')
+allowed_hosts_other = SECURE_SETTINGS.get('catchpy_allowed_hosts', '')
 if allowed_hosts_other:
     ALLOWED_HOSTS.extend(allowed_hosts_other.split())
 
@@ -92,11 +93,11 @@ WSGI_APPLICATION = PROJECT_NAME + '.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('CATCHPY_DB_NAME', 'catchpy'),
-        'USER': os.environ.get('CATCHPY_DB_USER', 'catchpy'),
-        'PASSWORD': os.environ.get('CATCHPY_DB_PASSWORD', 'catchpy'),
-        'HOST': os.environ.get('CATCHPY_DB_HOST', 'localhost'),
-        'PORT': os.environ.get('CATCHPY_DB_PORT', '5432'),
+        'NAME': SECURE_SETTINGS.get('catchpy_db_name', 'catchpy'),
+        'USER': SECURE_SETTINGS.get('catchpy_db_user', 'catchpy'),
+        'PASSWORD': SECURE_SETTINGS.get('catchpy_db_password', 'catchpy'),
+        'HOST': SECURE_SETTINGS.get('catchpy_db_host', 'localhost'),
+        'PORT': SECURE_SETTINGS.get('catchpy_db_port', '5432'),
         'ATOMIC_REQUESTS': False,
         'CONN_MAX_AGE': 500,  # permanent connections
     },
