@@ -96,7 +96,7 @@ DATABASES = {
         'NAME': SECURE_SETTINGS.get('catchpy_db_name', 'catchpy'),
         'USER': SECURE_SETTINGS.get('catchpy_db_user', 'catchpy'),
         'PASSWORD': SECURE_SETTINGS.get('catchpy_db_password', 'catchpy'),
-        'HOST': SECURE_SETTINGS.get('catchpy_db_host', 'localhost'),
+        'HOST': SECURE_SETTINGS.get('catchpy_db_host', ''),
         'PORT': SECURE_SETTINGS.get('catchpy_db_port', '5432'),
         'ATOMIC_REQUESTS': False,
         'CONN_MAX_AGE': 500,  # permanent connections
