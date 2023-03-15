@@ -18,3 +18,16 @@ LOGGING['loggers']['django.db'] = {
         'propagate': True
 }
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'catchpy2',
+        'USER': 'catchpy',
+        'PASSWORD': 'catchpy',
+        'HOST': 'dbserver.vm',
+        'PORT': '5432',
+        'ATOMIC_REQUESTS': False,
+        'CONN_MAX_AGE': 500,  # permanent connections
+    },
+}
+

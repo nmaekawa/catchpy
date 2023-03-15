@@ -26,11 +26,11 @@ def test_each_function_ok():
                                 override=['CAN_UPDATE','CAN_DELETE'])
     factory = RequestFactory()
     extra = {
-        JWT_AUTH_HEADER: 'Token {}'.format(token_enc.decode('iso-8859-1'))}
+        JWT_AUTH_HEADER: 'Token {}'.format(token_enc)}
     request = factory.get('/anno', **extra)
 
     x = get_credentials(request)
-    assert x == token_enc
+    assert x.decode('utf-8') == token_enc
 
     payload = decode_token(x)
     assert payload['consumerKey'] == c.consumer
@@ -53,7 +53,7 @@ def test_middleware_ok():
                                 override=['CAN_UPDATE','CAN_DELETE'])
     factory = RequestFactory()
     extra = {
-        JWT_AUTH_HEADER: 'Token {}'.format(token_enc.decode('iso-8859-1'))}
+        JWT_AUTH_HEADER: 'Token {}'.format(token_enc)}
     request = factory.get('/anno', **extra)
 
     response = HttpResponse('ok')
@@ -124,7 +124,7 @@ def test_middleware_invalid_consumer():
                                 override=['CAN_UPDATE','CAN_DELETE'])
     factory = RequestFactory()
     extra = {
-        JWT_AUTH_HEADER: 'Token {}'.format(token_enc.decode('iso-8859-1'))}
+        JWT_AUTH_HEADER: 'Token {}'.format(token_enc)}
     request = factory.get('/anno', **extra)
 
     response = HttpResponse('ok')
@@ -153,8 +153,8 @@ def test_middleware_tampered_token():
                                 user='clarice_lispector',
                                 override=['CAN_UPDATE','CAN_DELETE',
                                           'CAN_ADMIN'])
-    (header, payload, signature) = token_enc.decode('iso-8859-1').split('.')
-    (header2, payload2, signature2) = token2_enc.decode('iso-8859-1').split('.')
+    (header, payload, signature) = token_enc.split('.')
+    (header2, payload2, signature2) = token2_enc.split('.')
     token_tampered = '.'.join([header2, payload2, signature])
 
     factory = RequestFactory()
@@ -188,7 +188,7 @@ def test_middleware_token_expired():
                                 override=['CAN_UPDATE','CAN_DELETE'])
     factory = RequestFactory()
     extra = {
-        JWT_AUTH_HEADER: 'Token {}'.format(token_enc.decode('iso-8859-1'))}
+        JWT_AUTH_HEADER: 'Token {}'.format(token_enc)}
     request = factory.get('/anno', **extra)
 
     response = HttpResponse('ok')
@@ -217,7 +217,7 @@ def test_middleware_issued_in_future():
                                 override=['CAN_UPDATE','CAN_DELETE'])
     factory = RequestFactory()
     extra = {
-        JWT_AUTH_HEADER: 'Token {}'.format(token_enc.decode('iso-8859-1'))}
+        JWT_AUTH_HEADER: 'Token {}'.format(token_enc)}
     request = factory.get('/anno', **extra)
 
     response = HttpResponse('ok')

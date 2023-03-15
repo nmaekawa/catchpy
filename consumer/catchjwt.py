@@ -8,13 +8,20 @@ import logging
 from uuid import uuid4
 
 
+REQUIRED_CLAIMS = ('consumerKey', 'userId', 'issuedAt', 'ttl')
 logger = logging.getLogger(__name__)
 
 
 def decode_token(token, secret_key='', verify=False):
     try:    # decode to get consumerKey
         payload = jwt.decode(
-            token, secret_key, verify=verify, algorithms=['HS256'])
+            token,
+            secret_key,
+            options={
+                "verify_signature":verify,"require":list(REQUIRED_CLAIMS),
+            },
+            algorithms=['HS256'],
+        )
     except (jwt.exceptions.InvalidTokenError,
             jwt.exceptions.DecodeError) as e:
         logger.info(

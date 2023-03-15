@@ -1,5 +1,8 @@
 -r base.txt
 
+black
+isort
+flake8
 mock
 model-bakery
 pytest

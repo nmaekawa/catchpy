@@ -364,7 +364,7 @@ def make_jwt_payload(apikey=None, user=None, iat=None, ttl=60, override=[]):
 def make_encoded_token(secret, payload=None):
     if payload is None:
         payload = make_jwt_payload()
-    return encode_token(payload, secret).decode('utf-8')
+    return encode_token(payload, secret)
 
 
 def make_request(method='GET', jwt_payload=None, anno_id='tbd'):
