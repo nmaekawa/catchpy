@@ -20,8 +20,10 @@ from .errors import AnnoError
 from .errors import AnnotatorJSError
 from .errors import InconsistentAnnotationError
 from .errors import InvalidAnnotationCreatorError
+from .errors import InvalidInputWebAnnotationError
 from .errors import DuplicateAnnotationIdError
 from .errors import MethodNotAllowedError
+from .errors import MissingAnnotationCreatorInputError
 from .errors import MissingAnnotationError
 from .errors import MissingAnnotationInputError
 from .errors import NoPermissionForOperationError
@@ -54,7 +56,7 @@ METHOD_PERMISSION_MAP = {
     'DELETE': 'delete',
     'PUT': 'update',
 }
-REQUIRED_PARAMS_FOR_TRANSFER) = {
+REQUIRED_PARAMS_FOR_TRANSFER = {
     "userid_map", "source_context_id", "source_collection_id", "target_context_id",
     "target_collection_id",
 }
@@ -710,7 +712,7 @@ def copy_api(request):
             context_id=params['source_context_id'],
             collection_id=params['source_collection_id'],
             platform_name=params['platform_name'],  # fallback to default
-            userid_list=userids,
+            userid_list=list(params["userid_map"]),  # get only keys as simple list
             is_copy=True,  # exclude replies and deleted
     )
     logger.debug('select for copy returned ({})'.format(anno_list.count()))
@@ -719,10 +721,10 @@ def copy_api(request):
         anno_list,
         params['target_context_id'],
         params['target_collection_id'],
-        userid_map=userid_map,
+        userid_map=params["userid_map"],
         back_compat=False,
     )
-    logger.debug("transfer result: {}".format(resp))
+    logger.debug("transfer result: {}".format(json.dumps(resp)))
     """ format of resp
         resp = {
             'original_total': len(anno_list),
