@@ -26,18 +26,6 @@ from .conftest import make_request
 from .conftest import make_wa_object
 
 
-@pytest.mark.skip('not implemented yet')
-def test_index():
-    client = Client()
-    url = reverse('index')
-    response = client.get(url)
-
-    from django.core.urlresolvers import resolve
-    func = resolve(url).func
-    func_name = '{}.{}'.format(func.__module__, func.__name__)
-    assert response.status_code == 200
-
-
 @pytest.mark.django_db
 def test_method_not_allowed():
     request = make_request(method='patch')
@@ -583,8 +571,9 @@ def test_copy_ok(wa_list):
     assert int(resp['total_failed']) == 0
     for a in resp["success"]:
         assert a["creator"]["id"] == "other_instructor"
+        assert a["platform"]["context_id"] == "another_fake_context"
+        assert a["platform"]["collection_id"] == "another_fake_collection"
 
-    assert 1 < 0
 """
         resp = {
             'original_total': len(anno_list),

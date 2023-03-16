@@ -1405,13 +1405,13 @@
         "/annos/copy": {
             "post": {
                 "tags": ["catchpy"],
-                "summary": "Copies set of annotation to different context_id",
-                "description": "Creates new instances given a set of annotations; the requesting user must have permission to perform 'copy' operation; replies to annotations are ignored",
+                "summary": "Copies instructor annotation to different context_id",
+                "description": "Creates new instances given a map of instructor userids; the requesting user must have permission to perform 'copy' operation; replies to annotations are ignored",
                 "parameters": [
                     {
                         "name": "copy_params",
                         "in": "body",
-                        "description": "parameters for copy; note that (userid in userid_list AND username in username_list)",
+                        "description": "parameters for copy",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/CopyParams"
@@ -1901,26 +1901,17 @@
         "CopyParams": {
             "type": "object",
             "required": ["source_context_id", "source_collection_id",
-                "target_context_id", "target_collection_id", "platform_name"],
+                "target_context_id", "target_collection_id", "platform_name", "userid_map"],
             "properties": {
                 "source_context_id": {"type": "string"},
                 "source_collection_id": {"type": "string"},
                 "target_context_id": {"type": "string"},
                 "target_collection_id": {"type": "string"},
                 "platform_name": {"type": "string"},
-                "userid_list": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {"type": "string"},
-                    "uniqueItems": true
-                },
-                "username_list": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {"type": "string"},
-                    "uniqueItems": true
-                },
-                "back_compat": {"type": "boolean"}
+                "userid_map": {
+                    "type": "object",
+                    "description": "maps source instructor userid to target instructor userid, e.g. {\"smith\": \"johnson\"}"
+                }
             }
         },
         "CopyResult": {

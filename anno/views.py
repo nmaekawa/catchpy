@@ -632,48 +632,6 @@ def process_search_back_compat_params(request, query):
 @require_http_methods(['POST', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
-def copy_api_deprecated(request):
-
-    # check permissions to copy
-    jwt_payload = get_jwt_payload(request)
-    if 'CAN_COPY' not in jwt_payload['override']:
-        msg = 'user ({}) not allowed to copy'.format(jwt_payload['name'])
-        logger.error(msg, exc_info=True)
-        raise NoPermissionForOperationError(msg)
-
-    params = get_input_json(request)
-
-    # sanity check: not allowed to copy to same course or collection
-    if params['source_context_id'] == params['target_context_id']:
-        msg = 'not allowed to copy to same context_id({})'.format(
-            params['source_context_id'])
-        logger.error(msg, exc_info=True)
-        raise InconsistentAnnotationError(msg)
-
-    back_compat = params['back_compat'] if 'back_compat' in params else False
-
-    userids = params['userid_list'] if 'userid_list' in params else None
-    usernames = params['username_list'] if 'username_list' in params else None
-    anno_list = CRUD.select_annos(
-            context_id=params['source_context_id'],
-            collection_id=params['source_collection_id'],
-            platform_name=params.get('platform_name', None),
-            userid_list=userids,
-            username_list=usernames)
-
-    logger.debug('select for copy returned ({})'.format(anno_list.count()))
-
-    resp = CRUD.copy_annos(
-        anno_list,
-        params['target_context_id'], params['target_collection_id'],
-        back_compat=back_compat)
-
-    return JsonResponse(status=HTTPStatus.OK, data=resp)
-
-
-@require_http_methods(['POST', 'OPTIONS'])
-@csrf_exempt
-@require_catchjwt
 def copy_api(request):
 
     # check permissions to copy
