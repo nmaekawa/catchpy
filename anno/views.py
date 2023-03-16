@@ -54,7 +54,10 @@ METHOD_PERMISSION_MAP = {
     'DELETE': 'delete',
     'PUT': 'update',
 }
-
+REQUIRED_PARAMS_FOR_TRANSFER) = {
+    "userid_map", "source_context_id", "source_collection_id", "target_context_id",
+    "target_collection_id",
+}
 
 def get_jwt_payload(request):
     try:
@@ -627,7 +630,7 @@ def process_search_back_compat_params(request, query):
 @require_http_methods(['POST', 'OPTIONS'])
 @csrf_exempt
 @require_catchjwt
-def copy_api(request):
+def copy_api_deprecated(request):
 
     # check permissions to copy
     jwt_payload = get_jwt_payload(request)
@@ -652,7 +655,7 @@ def copy_api(request):
     anno_list = CRUD.select_annos(
             context_id=params['source_context_id'],
             collection_id=params['source_collection_id'],
-            platform_name=params['platform_name'],
+            platform_name=params.get('platform_name', None),
             userid_list=userids,
             username_list=usernames)
 
@@ -665,6 +668,71 @@ def copy_api(request):
 
     return JsonResponse(status=HTTPStatus.OK, data=resp)
 
+
+@require_http_methods(['POST', 'OPTIONS'])
+@csrf_exempt
+@require_catchjwt
+def copy_api(request):
+
+    # check permissions to copy
+    jwt_payload = get_jwt_payload(request)
+    if 'CAN_COPY' not in jwt_payload['override']:
+        msg = 'user ({}) not allowed to copy'.format(jwt_payload['name'])
+        logger.error(msg, exc_info=True)
+        raise NoPermissionForOperationError(msg)
+
+    params = get_input_json(request)
+    # all required keys in params?
+    if not (set(params) >= REQUIRED_PARAMS_FOR_TRANSFER):
+        msg = "missing params for transfer: expected({}) found({})".format(
+            REQUIRED_PARAMS_FOR_TRANSFER, set(params)
+        )
+        logger.error(msg)
+        raise InvalidInputWebAnnotationError(msg)
+
+    # sanity check: not allowed to copy to same course or collection
+    if params['source_context_id'] == params['target_context_id']:
+        msg = 'not allowed to copy to same context_id({})'.format(
+            params['source_context_id'])
+        logger.error(msg, exc_info=True)
+        raise InconsistentAnnotationError(msg)
+
+    # transferring instructors anno; userid_map mandatory
+    if len(params["userid_map"]) == 0:
+        msg = "copy({} -> {}) missing source instructor; userid_map empty".format(
+            params["source_context_id"],
+            params["target_context_id"],
+        )
+        logger.error(msg)
+        raise MissingAnnotationCreatorInputError(msg)
+
+    anno_list = CRUD.select_annos(
+            context_id=params['source_context_id'],
+            collection_id=params['source_collection_id'],
+            platform_name=params['platform_name'],  # fallback to default
+            userid_list=userids,
+            is_copy=True,  # exclude replies and deleted
+    )
+    logger.debug('select for copy returned ({})'.format(anno_list.count()))
+
+    resp = CRUD.copy_annos(
+        anno_list,
+        params['target_context_id'],
+        params['target_collection_id'],
+        userid_map=userid_map,
+        back_compat=False,
+    )
+    logger.debug("transfer result: {}".format(resp))
+    """ format of resp
+        resp = {
+            'original_total': len(anno_list),
+            'total_success': len(copied),
+            'total_failed': len(discarded),
+            'success': copied,
+            'failure': discarded,
+        }
+    """
+    return JsonResponse(status=HTTPStatus.OK, data=resp)
 
 
 def process_partial_update(request, anno_id):
