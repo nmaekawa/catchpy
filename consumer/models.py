@@ -7,7 +7,6 @@ from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import JSONField
 
 from django.db.models import CASCADE, PROTECT
 from django.db.models import BooleanField
