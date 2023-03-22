@@ -1,16 +1,13 @@
 import json
 
 import pytest
-from anno.anno_defaults import (
-    ANNO,
-    CATCH_DEFAULT_PLATFORM_NAME,
-    TEXT,
-)
+from anno.anno_defaults import ANNO, TEXT
 from anno.crud import CRUD
 from anno.json_models import AnnoJS, Catcha
 from anno.models import Anno
 from anno.views import _format_response, crud_api, crud_compat_api
 from consumer.models import Consumer
+from django.conf import settings
 from django.test import Client
 from django.urls import reverse
 
@@ -542,14 +539,14 @@ def test_copy_ok(wa_list):
     anno_list = CRUD.select_annos(
         context_id="fake_context",
         collection_id="fake_collection",
-        platform_name=CATCH_DEFAULT_PLATFORM_NAME,
+        platform_name=settings.CATCH_DEFAULT_PLATFORM_NAME,
     )
     select_total = anno_list.count()
     assert select_total == original_total
 
     # setup copy call to client
     params = {
-        "platform_name": CATCH_DEFAULT_PLATFORM_NAME,
+        "platform_name": settings.CATCH_DEFAULT_PLATFORM_NAME,
         "source_context_id": "fake_context",
         "source_collection_id": "fake_collection",
         "target_context_id": "another_fake_context",
@@ -561,6 +558,10 @@ def test_copy_ok(wa_list):
         apikey=c.consumer, user="__admin__", override=["CAN_COPY"]
     )
     token = make_encoded_token(c.secret_key, payload)
+
+    # force a different default platform_name
+    original_platform = settings.CATCH_DEFAULT_PLATFORM_NAME
+    setattr(settings, "CATCH_DEFAULT_PLATFORM_NAME", "test_PLATFORM_name")
 
     client = Client()
     copy_url = reverse("copy_api")
@@ -580,6 +581,10 @@ def test_copy_ok(wa_list):
         assert a["creator"]["id"] == "other_instructor"
         assert a["platform"]["context_id"] == "another_fake_context"
         assert a["platform"]["collection_id"] == "another_fake_collection"
+        assert a["platform"]["platform_name"] == "test_PLATFORM_name"
+
+    # restore platform_name
+    setattr(settings, "CATCH_DEFAULT_PLATFORM_NAME", original_platform)
 
 
 """

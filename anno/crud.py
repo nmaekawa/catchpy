@@ -3,12 +3,12 @@ from datetime import datetime
 
 import dateutil
 import dateutil.parser
+from django.conf import settings
 from django.db import DatabaseError, DataError, IntegrityError, transaction
 from django.db.models import Q
 
 from .anno_defaults import (
     ANNO,
-    CATCH_DEFAULT_PLATFORM_NAME,
     MEDIA_TYPES,
     PURPOSE_COMMENTING,
     PURPOSE_REPLYING,
@@ -550,7 +550,6 @@ class CRUD(object):
         ATT: anno_list should not contain replies nor deleted annatations!
         for userid_map addition, see [A] below
         """
-
         discarded = []
         copied = []
         for a in anno_list:
@@ -560,7 +559,9 @@ class CRUD(object):
             catcha["platform"]["collection_id"] = target_collection_id
             catcha["totalReplies"] = 0
             if fix_platform_name:  # see [C] below
-                catcha["platform_name"] = CATCH_DEFAULT_PLATFORM_NAME
+                catcha["platform"][
+                    "platform_name"
+                ] = settings.CATCH_DEFAULT_PLATFORM_NAME
             if userid_map:  # able to swap userid OR keep original, see [A] below
                 src_userid = catcha["creator"]["id"]
                 tgt_userid = userid_map.get(src_userid, src_userid)
@@ -577,7 +578,9 @@ class CRUD(object):
                 catcha["error"] = msg
                 discarded.append(catcha)
             else:
-                copied.append(a.serialized)
+                # 22mar23 nmaekawa: change of behavior, used to return original
+                # annotations, now returns copied annotation...
+                copied.append(anno.serialized)
 
         resp = {
             "original_total": len(anno_list),
