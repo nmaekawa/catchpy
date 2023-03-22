@@ -27,8 +27,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--platform_name', dest='platform_name', required=False,
-            default=CATCH_DEFAULT_PLATFORM_NAME,
-            help='defaul is {}'.format(CATCH_DEFAULT_PLATFORM_NAME),
+            help='',
         )
         parser.add_argument(
             '--userid_list', dest='userid_list', required=False,
@@ -44,7 +43,7 @@ class Command(BaseCommand):
         filepath = kwargs['filepath']
         source_context_id = kwargs['source_context_id']
         target_context_id = kwargs['target_context_id']
-        platform_name = kwargs['platform_name']
+        platform_name = kwargs.get('platform_name', None)
         userid_list = None
         username_list = None
         if kwargs['userid_list']:

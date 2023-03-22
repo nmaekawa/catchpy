@@ -23,10 +23,8 @@ from .errors import (
     AnnoError,
     AnnotatorJSError,
     DuplicateAnnotationIdError,
-    InconsistentAnnotationError,
     InvalidInputWebAnnotationError,
     MethodNotAllowedError,
-    MissingAnnotationCreatorInputError,
     MissingAnnotationError,
     MissingAnnotationInputError,
     NoPermissionForOperationError,
@@ -504,7 +502,7 @@ def _do_search_api(request, back_compat=False):
     # delta[2]
     step_in_time(ts_deltas)
 
-    q_result = query[offset:(offset + size)]
+    q_result = query[offset : (offset + size)]
 
     # delta[3]
     step_in_time(ts_deltas)
@@ -663,10 +661,13 @@ def process_search_back_compat_params(request, query):
 def copy_api(request):
     # check permissions to copy
     jwt_payload = get_jwt_payload(request)
-    if "CAN_COPY" not in jwt_payload["override"]:
-        msg = "user ({}) not allowed to copy".format(jwt_payload["name"])
+    if (
+        not jwt_payload.get("override", None)
+        or "CAN_COPY" not in jwt_payload["override"]
+    ):
+        msg = "user ({}) not allowed to copy".format(jwt_payload["userId"])
         logger.error(msg, exc_info=True)
-        raise NoPermissionForOperationError(msg)
+        return JsonResponse(status=401, data={"status": 401, "payload": [msg]})
 
     params = get_input_json(request)
     # all required keys in params?
@@ -675,7 +676,7 @@ def copy_api(request):
             REQUIRED_PARAMS_FOR_TRANSFER, set(params)
         )
         logger.error(msg)
-        raise InvalidInputWebAnnotationError(msg)
+        return JsonResponse(status=400, data={"status": 400, "payload": [msg]})
 
     # sanity check: not allowed to copy to same course or collection
     if params["source_context_id"] == params["target_context_id"]:
@@ -683,7 +684,7 @@ def copy_api(request):
             params["source_context_id"]
         )
         logger.error(msg, exc_info=True)
-        raise InconsistentAnnotationError(msg)
+        return JsonResponse(status=409, data={"status": 409, "payload": [msg]})
 
     # transferring instructors anno; userid_map mandatory
     if len(params["userid_map"]) == 0:
@@ -692,13 +693,15 @@ def copy_api(request):
             params["target_context_id"],
         )
         logger.error(msg)
-        raise MissingAnnotationCreatorInputError(msg)
+        return JsonResponse(status=400, data={"status": 400, "payload": [msg]})
 
+    # beware of the platform being None, as of now, ignoring platform_name is equivalent
+    # of assuming catchpy works with only one platform per instance. See [3] below.
     anno_list = CRUD.select_annos(
         context_id=params["source_context_id"],
         collection_id=params["source_collection_id"],
-        platform_name=params["platform_name"],  # fallback to default
         userid_list=list(params["userid_map"]),  # get only keys as simple list
+        platform_name=params["platform_name"] if "platform_name" in params else None,
         is_copy=True,  # exclude replies and deleted
     )
     logger.debug("select for copy returned ({})".format(anno_list.count()))
@@ -709,6 +712,7 @@ def copy_api(request):
         params["target_collection_id"],
         userid_map=params["userid_map"],
         back_compat=False,
+        fix_platform_name=True,  # instructor anno, always fixing...
     )
     logger.debug("transfer result: {}".format(json.dumps(resp)))
     """ format of resp
@@ -892,4 +896,10 @@ def _do_crud_compat_update(request, anno_id):
     being annotated). So, in the "search for replies" context, the use of `uri`
     in the list of filters selects OUT the replies the search actually wants
     and should be ignored.
+
+[3] 22mar23 nmaekawa: because of an oversight in configuration, the default
+    value for platform_name in catchpy diverge from the value in hxat. This ends up in
+    annotations with different platform_name that are actually meant to be in the same
+    platform ("edX"). Ignoring platform_name is a hack to deal with corrupted data!
+
 """

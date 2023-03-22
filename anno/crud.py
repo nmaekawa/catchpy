@@ -498,9 +498,6 @@ class CRUD(object):
         output list might include deleted annotations, if is_copy is False.
         NOT MEANT TO BE AN API ENDPOINT!
         """
-        if platform_name is None:  # default platform_name
-            platform_name = CATCH_DEFAULT_PLATFORM_NAME
-
         if is_copy:
             # exclude deleted annotations
             query = Anno._default_manager.filter(anno_deleted=False)
@@ -519,14 +516,16 @@ class CRUD(object):
         logger.debug('*************** select context_id={}, collection_id={}, platform_name={}, userid={}, username={}, start_datetime={}'.format(
             context_id, collection_id, platform_name, userid_list, username_list, start_datetime))
 
+        # ignoring platform_name assumes one platform per catchpy instance
+        # see [B] below.
+        search_expression = {"context_id": context_id, "collection_id": collection_id}
+        if platform_name:
+            search_expression["platform_name"] = platform_name
+
         # custom searches for platform params
         # TODO ATTENTION: assumes custom_manager extends the defaullt one,
         # provided by catchpy anno.managers.SearchManager
-        q = Anno.custom_manager.search_expression({
-            'platform': platform_name,
-            'context_id': context_id,
-            'collection_id': collection_id,
-        })
+        q = Anno.custom_manager.search_expression(search_expression)
         if q:
             query = query.filter(q)
 
@@ -543,7 +542,8 @@ class CRUD(object):
                    target_context_id,
                    target_collection_id,
                    userid_map=None,
-                   back_compat=False):
+                   back_compat=False,
+                   fix_platform_name=False):
         """
 
         ATT: anno_list should not contain replies nor deleted annatations!
@@ -558,6 +558,8 @@ class CRUD(object):
             catcha['platform']['context_id'] = target_context_id
             catcha['platform']['collection_id'] = target_collection_id
             catcha['totalReplies'] = 0
+            if fix_platform_name:  # see [C] below
+                catcha['platform_name'] = CATCH_DEFAULT_PLATFORM_NAME
             if userid_map:  # able to swap userid OR keep original, see [A] below
                 src_userid = catcha['creator']['id']
                 tgt_userid = userid_map.get(src_userid, src_userid)
@@ -736,4 +738,18 @@ class CRUD(object):
     updating the original annotation!)... Changes to the target object must be done in
     copy_annos().
 
+[B] 22mar23 nmaekawa: due to oversight in configuration, catchpy database end up with
+    annotations with different platform_name that are actually meant to be in the same
+    platform ("edX"). This causes problem in the copy of instructor annotations, because
+    it was always required to have a platform_name value. Allowing catchpy to ignore
+    platform_name mitigates the problem. Note that catchpy is still able to handle
+    multiple platform_names, but the client has to be more deliberate in searches and
+    specify a platform_name then.
+
+    BEWARE that this change affects delete_annos()! If platform_name == None you will
+    delete annotations from all platforms.
+
+[C] 22mar23 nmaekawa: on top of being able to select_annos() regardless its
+    platform_name, copy_annos() also overwrites the platform_name with
+    CATCH_DEFAULT_PLATFORM_NAME, hopefully correctly configured now!
 """
