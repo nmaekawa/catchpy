@@ -1405,8 +1405,8 @@
         "/annos/copy": {
             "post": {
                 "tags": ["catchpy"],
-                "summary": "Copies instructor annotation to different context_id",
-                "description": "Creates new instances given a map of instructor userids; the requesting user must have permission to perform 'copy' operation; replies to annotations are ignored",
+                "summary": "Copies instructor annotations to different context_id",
+                "description": "Copies annotations given a map of instructor userids; the requesting user must have permission to perform 'copy' operation; replies to annotations are ignored",
                 "parameters": [
                     {
                         "name": "copy_params",
@@ -1893,7 +1893,8 @@
                     "type": "array",
                     "minItems": 0,
                     "items": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "list of error messages to be displayed"
                     }
                 }
             }
@@ -1901,7 +1902,7 @@
         "CopyParams": {
             "type": "object",
             "required": ["source_context_id", "source_collection_id",
-                "target_context_id", "target_collection_id", "platform_name", "userid_map"],
+                "target_context_id", "target_collection_id", "userid_map"],
             "properties": {
                 "source_context_id": {"type": "string"},
                 "source_collection_id": {"type": "string"},
