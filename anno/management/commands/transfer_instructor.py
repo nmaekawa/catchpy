@@ -1,8 +1,5 @@
 import json
-import os
-import sys
 
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
 from anno.crud import CRUD
 from django.core.management import BaseCommand
 
@@ -39,8 +36,7 @@ class Command(BaseCommand):
             "--platform_name",
             dest="platform_name",
             required=False,
-            default=CATCH_DEFAULT_PLATFORM_NAME,
-            help="defaul is {}".format(CATCH_DEFAULT_PLATFORM_NAME),
+            help="",
         )
 
     def handle(self, *args, **kwargs):
@@ -48,7 +44,7 @@ class Command(BaseCommand):
         userid_f = kwargs["userid_filepath"]
         source_context_id = kwargs["source_context_id"]
         target_context_id = kwargs["target_context_id"]
-        platform_name = kwargs["platform_name"]
+        platform_name = kwargs.get("platform_name", None)
 
         with open(collection_f, "r") as f:
             collection_map = json.load(f)
@@ -76,6 +72,7 @@ class Command(BaseCommand):
                 target_context_id=target_context_id,
                 target_collection_id=collection_map[collection_row],
                 userid_map=userid_map,
+                fix_platform_name=True,
             )
             results.append(
                 {
