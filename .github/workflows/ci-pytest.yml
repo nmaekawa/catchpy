@@ -18,9 +18,9 @@ jobs:
           - name: Run Docker Compose containers
             run: |
               docker compose -f docker-compose.yml up -d
-          - name: Run Pytest unit tests within Compose using tox
+          - name: Run Pytest unit tests within Compose
             run: |
-              docker compose -f docker-compose.yml exec web tox
+              docker compose -f docker-compose.yml exec web pytest -v anno/tests
           - name: Stop Docker Compose containers
             if: always()
             run: docker compose -f docker-compose.yml down
