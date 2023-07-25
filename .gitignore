@@ -48,3 +48,5 @@ catch/settings/local.py
 
 # static root
 public/
+
+venv
