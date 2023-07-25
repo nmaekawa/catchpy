@@ -4,20 +4,23 @@ on:
     workflow_dispatch:
     pull_request:
 
+env:
+    CATCHPY_DOTENV_PATH: docker_dotenv.env
+
 jobs:
     tests:
         runs-on: ubuntu-latest
         steps:
-        - uses: actions/checkout@v3
-        - name: Build Docker images
-          run: |
-            docker compose -f docker-compose.yml build
-        - name: Run Docker Compose containers
-          run: |
-            docker compose -f docker-compose.yml up -d
-        - name: Run Pytest unit tests within Compose using tox
-          run: |
-            docker compose -f docker-compose.yml exec web CATCHPY_DOTENV_PATH=docker_dotenv.env tox
-        - name: Stop Docker Compose containers
-          if: always()
-          run: docker compose -f docker-compose.yml down
+          - uses: actions/checkout@v3
+          - name: Build Docker images
+            run: |
+              docker compose -f docker-compose.yml build
+          - name: Run Docker Compose containers
+            run: |
+              docker compose -f docker-compose.yml up -d
+          - name: Run Pytest unit tests within Compose using tox
+            run: |
+              docker compose -f docker-compose.yml exec web tox
+          - name: Stop Docker Compose containers
+            if: always()
+            run: docker compose -f docker-compose.yml down
