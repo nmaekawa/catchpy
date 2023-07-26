@@ -3,6 +3,7 @@ name: CI - Pytest
 on:
     workflow_dispatch:
     pull_request:
+        types: [opened, reopened, edited, synchronize]
 
 env:
     CATCHPY_DOTENV_PATH: docker_dotenv.env
