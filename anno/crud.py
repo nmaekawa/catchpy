@@ -638,6 +638,7 @@ class CRUD(object):
         failure = []
         success = []
         for a in selected:
+            serialization = a.serialized
             try:
                 if true_delete and a.anno_deleted:
                     a.delete()
@@ -648,7 +649,7 @@ class CRUD(object):
                 failure.append(a.serialized)
                 logger.error("failed to delete annotation({}): {}".format(a.anno_id, e))
             else:
-                success.append(a.serialized)
+                success.append(serialization)
 
         return {
             "failed": len(failure),

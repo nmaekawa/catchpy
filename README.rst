@@ -69,13 +69,13 @@ the ``Authorize`` button at the top right of the page.
 Not So Quick Start
 ------------------
 
-For those who want to set up a local instance of catchpy, for tests or
-developement.
+For those who want to set up a local instance of Catchpy, for tests or
+development.
 
-Setting up catchpy locally requires:
+Setting up Catchpy locally requires:
 
-    - postgres 9.6 or higher
-    - python 3.5 or higher
+    - Postgres 9.6 or higher
+    - Python 3.8 or higher (Django 4.2 requirement)
 
 ::
 
@@ -135,14 +135,14 @@ Run unit tests
 
 unit tests require:
 
-    - a postgres 9.6 or higher running (and its config in
+    - Postgres 9.6 or higher (config in
       ``catchpy/settings/test.py``); this is hard to fake because it requires
       postgres jsonb data type
 
     - the fortune program, ex: ``brew install fortune`` if you're in macos.
       ``fortune`` is used to create content in test annotations.
 
-tests are located under each django app:
+tests are located under each Django app:
 
 ::
 
@@ -155,6 +155,12 @@ tests are located under each django app:
     # or use tox
     CATCHPY_DOTENV_PATH=/path/to/dotenv/file tox
 
+
+Github Actions CI
+---------------
+Github Actions is configured to run unit tests on every new PR. The tests are configured in
+``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python3.8-3.12 using
+``tox``.
 
 ---eop
 
