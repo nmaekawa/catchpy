@@ -2,7 +2,7 @@ import os
 import sys
 from django.core.management import BaseCommand
 
-from consumer.catchjwt import encode_catchjwt
+from catchpy.consumer.catchjwt import encode_catchjwt
 
 
 #def encode_catchjwt(apikey=None, secret=None,

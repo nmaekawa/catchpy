@@ -5,7 +5,7 @@ from subprocess import PIPE, Popen
 from uuid import uuid4
 
 import pytest
-from anno.anno_defaults import (
+from catchpy.anno.anno_defaults import (
     ANNO,
     AUDIO,
     CATCH_DEFAULT_PLATFORM_NAME,
@@ -20,8 +20,8 @@ from anno.anno_defaults import (
     THUMB,
     VIDEO,
 )
-from anno.utils import generate_uid
-from consumer.catchjwt import encode_token
+from catchpy.anno.utils import generate_uid
+from catchpy.consumer.catchjwt import encode_token
 from dateutil import tz
 from django.test import RequestFactory
 

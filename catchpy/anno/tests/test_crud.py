@@ -4,15 +4,15 @@ from dateutil import tz
 import json
 import pytest
 
-from anno.crud import CRUD
-from anno.anno_defaults import ANNO
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from anno.errors import AnnoError
-from anno.errors import InvalidAnnotationTargetTypeError
-from anno.errors import InvalidInputWebAnnotationError
-from anno.errors import MissingAnnotationError
-from anno.models import Anno, Target
-from anno.models import PURPOSE_TAGGING
+from catchpy.anno.crud import CRUD
+from catchpy.anno.anno_defaults import ANNO
+from catchpy.anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
+from catchpy.anno.errors import AnnoError
+from catchpy.anno.errors import InvalidAnnotationTargetTypeError
+from catchpy.anno.errors import InvalidInputWebAnnotationError
+from catchpy.anno.errors import MissingAnnotationError
+from catchpy.anno.models import Anno, Target
+from catchpy.anno.models import PURPOSE_TAGGING
 
 from .conftest import make_wa_object
 from .conftest import make_wa_tag

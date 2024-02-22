@@ -4,7 +4,7 @@ import os
 import sys
 from django.core.management import BaseCommand
 
-from anno.crud import CRUD
+from catchpy.anno.crud import CRUD
 
 
 class Command(BaseCommand):

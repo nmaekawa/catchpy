@@ -2,8 +2,8 @@ import os
 import sys
 from django.core.management import BaseCommand
 
-from consumer.models import Consumer
-from consumer.models import expire_in_weeks
+from catchpy.consumer.models import Consumer
+from catchpy.consumer.models import expire_in_weeks
 
 
 class Command(BaseCommand):

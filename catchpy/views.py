@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from anno.decorators import require_catchjwt
+from catchpy.anno.decorators import require_catchjwt
 from . import __version__
 
 import logging

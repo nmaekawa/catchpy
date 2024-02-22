@@ -4,8 +4,8 @@ import os
 import sys
 from django.core.management import BaseCommand
 
-from anno.crud import CRUD
-from anno.json_models import Catcha
+from catchpy.anno.crud import CRUD
+from catchpy.anno.json_models import Catcha
 
 
 class Command(BaseCommand):

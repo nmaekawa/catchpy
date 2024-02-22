@@ -1,12 +1,12 @@
 import json
 
 import pytest
-from anno.anno_defaults import ANNO, TEXT
-from anno.crud import CRUD
-from anno.json_models import AnnoJS, Catcha
-from anno.models import Anno
-from anno.views import _format_response, crud_api, crud_compat_api
-from consumer.models import Consumer
+from catchpy.anno.anno_defaults import ANNO, TEXT
+from catchpy.anno.crud import CRUD
+from catchpy.anno.json_models import AnnoJS, Catcha
+from catchpy.anno.models import Anno
+from catchpy.anno.views import _format_response, crud_api, crud_compat_api
+from catchpy.consumer.models import Consumer
 from django.conf import settings
 from django.test import Client
 from django.urls import reverse

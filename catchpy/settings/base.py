@@ -38,8 +38,8 @@ if allowed_hosts_other:
 # Application definition
 
 INSTALLED_APPS = [
-    'anno.apps.AnnoConfig',
-    'consumer.apps.ConsumerConfig',
+    'catchpy.anno',
+    'catchpy.consumer',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,7 +60,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'consumer.jwt_middleware.jwt_middleware',
+    'catchpy.consumer.jwt_middleware.jwt_middleware',
 ]
 
 ROOT_URLCONF = PROJECT_NAME + '.urls'

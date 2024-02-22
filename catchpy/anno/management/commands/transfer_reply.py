@@ -1,7 +1,7 @@
 import json
 
 import dateutil
-from anno.crud import CRUD
+from catchpy.anno.crud import CRUD
 from django.core.management import BaseCommand
 
 
