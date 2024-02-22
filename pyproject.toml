@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "catchpy"
+dynamic = ["version"]
+description = "Annotation storage backend"
+readme = "README.rst"
+license = ""
+authors = [
+    { name = "nmaekawa", email = "nmaekawa@g.harvard.edu" },
+]
+keywords = [
+    "catchpy",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "Django",
+    "django-cors-headers",
+    "django-log-request-id",
+    "iso8601",
+    "jsonschema",
+    "psycopg",
+    "pyjwt",
+    "pyld",
+    "python-dateutil",
+    "python-dotenv",
+    "pytz",
+    "requests",
+]
+
+[tool.hatch.version]
+path = "catchpy/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/catchpy",
+]
+
+[project.urls]
+Homepage = "https://github.com/nmaekawa/catchpy"
