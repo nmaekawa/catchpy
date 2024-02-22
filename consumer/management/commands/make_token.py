@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 ttl=ttl,
                 backcompat=backcompat,
                 override=override,
-            ).decode('utf-8')
+            )
         print('{}'.format(token))
 
 
