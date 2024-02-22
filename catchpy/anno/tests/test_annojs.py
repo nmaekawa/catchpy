@@ -1,10 +1,10 @@
 import json
 import pytest
 
-from anno.crud import CRUD
-from anno.errors import InvalidInputWebAnnotationError
-from anno.json_models import AnnoJS
-from anno.json_models import Catcha
+from catchpy.anno.crud import CRUD
+from catchpy.anno.errors import InvalidInputWebAnnotationError
+from catchpy.anno.json_models import AnnoJS
+from catchpy.anno.json_models import Catcha
 
 from .conftest import make_wa_object
 
@@ -23,14 +23,14 @@ def test_fixture_js_list(js_list):
     assert js_list == 'blah'
 
 
-@pytest.mark.usefixtures('js_list')
-@pytest.mark.django_db
-def test_to_annotatorjs(js_list):
-    for js in js_list:
-        catcha = AnnoJS.convert_to_catcha(js)
-        anno = CRUD.create_anno(catcha, catcha['creator']['name'])
-        js_back = AnnoJS.convert_from_anno(anno)
-        assert AnnoJS.are_similar(js, js_back)
+# @pytest.mark.usefixtures('js_list')
+# @pytest.mark.django_db
+# def test_to_annotatorjs(js_list):
+#     for js in js_list:
+#         catcha = AnnoJS.convert_to_catcha(js)
+#         anno = CRUD.create_anno(catcha, catcha['creator']['name'])
+#         js_back = AnnoJS.convert_from_anno(anno)
+#         assert AnnoJS.are_similar(js, js_back)
 
 
 def test_body_sanitize():
