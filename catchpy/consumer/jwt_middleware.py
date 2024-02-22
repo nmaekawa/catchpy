@@ -113,15 +113,18 @@ def get_credentials(request):
     '''get jwt token from http header.'''
     credentials = None
     header = request.META.get(JWT_AUTH_HEADER, None)
-    if header:  # try catchpy header
-        (header_type, token) = header.split()
-        if header_type.lower() == 'token':
+    if header:
+        header = header.split()
+        if len(header) == 2 and header[0].lower() == 'token':
+            (header_type, token) = header
             # Work around django test client oddness:
             # https://github.com/jpadilla/django-jwt-auth/blob/master/jwt_auth/utils.py
             if isinstance(header_type, type('')):
                 credentials = token.encode('iso-8859-1')
             else:
                 credentials = token
+        else: # when testing via swagger, token is not prefixed with 'token'
+            credentials = header[0]
     else:       # try annotator header
         header = request.META.get(JWT_ANNOTATOR_HEADER)
         if header:
