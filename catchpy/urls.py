@@ -26,5 +26,8 @@ urls = [
     path('version', views.app_version),
     path('is_alive', views.is_alive),
 ]
-
-urlpatterns = urls + [path('admin/', admin.site.urls)]
+# urlpatterns = urls + [path('admin/', admin.site.urls)]x
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('catchpy/', include(urls)),
+]
