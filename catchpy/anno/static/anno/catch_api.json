@@ -19,8 +19,8 @@
         }
     ],
     "schemes": [
-        "https",
-        "http"
+        "http",
+        "https"
     ],
     "consumes": [
         "application/json"
@@ -29,7 +29,7 @@
         "application/json"
     ],
     "paths": {
-        "/annos/{id}": {
+        "/catchpy/annos/{id}": {
             "get": {
                 "tags": ["catchpy"],
                 "summary": "Gets the `Annotation` object for the given id",
@@ -382,7 +382,7 @@
                 ]
             }
         },
-        "/annos/": {
+        "/catchpy/annos/": {
             "get": {
                 "tags": ["catchpy"],
                 "summary": "Returns list of `Annotation` objects resulting from the given search",
@@ -630,7 +630,7 @@
                 ]
             }
         },
-        "/annos/create": {
+        "/catchpy/annos/create": {
             "post": {
                 "tags": ["old catch annotator"],
                 "summary": "Creates an `Annotation` object",
@@ -706,7 +706,7 @@
                 ]
             }
         },
-        "/annos/update/{id}": {
+        "/catchpy/annos/update/{id}": {
             "put": {
                 "tags": ["old catch annotator"],
                 "summary": "Updates an `Annotation` object",
@@ -870,7 +870,7 @@
                 ]
             }
         },
-        "/annos/delete/{id}": {
+        "/catchpy/annos/delete/{id}": {
             "delete": {
                 "tags": ["old catch annotator"],
                 "summary": "Deletes an `Annotation` object",
@@ -941,7 +941,7 @@
                 ]
             }
         },
-        "/annos/read/{id}": {
+        "/catchpy/annos/read/{id}": {
             "get": {
                 "tags": ["old catch annotator"],
                 "summary": "Fetches an `Annotation` object",
@@ -1012,7 +1012,7 @@
                 ]
             }
         },
-        "/annos/search": {
+        "/catchpy/annos/search": {
             "get": {
                 "tags": ["old catch annotator"],
                 "summary": "Returns list of `Annotation` objects resulting from the given search",
@@ -1270,7 +1270,7 @@
                 ]
             }
         },
-        "/annos/update_tags": {
+        "/catchpy/annos/update_tags": {
             "put": {
                 "tags": ["not yet available"],
                 "summary": "TO BE IMPLEMENTED",
@@ -1314,7 +1314,7 @@
                 ]
             }
         },
-        "/annos/update_text": {
+        "/catchpy/annos/update_text": {
             "put": {
                 "tags": ["not yet available"],
                 "summary": "TO BE IMPLEMENTED",
@@ -1358,7 +1358,7 @@
                 ]
             }
         },
-        "/annos/update_target": {
+        "/catchpy/annos/update_target": {
             "put": {
                 "tags": ["not yet available"],
                 "summary": "TO BE IMPLEMENTED",
@@ -1402,7 +1402,7 @@
                 ]
             }
         },
-        "/annos/copy": {
+        "/catchpy/annos/copy": {
             "post": {
                 "tags": ["catchpy"],
                 "summary": "Copies instructor annotations to different context_id",
