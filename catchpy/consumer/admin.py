@@ -1,9 +1,9 @@
 from django.contrib import admin
 
 from .models import Consumer
-from .models import Profile
+from .models import CatchpyProfile
 
 # Register your models here.
 admin.site.register(Consumer)
-admin.site.register(Profile)
+admin.site.register(CatchpyProfile)
 

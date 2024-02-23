@@ -3,10 +3,11 @@ import pdb
 import pytest
 import os
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from ..models import Consumer
-from ..models import Profile
+
+User = get_user_model()
 
 @pytest.mark.django_db
 class TestConsumer(object):
