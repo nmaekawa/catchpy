@@ -280,3 +280,11 @@ Add to your Django urls:
     ]
 
 Finally, be sure to run migrations.
+
+Build and Package
+-----------------
+
+- install `hatch <https://hatch.pypa.io/latest/install/>`_
+- set version in ``catchpy/__init__.py``
+- package (create Python wheel) ``hatch build``
+- publish to PYPI with ``hatch publish``
