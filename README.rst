@@ -25,7 +25,10 @@ Quick Start
 
 For those who want to quickly check out what catchpy does.
 
+CatchPy can also be installed a a Django app in an existing Django project. See `below <#install-as-a-django-app>`_ for more details.
+
 Make sure you have docker_ installed to try this quickstart.
+
 
 ::
 
@@ -65,7 +68,6 @@ The command spits out the token as a long string of chars. Copy that and paste
 into the API page, by clicking on the lock at the right of each API call, or on
 the ``Authorize`` button at the top right of the page.
 
-CatchPy can also be installed a a Django app in an existing Django project. See `below <install-as-a-django-app>`_ for more details.
 
 Not So Quick Start
 ------------------
@@ -174,7 +176,6 @@ Github Actions is configured to run unit tests on every new PR. The tests are co
 .. _jwt: https://jwt.io
 
 
-.. _install-as-a-django-app:
 Install as a Django app
 -----------------------
 
