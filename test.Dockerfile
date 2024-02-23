@@ -19,7 +19,7 @@ RUN for PYTHON_VERSION in 3.8.17 3.9.17 3.10.12 3.11.4 3.12.0b4; do \
 ENV PATH /root/.pyenv/versions/3.8.17/bin:${PATH}
 ENV PATH /root/.pyenv/versions/3.9.17/bin:${PATH}
 ENV PATH /root/.pyenv/versions/3.10.12/bin:${PATH}
-ENV PATH /root/.pyenv/versions/3.12.0b4/bin:${PATH}
+ENV PATH /root/.pyenv/versions/3.12.2/bin:${PATH}
 ENV PATH /root/.pyenv/versions/3.11.4/bin:${PATH}
 
 RUN mkdir /code
