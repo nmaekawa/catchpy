@@ -39,7 +39,7 @@ def test_urls():
             'url': reverse('create_or_search'),
             'view_func': 'catchpy.anno.views.create_or_search'},
         {
-            'url': '/annos/123-456-789',
+            'url': '/catchpy/annos/123-456-789',
             'view_func': 'catchpy.anno.views.crud_api'},
     ]
 
@@ -48,4 +48,4 @@ def test_urls():
         func = match_func_for_url(cfg['url'])
         func_name = '{}.{}'.format(func.__module__, func.__name__)
         print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&({})'.format(func_name))
-        assert func_name == cfg['view_func']
+        assert func_name.strip() == cfg['view_func'].strip()
