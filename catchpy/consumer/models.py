@@ -26,7 +26,7 @@ User = get_user_model()
 class CatchpyProfile(Model):
     created = DateTimeField(auto_now_add=True, null=False)
     modified = DateTimeField(auto_now=True, null=False)
-    user = OneToOneField(User, on_delete=CASCADE)
+    user = OneToOneField(User, on_delete=CASCADE, related_name='catchpy_profile')
     prime_consumer = OneToOneField(
         'Consumer',
         related_name='prime_profile',
@@ -44,7 +44,7 @@ class CatchpyProfile(Model):
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         CatchpyProfile.objects.create(user=instance)
-    instance.profile.save()
+    instance.catchpy_profile.save()
 
 
 def expire_in_weeks(ttl=24):

@@ -17,9 +17,9 @@ class TestConsumer(object):
                 username='fake_user',
                 password='fake_pwd',
                 email='fake_email@fake.org')
-        assert u.profile is not None
-        assert u.profile.prime_consumer is not None
-        assert u.profile.prime_consumer.prime_profile == u.profile
+        assert u.catchpy_profile is not None
+        assert u.catchpy_profile.prime_consumer is not None
+        assert u.catchpy_profile.prime_consumer.prime_profile == u.catchpy_profile
 
     def test_create_consumer_without_prime_profile_ok(self):
         c = Consumer._default_manager.create()
@@ -32,5 +32,5 @@ class TestConsumer(object):
                 username='fake_user',
                 password='fake_pwd',
                 email='fake_email@fake.org')
-        c = Consumer._default_manager.create(parent_profile=u.profile)
-        assert c.parent_profile == u.profile
+        c = Consumer._default_manager.create(parent_profile=u.catchpy_profile)
+        assert c.parent_profile == u.catchpy_profile
