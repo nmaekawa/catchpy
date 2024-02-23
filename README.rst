@@ -37,9 +37,9 @@ Make sure you have docker_ installed to try this quickstart.
     $> cd catchpy
 
     # start docker services
-    $> docker-compose up
-    $> docker-compose exec web python manage.py migrate
-    $> docker-compose exec web python manage.py createsuperuser
+    $> docker compose up
+    $> docker compose exec web python manage.py migrate
+    $> docker compose exec web python manage.py createsuperuser
     $> open http://localhost:8000/static/anno/index.html
 
 
@@ -50,14 +50,14 @@ To actually issue rest requests, you will need a jwt_ token. Generate one
 like below::
 
     # this generates a consumer/secret api key
-    $> docker-compose exec web python manage.py \
+    $> docker compose exec web python manage.py \
             create_consumer_pair \
                 --consumer "my_consumer" \
                 --secret "super_secret" \
                 --expire_in_weeks 1
 
     # this generates the token that expires in 10 min
-    $> docker-compose exec web python manage.py \
+    $> docker compose exec web python manage.py \
             make_token \
                 --user "exceptional_user" \
                 --api_key "my_consumer" \
