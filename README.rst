@@ -65,6 +65,7 @@ The command spits out the token as a long string of chars. Copy that and paste
 into the API page, by clicking on the lock at the right of each API call, or on
 the ``Authorize`` button at the top right of the page.
 
+CatchPy can also be installed a a Django app in an existing Django project. See `below <install-as-a-django-app>`_ for more details.
 
 Not So Quick Start
 ------------------
@@ -173,5 +174,108 @@ Github Actions is configured to run unit tests on every new PR. The tests are co
 .. _jwt: https://jwt.io
 
 
+.. _install-as-a-django-app:
+Install as a Django app
+-----------------------
 
+Add to your `requirements.txt`:
 
+.. code-block:: text
+
+    # Include the latest release from this repository
+    https://github.com/artshumrc/catchpy/releases/download/v2.7.1-django-package/catchpy-2.7.0.tar.gz
+    Django~=4.2
+    iso8601~=2.0.0
+    jsonschema==4.18.4
+    psycopg>=3.1.8
+    PyJWT==2.8.0
+    PyLD==2.0.3
+    python-dateutil==2.8.2
+    python-dotenv==1.0.0
+    pytz==2023.3
+    requests~=2.31.0
+    django-log-request-id==2.1.0
+    django-cors-headers~=4.2.0
+
+Add to your `INSTALLED_APPS` in your Django settings:
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
+        ...
+        'catchpy.anno',
+        'catchpy.consumer',
+        ...
+    ]
+
+Add to your middleware in your Django settings:
+
+.. code-block:: python
+
+    MIDDLEWARE = [
+        ...
+        'corsheaders.middleware.CorsMiddleware',
+        'catchpy.middleware.HxCommonMiddleware',
+        'catchpy.consumer.jwt_middleware.jwt_middleware',
+        ...
+    ]
+
+Add the following to your Django settings:
+
+.. code-block:: python
+
+    # catchpy settings
+    CATCH_JSONLD_CONTEXT_IRI = os.environ.get(
+        'CATCH_JSONLD_CONTEXT_IRI',
+        'http://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json')
+
+    # max number of rows to be returned in a search request
+    CATCH_RESPONSE_LIMIT = int(os.environ.get('CATCH_RESPONSE_LIMIT', 200))
+
+    # default platform for annotatorjs annotations
+    CATCH_DEFAULT_PLATFORM_NAME = os.environ.get(
+        'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')
+
+    # admin id overrides all permissions, when requesting_user
+    CATCH_ADMIN_GROUP_ID = os.environ.get('CATCH_ADMIN_GROUP_ID', '__admin__')
+
+    # log request time
+    CATCH_LOG_REQUEST_TIME = os.environ.get(
+        'CATCH_LOG_REQUEST_TIME', 'false').lower() == 'true'
+    CATCH_LOG_SEARCH_TIME = os.environ.get(
+        'CATCH_LOG_SEARCH_TIME', 'false').lower() == 'true'
+
+    # log jwt and jwt error message
+    CATCH_LOG_JWT = os.environ.get(
+        'CATCH_LOG_JWT', 'false').lower() == 'true'
+    CATCH_LOG_JWT_ERROR = os.environ.get(
+        'CATCH_LOG_JWT_ERROR', 'false').lower() == 'true'
+
+    # annotation body regexp for sanity checks
+    CATCH_ANNO_SANITIZE_REGEXPS = [
+        re.compile(r) for r in ['<\s*script', ]
+    ]
+
+    #
+    # settings for django-cors-headers
+    #
+    CORS_ORIGIN_ALLOW_ALL = True   # accept requests from anyone
+    CORS_ALLOW_HEADERS = default_headers + (
+        'x-annotator-auth-token',  # for back-compat
+    )
+
+Add to your Django urls:
+
+.. code-block:: python
+
+    from django.urls import path, include
+
+    from catchpy.urls import urls as catchpy_urls
+
+    urlpatterns = [
+        ...
+        path("catchpy/", include(catchpy_urls)),
+        ...
+    ]
+
+Finally, be sure to run migrations.
