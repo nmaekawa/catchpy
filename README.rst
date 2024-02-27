@@ -185,18 +185,6 @@ Add to your `requirements.txt`:
 
     # Include the latest release from this repository
     https://github.com/artshumrc/catchpy/releases/download/v2.7.1-django-package/catchpy-2.7.0.tar.gz
-    Django~=4.2
-    iso8601~=2.0.0
-    jsonschema==4.18.4
-    psycopg>=3.1.8
-    PyJWT==2.8.0
-    PyLD==2.0.3
-    python-dateutil==2.8.2
-    python-dotenv==1.0.0
-    pytz==2023.3
-    requests~=2.31.0
-    django-log-request-id==2.1.0
-    django-cors-headers~=4.2.0
 
 Add to your `INSTALLED_APPS` in your Django settings:
 
