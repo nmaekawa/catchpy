@@ -27,18 +27,17 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "Django",
-    "django-cors-headers",
-    "django-log-request-id",
-    "iso8601",
-    "jsonschema",
-    "psycopg",
-    "pyjwt",
-    "pyld",
-    "python-dateutil",
-    "python-dotenv",
-    "pytz",
-    "requests",
+    "Django~=4.2",
+    "iso8601~=2.0.0",
+    "jsonschema==4.18.4",
+    "PyJWT==2.8.0",
+    "PyLD==2.0.3",
+    "python-dateutil==2.8.2",
+    "python-dotenv==1.0.0",
+    "pytz==2023.3",
+    "requests~=2.31.0",
+    "django-log-request-id==2.1.0",
+    "django-cors-headers~=4.2.0",
 ]
 
 [tool.hatch.version]
