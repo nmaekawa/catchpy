@@ -123,8 +123,6 @@ def get_credentials(request):
                 credentials = token.encode('iso-8859-1')
             else:
                 credentials = token
-        else: # when testing via swagger, token is not prefixed with 'token'
-            credentials = header[0]
     else:       # try annotator header
         header = request.META.get(JWT_ANNOTATOR_HEADER)
         if header:
