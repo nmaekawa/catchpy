@@ -126,7 +126,6 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'America/New_York'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 # Default primary key field type
@@ -250,7 +249,7 @@ CATCH_LOG_JWT_ERROR = os.environ.get(
 
 # annotation body regexp for sanity checks
 CATCH_ANNO_SANITIZE_REGEXPS = [
-    re.compile(r) for r in ['<\s*script', ]
+    re.compile(r) for r in [r'<\s*script', ]
 ]
 
 #

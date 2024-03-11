@@ -1,5 +1,4 @@
-from datetime import datetime
-from dateutil import tz
+from datetime import datetime, timezone
 import json
 import jsonschema
 import logging
@@ -311,7 +310,7 @@ class AnnoJS(object):
                 'anno({}): expected property not found - {}'.format(
                     anno_id, str(e)))
 
-        now = datetime.now(tz.tzutc()).replace(microsecond=0).isoformat()
+        now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
         catcha = {
             '@context': CATCH_JSONLD_CONTEXT_IRI,
             'id': anno_id,

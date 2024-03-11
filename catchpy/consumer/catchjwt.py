@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import iso8601
 import jwt
-from dateutil import tz
 
 REQUIRED_CLAIMS = ("consumerKey", "userId", "issuedAt", "ttl")
 logger = logging.getLogger(__name__)
@@ -49,7 +48,7 @@ def encode_catchjwt(
 
 
 def now_utc():
-    return datetime.now(tz.tzutc())
+    return datetime.now(timezone.utc)
 
 
 def validate_token(token_payload):

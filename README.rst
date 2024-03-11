@@ -25,7 +25,8 @@ Quick Start
 
 For those who want to quickly check out what catchpy does.
 
-CatchPy can also be installed a a Django app in an existing Django project. See `below <#install-as-a-django-app>`_ for more details.
+CatchPy can also be installed a a Django app in an existing Django project. See `below
+<#install-as-a-django-app>`_ for more details.
 
 Make sure you have docker_ installed to try this quickstart.
 
@@ -77,8 +78,8 @@ development.
 
 Setting up Catchpy locally requires:
 
-    - Postgres 9.6 or higher
-    - Python 3.8 or higher (Django 4.2 requirement)
+    - Postgres 12+ or higher
+    - Python 3.10 or higher (Django 4.2 requirement)
 
 ::
 
@@ -162,10 +163,8 @@ tests are located under each Django app:
 Github Actions CI
 ---------------
 Github Actions is configured to run unit tests on every new PR. The tests are configured in
-``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python3.8-3.12 using
+``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python3.10-3.12 using
 ``tox``.
-
----eop
 
 
 .. _W3C Web Annotation Data Model: https://www.w3.org/TR/annotation-model/
@@ -212,6 +211,9 @@ Add to your middleware in your Django settings:
 Add the following to your Django settings:
 
 .. code-block:: python
+
+   import re
+   from corsheaders.default import default_headers
 
     # catchpy settings
     CATCH_JSONLD_CONTEXT_IRI = os.environ.get(
@@ -275,4 +277,3 @@ Build and Package
 - install `hatch <https://hatch.pypa.io/latest/install/>`_
 - set version in ``catchpy/__init__.py``
 - package (create Python wheel) ``hatch build``
-- publish to PYPI with ``hatch publish``

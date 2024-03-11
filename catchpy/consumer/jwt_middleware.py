@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import iso8601
 import jwt
 import logging
-import pytz
 
 from django.conf import settings
 
@@ -42,7 +40,7 @@ def jwt_middleware(get_response):
 
         # log request time
         # based on https://djangosnippets.org/snippets/1826/
-        start_ts = datetime.utcnow()
+        start_ts = datetime.now(timezone.utc)
 
         #
         # TODO: refactor into more legible code...
@@ -98,7 +96,7 @@ def jwt_middleware(get_response):
         # the view is called
 
         # calculate and log the response time
-        ts_delta = (datetime.utcnow() - start_ts).total_seconds()
+        ts_delta = (datetime.now(timezone.utc) - start_ts).total_seconds()
         response['x-hx-custom1'] = format(str(ts_delta))
         if PRINT_REQUEST_TIME:
             logger.info('[REQUEST_TIME] {}'.format(str(ts_delta)))

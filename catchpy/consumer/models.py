@@ -1,7 +1,5 @@
 import logging
-from datetime import datetime
-from datetime import timedelta
-import pytz
+from datetime import datetime, timedelta, timezone
 from random import randint
 from uuid import uuid4
 
@@ -48,7 +46,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 
 
 def expire_in_weeks(ttl=24):
-    return datetime.now(pytz.utc) + timedelta(weeks=ttl)
+    return datetime.now(timezone.utc) + timedelta(weeks=ttl)
 
 
 def generate_id():
@@ -70,7 +68,7 @@ class Consumer(Model):
 
     def has_expired(self, now=None):
         if now is None:
-            now = datetime.now(pytz.utc)
+            now = datetime.now(timezone.utc)
         return self.expire_on < now
 
     def __repr__(self):

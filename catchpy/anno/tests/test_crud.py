@@ -1,6 +1,4 @@
-from datetime import datetime
-from datetime import timedelta
-from dateutil import tz
+from datetime import datetime, timedelta, timezone
 import json
 import pytest
 
@@ -50,7 +48,7 @@ def test_create_duplicate_anno(wa_image):
 def test_import_anno_ok_2(wa_image):
     catcha = wa_image
 
-    now = datetime.now(tz.tzutc())
+    now = datetime.now(timezone.utc)
 
     # import first because CRUD.create changes created time in input
     catcha['id'] = 'naomi-xx-imported'
@@ -81,7 +79,7 @@ def test_import_anno_ok(wa_image):
     catcha_reply = make_wa_object(
         age_in_hours=1, reply_to=catcha['id'])
 
-    now = datetime.now(tz.tzutc())
+    now = datetime.now(timezone.utc)
 
     resp = CRUD.import_annos([catcha, catcha_reply])
     x2 = Anno._default_manager.get(pk=catcha['id'])

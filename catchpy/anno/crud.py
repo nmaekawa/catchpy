@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
-import dateutil
-import dateutil.parser
+#import dateutil
+#import dateutil.parser
 from django.conf import settings
 from django.db import DatabaseError, DataError, IntegrityError, transaction
 from django.db.models import Q
@@ -214,14 +214,14 @@ class CRUD(object):
     def _get_original_created(cls, catcha):
         """convert `created` from catcha or return current date."""
         try:
-            original_date = dateutil.parser.parse(catcha["created"])
+            original_date = datetime.fromisoformat(catcha["created"])
         except (TypeError, OverflowError, KeyError) as e:
             msg = (
                 "error converting iso8601 `created` date in anno({}) "
                 "copy, setting a fresh date: {}"
             ).format(catcha["id"], str(e))
             logger.error(msg, exc_info=True)
-            original_date = datetime.now(dateutil.tz.tzutc()).replace(microsecond=0)
+            original_date = datetime.now(timezone.utc).replace(microsecond=0)
         else:
             return original_date
 

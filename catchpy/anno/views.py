@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 
 from django.db.models import Q
@@ -430,10 +430,10 @@ def search_back_compat_api(request):
 
 def step_in_time(delta_list=None):
     if not delta_list:
-        return [(datetime.utcnow(), 0)]
+        return [(datetime.now(timezone.utc), 0)]
 
     i = len(delta_list) - 1
-    ts = datetime.utcnow()
+    ts = datetime.now(timezone.utc)
     d = ts - delta_list[i][0]
     delta_list.append((ts, d))
 
@@ -531,7 +531,7 @@ def _do_search_api(request, back_compat=False):
                 (ts_deltas[3][1].total_seconds()),
                 (ts_deltas[4][1].total_seconds()),
                 (ts_deltas[5][1].total_seconds()),
-                (datetime.utcnow() - ts_deltas[0][0]).total_seconds(),
+                (datetime.now(timezone.utc) - ts_deltas[0][0]).total_seconds(),
             )
         )
     response["total"] = total  # add response info

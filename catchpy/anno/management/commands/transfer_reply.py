@@ -1,6 +1,7 @@
+from datetime import datetime
 import json
 
-import dateutil
+ #import dateutil
 from catchpy.anno.crud import CRUD
 from django.core.management import BaseCommand
 
@@ -64,7 +65,7 @@ class Command(BaseCommand):
         if kwargs["username_list"]:
             username_list = kwargs["username_list"].strip().split(",")
         if kwargs["start_datetime_iso"]:
-            start_datetime = dateutil.parser.isoparse(kwargs["start_datetime_iso"])
+            start_datetime = datetime.fromisoformat(kwargs["start_datetime_iso"])
 
         with open(filepath, "r") as f:
             collection_map = json.load(f)

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from random import randint
 from subprocess import PIPE, Popen
 from uuid import uuid4
@@ -22,7 +22,6 @@ from catchpy.anno.anno_defaults import (
 )
 from catchpy.anno.utils import generate_uid
 from catchpy.consumer.catchjwt import encode_token
-from dateutil import tz
 from django.test import RequestFactory
 
 MEDIAS = [ANNO, AUDIO, TEXT, VIDEO, IMAGE]
@@ -112,7 +111,7 @@ def get_fake_url():
 
 
 def get_past_datetime(age_in_hours):
-    now = datetime.now(tz.tzutc())
+    now = datetime.now(timezone.utc)
     delta = timedelta(hours=age_in_hours)
     return (now - delta).replace(microsecond=0).isoformat()
 
@@ -385,7 +384,7 @@ def make_jwt_payload(apikey=None, user=None, iat=None, ttl=60, override=[]):
         "userId": user if user else str(uuid4()),
         "issuedAt": iat
         if iat
-        else datetime.now(tz.tzutc()).replace(microsecond=0).isoformat(),
+        else datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "ttl": ttl,
         "override": override,
         "error": "",
