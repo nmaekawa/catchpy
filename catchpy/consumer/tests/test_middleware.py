@@ -4,13 +4,13 @@ import pytest
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from ..catchjwt import decode_token, encode_catchjwt, validate_token
-from ..jwt_middleware import (
+from catchpy.consumer.catchjwt import decode_token, encode_catchjwt, validate_token
+from catchpy.consumer.jwt_middleware import (
     JWT_AUTH_HEADER,
     get_credentials,
     jwt_middleware,
 )
-from ..models import Consumer
+from catchpy.consumer.models import Consumer
 
 
 @pytest.mark.django_db

@@ -5,7 +5,7 @@ import os
 
 from django.contrib.auth import get_user_model
 
-from ..models import Consumer
+from catchpy.consumer.models import Consumer
 
 User = get_user_model()
 
