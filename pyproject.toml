@@ -50,3 +50,52 @@ include = [
 
 [project.urls]
 Homepage = "https://github.com/nmaekawa/catchpy"
+
+[tool.isort]
+profile = "black"
+skip = ["migrations", ".tox"]
+
+[tool.black]
+target-version = ["py36"]
+exclude = '''
+/(
+        \.eggs
+      | \.git
+      | \.tox
+      | \.venv
+      | build
+      | dist
+      | migrations
+)/
+'''
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+env_list =
+    py310
+    py311
+    py312
+
+[testenv]
+deps =
+    -r{toxinidir}/catchpy/requirements/dev.txt
+commands =
+    pytest -v
+passenv = CATCHPY_DOTENV_PATH
+
+
+[flake8]
+ignore =
+    # too many blank lines
+    E303,
+    # blank line at the end of file
+    W391
+
+exclude =
+    .tox,
+    .git,
+    __pycache__,
+    build,
+    dist
+"""

@@ -139,7 +139,7 @@ Run unit tests
 
 unit tests require:
 
-    - Postgres 9.6 or higher (config in
+    - Postgres 12+ or higher (config in
       ``catchpy/settings/test.py``); this is hard to fake because it requires
       postgres jsonb data type
 

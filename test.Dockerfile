@@ -9,15 +9,13 @@ ENV PATH "$PATH:/usr/games"
 
 # Install all other versions of Python we want to test with tox
 RUN git clone https://github.com/pyenv/pyenv /root/.pyenv
-RUN for PYTHON_VERSION in 3.8.17 3.9.17 3.10.12 3.11.4 3.12.2; do \
+RUN for PYTHON_VERSION in 3.10.12 3.11.4 3.12.2; do \
   set -ex \
     && /root/.pyenv/bin/pyenv install ${PYTHON_VERSION} \
     && /root/.pyenv/versions/${PYTHON_VERSION}/bin/python -m pip install --upgrade pip \
   ; done
 
 # Add to PATH, in order of lowest precedence to highest.
-ENV PATH /root/.pyenv/versions/3.8.17/bin:${PATH}
-ENV PATH /root/.pyenv/versions/3.9.17/bin:${PATH}
 ENV PATH /root/.pyenv/versions/3.10.12/bin:${PATH}
 ENV PATH /root/.pyenv/versions/3.12.2/bin:${PATH}
 ENV PATH /root/.pyenv/versions/3.11.4/bin:${PATH}
