@@ -1,27 +1,34 @@
-from copy import deepcopy
 import json
-import pytest
+from copy import deepcopy
 
+import pytest
+from conftest import (
+    make_encoded_token,
+    make_json_request,
+    make_jwt_payload,
+    make_wa_object,
+    make_wa_tag,
+)
 from django.conf import settings
 from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
 
-from catchpy.anno.anno_defaults import ANNOTATORJS_FORMAT, CATCH_ANNO_FORMAT
-from catchpy.anno.anno_defaults import AUDIO, IMAGE, TEXT, VIDEO, THUMB, ANNO
+from catchpy.anno.anno_defaults import (
+    ANNO,
+    ANNOTATORJS_FORMAT,
+    AUDIO,
+    CATCH_ANNO_FORMAT,
+    IMAGE,
+    TEXT,
+    THUMB,
+    VIDEO,
+)
 from catchpy.anno.crud import CRUD
 from catchpy.anno.json_models import Catcha
-from catchpy.anno.models import Anno, Tag, Target
-from catchpy.anno.models import PURPOSE_TAGGING
-from catchpy.anno.json_models import Catcha
+from catchpy.anno.models import PURPOSE_TAGGING, Anno, Tag, Target
 from catchpy.anno.views import search_api
 from catchpy.consumer.models import Consumer
-
-from conftest import make_encoded_token
-from conftest import make_jwt_payload
-from conftest import make_json_request
-from conftest import make_wa_object
-from conftest import make_wa_tag
 
 
 @pytest.mark.django_db

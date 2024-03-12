@@ -1,5 +1,4 @@
-from django.db.models import Manager
-from django.db.models import Q
+from django.db.models import Manager, Q
 
 
 class SearchManager(Manager):

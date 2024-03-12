@@ -1,7 +1,8 @@
 import json
 
-from catchpy.anno.crud import CRUD
 from django.core.management import BaseCommand
+
+from catchpy.anno.crud import CRUD
 
 
 class Command(BaseCommand):

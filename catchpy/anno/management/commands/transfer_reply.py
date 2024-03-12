@@ -1,9 +1,11 @@
-from datetime import datetime
 import json
+from datetime import datetime
+
+from django.core.management import BaseCommand
+
+from catchpy.anno.crud import CRUD
 
  #import dateutil
-from catchpy.anno.crud import CRUD
-from django.core.management import BaseCommand
 
 
 class Command(BaseCommand):

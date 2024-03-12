@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+
 def string_to_number(text):
     '''try to convert string to int or float.
 

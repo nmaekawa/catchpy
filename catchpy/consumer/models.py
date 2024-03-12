@@ -3,21 +3,22 @@ from datetime import datetime, timedelta, timezone
 from random import randint
 from uuid import uuid4
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
-
-from django.db.models import CASCADE, PROTECT
-from django.db.models import BooleanField
-from django.db.models import CharField
-from django.db.models import DateTimeField
-from django.db.models import ForeignKey
-from django.db.models import ManyToManyField
-from django.db.models import Model
-from django.db.models import OneToOneField
-from django.db.models import TextField
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import (
+    CASCADE,
+    PROTECT,
+    BooleanField,
+    CharField,
+    DateTimeField,
+    ForeignKey,
+    ManyToManyField,
+    Model,
+    OneToOneField,
+    TextField,
+)
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 
 User = get_user_model()
 

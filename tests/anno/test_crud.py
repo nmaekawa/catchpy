@@ -1,19 +1,19 @@
-from datetime import datetime, timedelta, timezone
 import json
+from datetime import datetime, timedelta, timezone
+
 import pytest
+from conftest import make_wa_object, make_wa_tag
 
+from catchpy.anno.anno_defaults import ANNO, CATCH_DEFAULT_PLATFORM_NAME
 from catchpy.anno.crud import CRUD
-from catchpy.anno.anno_defaults import ANNO
-from catchpy.anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from catchpy.anno.errors import AnnoError
-from catchpy.anno.errors import InvalidAnnotationTargetTypeError
-from catchpy.anno.errors import InvalidInputWebAnnotationError
-from catchpy.anno.errors import MissingAnnotationError
-from catchpy.anno.models import Anno, Target
-from catchpy.anno.models import PURPOSE_TAGGING
+from catchpy.anno.errors import (
+    AnnoError,
+    InvalidAnnotationTargetTypeError,
+    InvalidInputWebAnnotationError,
+    MissingAnnotationError,
+)
+from catchpy.anno.models import PURPOSE_TAGGING, Anno, Target
 
-from conftest import make_wa_object
-from conftest import make_wa_tag
 
 @pytest.mark.django_db
 def test_create_anno_ok(wa_text):

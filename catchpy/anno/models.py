@@ -2,46 +2,44 @@
 
 import logging
 
-from .anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
-from .anno_defaults import PURPOSE_COMMENTING
-from .anno_defaults import PURPOSE_REPLYING
-from .anno_defaults import PURPOSE_TAGGING
-from .anno_defaults import PURPOSE_CHOICES
-from .anno_defaults import PURPOSES
-
-from .anno_defaults import RESOURCE_TYPE_UNDEFINED
-from .anno_defaults import RESOURCE_TYPE_LIST
-from .anno_defaults import RESOURCE_TYPE_CHOICE
-from .anno_defaults import RESOURCE_TYPE_CHOICES
-from .anno_defaults import RESOURCE_TYPES
-
-from .anno_defaults import ANNO
-from .anno_defaults import AUDIO
-from .anno_defaults import IMAGE
-from .anno_defaults import TEXT
-from .anno_defaults import THUMB
-from .anno_defaults import VIDEO
-from .anno_defaults import MEDIA_TYPE_CHOICES
-from .anno_defaults import MEDIA_TYPES
-
-from django.db.models import CASCADE
-from django.db.models import BooleanField
-from django.db.models import CharField
-from django.db.models import DateTimeField
-from django.db.models import ForeignKey
-from django.db.models import JSONField
-from django.db.models import Manager
-from django.db.models import ManyToManyField
-from django.db.models import Model
-from django.db.models import TextField
-
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
+from django.db.models import (
+    CASCADE,
+    BooleanField,
+    CharField,
+    DateTimeField,
+    ForeignKey,
+    JSONField,
+    Manager,
+    ManyToManyField,
+    Model,
+    TextField,
+)
 
-from django.conf import settings
-
+from .anno_defaults import (
+    ANNO,
+    AUDIO,
+    CATCH_CURRENT_SCHEMA_VERSION,
+    IMAGE,
+    MEDIA_TYPE_CHOICES,
+    MEDIA_TYPES,
+    PURPOSE_CHOICES,
+    PURPOSE_COMMENTING,
+    PURPOSE_REPLYING,
+    PURPOSE_TAGGING,
+    PURPOSES,
+    RESOURCE_TYPE_CHOICE,
+    RESOURCE_TYPE_CHOICES,
+    RESOURCE_TYPE_LIST,
+    RESOURCE_TYPE_UNDEFINED,
+    RESOURCE_TYPES,
+    TEXT,
+    THUMB,
+    VIDEO,
+)
 from .managers import SearchManager
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,14 +1,11 @@
 import pytest
-
+from conftest import make_wa_object
 from model_bakery import baker
 
-from catchpy.anno.anno_defaults import CATCH_CURRENT_SCHEMA_VERSION
-from catchpy.anno.anno_defaults import MEDIA_TYPES
+from catchpy.anno.anno_defaults import CATCH_CURRENT_SCHEMA_VERSION, MEDIA_TYPES
 from catchpy.anno.errors import InvalidInputWebAnnotationError
 from catchpy.anno.json_models import Catcha
 from catchpy.anno.models import Anno, Tag, Target
-
-from conftest import make_wa_object
 
 
 @pytest.mark.django_db

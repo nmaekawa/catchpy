@@ -1,7 +1,7 @@
 from functools import wraps
-from django.http import JsonResponse
 from http import HTTPStatus
 
+from django.http import JsonResponse
 
 
 def require_catchjwt(view_func):

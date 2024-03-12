@@ -1,8 +1,8 @@
 import json
-import pdb
-import pytest
 import os
+import pdb
 
+import pytest
 from django.contrib.auth import get_user_model
 
 from catchpy.consumer.models import Consumer

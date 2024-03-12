@@ -5,6 +5,8 @@ from subprocess import PIPE, Popen
 from uuid import uuid4
 
 import pytest
+from django.test import RequestFactory
+
 from catchpy.anno.anno_defaults import (
     ANNO,
     AUDIO,
@@ -22,7 +24,6 @@ from catchpy.anno.anno_defaults import (
 )
 from catchpy.anno.utils import generate_uid
 from catchpy.consumer.catchjwt import encode_token
-from django.test import RequestFactory
 
 MEDIAS = [ANNO, AUDIO, TEXT, VIDEO, IMAGE]
 

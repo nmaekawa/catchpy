@@ -1,3 +1,4 @@
+import logging
 from http import HTTPStatus
 
 from django.conf import settings
@@ -7,9 +8,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from catchpy.anno.decorators import require_catchjwt
+
 from . import __version__
 
-import logging
 
 @require_http_methods(['GET', 'HEAD'])
 @csrf_exempt
