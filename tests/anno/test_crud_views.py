@@ -11,7 +11,7 @@ from django.conf import settings
 from django.test import Client
 from django.urls import reverse
 
-from .conftest import (
+from conftest import (
     make_encoded_token,
     make_json_request,
     make_jwt_payload,

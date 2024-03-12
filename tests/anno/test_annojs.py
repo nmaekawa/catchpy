@@ -6,7 +6,7 @@ from catchpy.anno.errors import InvalidInputWebAnnotationError
 from catchpy.anno.json_models import AnnoJS
 from catchpy.anno.json_models import Catcha
 
-from .conftest import make_wa_object
+from conftest import make_wa_object
 
 
 @pytest.mark.skip('debugging fixture')

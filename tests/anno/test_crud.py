@@ -12,8 +12,8 @@ from catchpy.anno.errors import MissingAnnotationError
 from catchpy.anno.models import Anno, Target
 from catchpy.anno.models import PURPOSE_TAGGING
 
-from .conftest import make_wa_object
-from .conftest import make_wa_tag
+from conftest import make_wa_object
+from conftest import make_wa_tag
 
 @pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db

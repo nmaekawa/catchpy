@@ -17,12 +17,12 @@ from catchpy.anno.json_models import Catcha
 from catchpy.anno.views import search_api
 from catchpy.consumer.models import Consumer
 
-from .conftest import make_annotatorjs_object
-from .conftest import make_encoded_token
-from .conftest import make_jwt_payload
-from .conftest import make_json_request
-from .conftest import make_wa_object
-from .conftest import make_wa_tag
+from conftest import make_annotatorjs_object
+from conftest import make_encoded_token
+from conftest import make_jwt_payload
+from conftest import make_json_request
+from conftest import make_wa_object
+from conftest import make_wa_tag
 
 
 @pytest.mark.usefixtures('wa_audio')
