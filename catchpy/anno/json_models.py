@@ -21,7 +21,10 @@ from catchpy.anno.anno_defaults import (
     THUMB,
     VIDEO,
 )
-from catchpy.anno.catch_json_schema import CATCH_JSON_SCHEMA, CATCH_JSONLD_CONTEXT_OBJECT
+from catchpy.anno.catch_json_schema import (
+    CATCH_JSON_SCHEMA,
+    CATCH_JSONLD_CONTEXT_OBJECT,
+)
 from catchpy.anno.errors import (
     AnnoError,
     AnnotatorJSError,
