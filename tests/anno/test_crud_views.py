@@ -27,7 +27,6 @@ def test_method_not_allowed():
     assert response.status_code == 405
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_read_ok(wa_audio):
     catcha = wa_audio
@@ -39,7 +38,6 @@ def test_read_ok(wa_audio):
     assert response.content is not None
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_head_ok(wa_audio):
     catcha = wa_audio
@@ -72,7 +70,6 @@ def test_read_not_found():
     assert response.status_code == 404
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_delete_ok(wa_audio):
     catcha = wa_audio
@@ -92,7 +89,6 @@ def test_delete_ok(wa_audio):
     assert response.status_code == 404
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_delete_with_override(wa_audio):
     catcha = wa_audio
@@ -113,7 +109,6 @@ def test_delete_with_override(wa_audio):
     assert response.status_code == 404
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_delete_back_compat_with_override(wa_audio):
     catcha = wa_audio
@@ -137,7 +132,6 @@ def test_delete_back_compat_with_override(wa_audio):
     assert response.status_code == 404
 
 
-@pytest.mark.usefixtures("wa_text")
 @pytest.mark.django_db
 def test_update_no_body_in_request(wa_text):
     catcha = wa_text
@@ -154,7 +148,6 @@ def test_update_no_body_in_request(wa_text):
     assert "missing json" in ",".join(resp["payload"])
 
 
-@pytest.mark.usefixtures("wa_video")
 @pytest.mark.django_db
 def test_update_invalid_input(wa_video):
     catcha = wa_video
@@ -172,7 +165,6 @@ def test_update_invalid_input(wa_video):
     assert len(resp["payload"]) > 0
 
 
-@pytest.mark.usefixtures("wa_video")
 @pytest.mark.django_db
 def test_update_denied_can_admin(wa_video):
     catch = wa_video
@@ -196,7 +188,6 @@ def test_update_denied_can_admin(wa_video):
     assert "not allowed to admin" in ",".join(resp["payload"])
 
 
-@pytest.mark.usefixtures("wa_text")
 @pytest.mark.django_db
 def test_update_ok(wa_text):
     catch = wa_text
@@ -230,7 +221,6 @@ def test_update_ok(wa_text):
     assert len(resp["target"]["items"]) == original_targets
 
 
-@pytest.mark.usefixtures("wa_image")
 @pytest.mark.django_db
 def test_create_on_behalf_of_others(wa_image):
     to_be_created_id = "1234-5678-abcd-0987"
@@ -251,7 +241,6 @@ def test_create_on_behalf_of_others(wa_image):
     assert "conflict in input creator_id" in ",".join(resp["payload"])
 
 
-@pytest.mark.usefixtures("wa_image")
 @pytest.mark.django_db
 def test_create_ok(wa_image):
     to_be_created_id = "1234-5678-abcd-0987"
@@ -277,7 +266,6 @@ def test_create_ok(wa_image):
     assert x.creator_id == payload["userId"]
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_create_duplicate(wa_audio):
     catch = wa_audio
@@ -295,7 +283,6 @@ def test_create_duplicate(wa_audio):
     assert "failed to create" in resp["payload"][0]
 
 
-@pytest.mark.usefixtures("js_text")
 @pytest.mark.django_db
 def test_create_annojs(js_text):
     js = js_text
@@ -322,7 +309,6 @@ def test_create_annojs(js_text):
     assert x.creator_id == payload["userId"]
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_create_reply(wa_audio):
     to_be_created_id = "1234-5678-abcd-efgh"
@@ -365,7 +351,6 @@ def test_create_reply_to_itself():
     assert "cannot be a reply to itself" in resp["payload"][0]
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_create_reply_missing_target(wa_audio):
     to_be_created_id = "1234-5678-abcd-efgh"
@@ -390,7 +375,6 @@ def test_create_reply_missing_target(wa_audio):
         x = Anno._default_manager.get(pk=to_be_created_id)
 
 
-@pytest.mark.usefixtures("wa_audio")
 @pytest.mark.django_db
 def test_create_reply_internal_target_source_id_ok(wa_audio):
     to_be_created_id = "1234-5678-abcd-efgh"
@@ -417,7 +401,6 @@ def test_create_reply_internal_target_source_id_ok(wa_audio):
     assert x.anno_reply_to.anno_id == catch["target"]["items"][0]["source"]
 
 
-@pytest.mark.usefixtures("js_text")
 @pytest.mark.django_db
 def test_create_compat_annojs(js_text):
     js = js_text
@@ -448,7 +431,6 @@ def test_create_compat_annojs(js_text):
     assert Catcha.are_similar(catcha, x.serialized)
 
 
-@pytest.mark.usefixtures("wa_text")
 @pytest.mark.django_db
 def test_format_response_id_nan(wa_text):
     wa = wa_text
@@ -463,7 +445,6 @@ def test_format_response_id_nan(wa_text):
     assert resp["size_failed"] == 1
 
 
-@pytest.mark.usefixtures("wa_text")
 @pytest.mark.django_db
 def test_format_response_multitarget(wa_text):
     wa = wa_text
@@ -495,7 +476,6 @@ def test_format_response_multitarget(wa_text):
     ]
 
 
-@pytest.mark.usefixtures("wa_text")
 @pytest.mark.django_db
 def test_format_response_reply_to_reply(wa_text):
     wa = wa_text
@@ -520,7 +500,6 @@ def test_format_response_reply_to_reply(wa_text):
     assert len(resp["rows"]) == 2
 
 
-@pytest.mark.usefixtures("wa_list")
 @pytest.mark.django_db
 def test_copy_ok(wa_list):
     original_total = len(wa_list)
@@ -599,7 +578,6 @@ def test_copy_ok(wa_list):
 
 
 @pytest.mark.skip("unable to force a redirect")
-@pytest.mark.usefixtures("wa_image")
 @pytest.mark.django_db
 def test_redirect_ok(wa_image):
     wa = wa_image

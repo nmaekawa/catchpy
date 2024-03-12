@@ -15,7 +15,6 @@ from catchpy.anno.models import PURPOSE_TAGGING
 from conftest import make_wa_object
 from conftest import make_wa_tag
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_create_anno_ok(wa_text):
     catcha = wa_text
@@ -26,7 +25,6 @@ def test_create_anno_ok(wa_text):
     assert(x.raw['totalReplies']) == 0
 
 
-@pytest.mark.usefixtures('wa_image')
 @pytest.mark.django_db(transaction=True)
 def test_create_duplicate_anno(wa_image):
     catcha = wa_image
@@ -43,7 +41,6 @@ def test_create_duplicate_anno(wa_image):
     assert(Anno._default_manager.count() == 1)
     assert(Target._default_manager.count() == len(catcha['target']['items']))
 
-@pytest.mark.usefixtures('wa_image')
 @pytest.mark.django_db(transaction=True)
 def test_import_anno_ok_2(wa_image):
     catcha = wa_image
@@ -72,7 +69,6 @@ def test_import_anno_ok_2(wa_image):
     assert (now - delta) < x1.created
 
 
-@pytest.mark.usefixtures('wa_image')
 @pytest.mark.django_db(transaction=True)
 def test_import_anno_ok(wa_image):
     catcha = wa_image
@@ -157,7 +153,6 @@ def test_import_deleted_parent_ok():
     assert c_regular.anno_deleted is False
 
 
-@pytest.mark.usefixtures('wa_video')
 @pytest.mark.django_db(transaction=True)
 def test_create_anno_invalid_target(wa_video):
     catcha = wa_video
@@ -177,7 +172,6 @@ def test_create_anno_invalid_target(wa_video):
     assert y is None
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_update_anno_ok(wa_text):
     catcha = wa_text
@@ -213,7 +207,6 @@ def test_update_anno_ok(wa_text):
     assert(x.modified > original_created)
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_update_anno_delete_tags_ok(wa_text):
     catcha = wa_text
@@ -241,7 +234,6 @@ def test_update_anno_delete_tags_ok(wa_text):
     assert(x.modified > original_created)
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_update_anno_duplicate_tags(wa_text):
     catcha = wa_text
@@ -274,7 +266,6 @@ def test_update_anno_duplicate_tags(wa_text):
 
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_update_anno_tag_too_long(wa_text):
     catcha = wa_text
@@ -325,7 +316,6 @@ def test_update_anno_tag_too_long(wa_text):
     assert(x.modified > original_created)
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db(transaction=True)
 def test_delete_anno_ok(wa_list):
     annos = []
@@ -349,7 +339,6 @@ def test_delete_anno_ok(wa_list):
     assert deleted is not None
     assert deleted.anno_deleted is True
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db(transaction=True)
 def test_delete_anno_replies_ok(wa_text):
     catcha = wa_text
@@ -390,7 +379,6 @@ def test_delete_anno_replies_ok(wa_text):
         assert x_r2r.anno_deleted
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db(transaction=True)
 def test_anno_replies_chrono_sorted(wa_text):
     catcha = wa_text
@@ -420,7 +408,6 @@ def test_anno_replies_chrono_sorted(wa_text):
 
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db(transaction=True)
 def test_count_deleted_anno_replies_ok(wa_text):
     catcha = wa_text
@@ -452,7 +439,6 @@ def test_count_deleted_anno_replies_ok(wa_text):
     assert x.total_replies == 3
 
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db(transaction=True)
 def test_true_delete_anno_ok(wa_text):
     catcha = wa_text
@@ -474,7 +460,6 @@ def test_true_delete_anno_ok(wa_text):
     assert targets.count() == 0
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_copy_ok(wa_list):
     original_total = len(wa_list)
@@ -503,7 +488,6 @@ def test_copy_ok(wa_list):
     assert int(copy_resp['total_failed']) == 0
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_copy_except_deleted_and_reply(wa_list):
     # insert a reply
@@ -541,7 +525,6 @@ def test_copy_except_deleted_and_reply(wa_list):
     assert int(copy_resp['total_failed']) == 0
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_remove_in_2step(wa_list):
     # insert a reply

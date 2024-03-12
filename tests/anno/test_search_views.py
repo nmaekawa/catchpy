@@ -25,7 +25,6 @@ from conftest import make_wa_object
 from conftest import make_wa_tag
 
 
-@pytest.mark.usefixtures('wa_audio')
 @pytest.mark.django_db
 def test_search_by_username_ok(wa_audio):
     catcha = wa_audio
@@ -56,7 +55,6 @@ def test_search_by_username_ok(wa_audio):
     for a in resp['rows']:
         assert a['creator']['name'] == catcha['creator']['name']
 
-@pytest.mark.usefixtures('wa_audio')
 @pytest.mark.django_db
 def test_search_by_exclude_username_ok(wa_audio):
     catcha = wa_audio
@@ -91,7 +89,6 @@ def test_search_by_exclude_username_ok(wa_audio):
         assert (a['creator']['name'] != catcha['creator']['name']) and (
             a['creator']['name'] != other_username)
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_search_by_userid_ok(wa_text):
     catcha = wa_text
@@ -123,7 +120,6 @@ def test_search_by_userid_ok(wa_text):
     for a in resp['rows']:
         assert a['creator']['id'] == catcha['creator']['id']
 
-@pytest.mark.usefixtures('wa_text')
 @pytest.mark.django_db
 def test_search_by_exclude_userid_ok(wa_text):
     catcha = wa_text
@@ -159,7 +155,6 @@ def test_search_by_exclude_userid_ok(wa_text):
             a['creator']['id'] != other_userid)
 
 
-@pytest.mark.usefixtures('wa_video')
 @pytest.mark.django_db
 def test_search_by_tags_ok(wa_video):
     catcha = wa_video
@@ -196,7 +191,6 @@ def test_search_by_tags_ok(wa_video):
         assert Catcha.has_tag(a, 'testing_tag5') is False
 
 
-@pytest.mark.usefixtures('wa_video')
 @pytest.mark.django_db
 def test_search_by_tag_or_tag(wa_video):
     catcha = wa_video
@@ -231,7 +225,6 @@ def test_search_by_tag_or_tag(wa_video):
             assert Catcha.has_tag(a, common_tag_value) is True
 
 
-@pytest.mark.usefixtures('wa_audio', 'wa_image')
 @pytest.mark.django_db
 def test_search_by_target_source_ok(wa_audio, wa_image):
     catcha1 = wa_audio
@@ -261,7 +254,6 @@ def test_search_by_target_source_ok(wa_audio, wa_image):
         assert Catcha.has_target_source(a, tsource)
 
 
-@pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
 def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
@@ -281,7 +273,6 @@ def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
     assert resp['rows'][0]['id'] == wa_video['id']
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_search_by_body_text_ok(wa_list):
     for wa in wa_list:
@@ -310,7 +301,6 @@ def test_search_by_body_text_ok(wa_list):
     assert resp['rows'][0]['id'] == anno.anno_id
 
 
-@pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
 def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
@@ -344,7 +334,6 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     assert resp['rows'][0]['id'] == wa['id']
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_search_back_compat_by_context_id_ok(wa_list):
     for wa in wa_list:
@@ -383,7 +372,6 @@ def test_search_back_compat_by_context_id_ok(wa_list):
     assert str(resp['rows'][0]['id']) == wa['id']
 
 
-@pytest.mark.usefixtures('wa_text', 'wa_video', 'wa_image', 'wa_audio')
 @pytest.mark.django_db
 def test_search_by_username_via_client(
     wa_text, wa_video, wa_image, wa_audio):
@@ -415,7 +403,6 @@ def test_search_by_username_via_client(
     assert resp['rows'][0]['id'] == wa_video['id']
 
 
-@pytest.mark.usefixtures('js_list')
 @pytest.mark.django_db
 def test_search_replies_js_ok(js_list):
     anno_list = []
@@ -465,7 +452,6 @@ def test_search_replies_js_ok(js_list):
         assert annojs['user']['id'] == payload['userId']
 
 
-@pytest.mark.usefixtures('js_list')
 @pytest.mark.django_db
 def test_search_back_compat_replies_ok(js_list):
     anno_list = []
@@ -511,7 +497,6 @@ def test_search_back_compat_replies_ok(js_list):
         assert annojs['user']['id'] == payload['userId']
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_search_replies_catcha_ok(wa_list):
     anno_list = []
@@ -562,7 +547,6 @@ def test_search_replies_catcha_ok(wa_list):
         assert target_item['source'] == reply_to.anno_id
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_search_deleted_catcha_ok(wa_list):
     anno_list = []
@@ -615,7 +599,6 @@ def test_search_deleted_catcha_ok(wa_list):
 
 
 
-@pytest.mark.usefixtures('wa_list')
 @pytest.mark.django_db
 def test_search_private_catcha_ok(wa_list):
     anno_list = []
@@ -677,7 +660,6 @@ def test_search_private_catcha_ok(wa_list):
     assert resp['total'] == total_annotations
 
 
-@pytest.mark.usefixtures('js_list')
 @pytest.mark.django_db
 def test_search_replies_js_with_uri(js_list):
     anno_list = []
