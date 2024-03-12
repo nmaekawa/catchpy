@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import DatabaseError, DataError, IntegrityError, transaction
 from django.db.models import Q
 
-from .anno_defaults import (
+from catchpy.anno.anno_defaults import (
     ANNO,
     MEDIA_TYPES,
     PURPOSE_COMMENTING,
@@ -16,7 +16,7 @@ from .anno_defaults import (
     PURPOSES,
     RESOURCE_TYPES,
 )
-from .errors import (
+from catchpy.anno.errors import (
     AnnoError,
     DuplicateAnnotationIdError,
     InvalidAnnotationPurposeError,
@@ -26,10 +26,10 @@ from .errors import (
     MissingAnnotationError,
     TargetAnnotationForReplyMissingError,
 )
-from .json_models import Catcha
-from .models import Anno, Tag, Target
-from .search import query_userid, query_username
-from .utils import generate_uid
+from catchpy.anno.json_models import Catcha
+from catchpy.anno.models import Anno, Tag, Target
+from catchpy.anno.search import query_userid, query_username
+from catchpy.anno.utils import generate_uid
 
 logger = logging.getLogger(__name__)
 

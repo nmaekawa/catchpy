@@ -1,4 +1,4 @@
-from .dev import *  # noqa
+from catchpy.settings.dev import *  # noqa
 
 DEBUG = True
 

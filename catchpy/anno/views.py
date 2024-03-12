@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from .anno_defaults import (
+from catchpy.anno.anno_defaults import (
     ANNO,
     ANNOTATORJS_FORMAT,
     CATCH_ADMIN_GROUP_ID,
@@ -17,9 +17,9 @@ from .anno_defaults import (
     CATCH_LOG_SEARCH_TIME,
     CATCH_RESPONSE_LIMIT,
 )
-from .crud import CRUD
-from .decorators import require_catchjwt
-from .errors import (
+from catchpy.anno.crud import CRUD
+from catchpy.anno.decorators import require_catchjwt
+from catchpy.anno.errors import (
     AnnoError,
     AnnotatorJSError,
     DuplicateAnnotationIdError,
@@ -29,16 +29,16 @@ from .errors import (
     NoPermissionForOperationError,
     UnknownResponseFormatError,
 )
-from .json_models import AnnoJS, Catcha
-from .models import Anno
-from .search import (
+from catchpy.anno.json_models import AnnoJS, Catcha
+from catchpy.anno.models import Anno
+from catchpy.anno.search import (
     query_tags,
     query_target_medias,
     query_target_sources,
     query_userid,
     query_username,
 )
-from .utils import generate_uid
+from catchpy.anno.utils import generate_uid
 
 logger = logging.getLogger(__name__)
 

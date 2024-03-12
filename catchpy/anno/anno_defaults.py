@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from .catch_json_schema import CATCH_CURRENT_SCHEMA_VERSION  # noqa
+from catchpy.anno.catch_json_schema import CATCH_CURRENT_SCHEMA_VERSION  # noqa
 
 # jsonld context
 CATCH_JSONLD_CONTEXT_IRI = getattr(settings, "CATCH_JSONLD_CONTEXT_IRI")

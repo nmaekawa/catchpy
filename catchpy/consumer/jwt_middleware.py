@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 
 from django.conf import settings
 
-from .catchjwt import decode_token, validate_token
-from .models import Consumer
+from catchpy.consumer.catchjwt import decode_token, validate_token
+from catchpy.consumer.models import Consumer
 
 JWT_AUTH_HEADER = "HTTP_AUTHORIZATION"
 JWT_ANNOTATOR_HEADER = "HTTP_X_ANNOTATOR_AUTH_TOKEN"

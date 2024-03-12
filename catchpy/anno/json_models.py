@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import jsonschema
 from pyld import jsonld
 
-from .anno_defaults import (
+from catchpy.anno.anno_defaults import (
     ANNO,
     AUDIO,
     CATCH_ANNO_REGEXPS,
@@ -21,8 +21,8 @@ from .anno_defaults import (
     THUMB,
     VIDEO,
 )
-from .catch_json_schema import CATCH_JSON_SCHEMA, CATCH_JSONLD_CONTEXT_OBJECT
-from .errors import (
+from catchpy.anno.catch_json_schema import CATCH_JSON_SCHEMA, CATCH_JSONLD_CONTEXT_OBJECT
+from catchpy.anno.errors import (
     AnnoError,
     AnnotatorJSError,
     InconsistentAnnotationError,
@@ -30,7 +30,7 @@ from .errors import (
     InvalidAnnotationCreatorError,
     InvalidInputWebAnnotationError,
 )
-from .utils import string_to_number
+from catchpy.anno.utils import string_to_number
 
 logger = logging.getLogger(__name__)
 

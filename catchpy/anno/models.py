@@ -17,7 +17,7 @@ from django.db.models import (
     TextField,
 )
 
-from .anno_defaults import (
+from catchpy.anno.anno_defaults import (
     ANNO,
     AUDIO,
     CATCH_CURRENT_SCHEMA_VERSION,
@@ -38,7 +38,7 @@ from .anno_defaults import (
     THUMB,
     VIDEO,
 )  # 12mar24 nmaekawa: this is imported by other modules!
-from .managers import SearchManager
+from catchpy.anno.managers import SearchManager
 
 logger = logging.getLogger(__name__)
 

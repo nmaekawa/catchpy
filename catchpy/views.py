@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 
 from catchpy.anno.decorators import require_catchjwt
 
-from . import __version__
+from catchpy import __version__
 
 
 @require_http_methods(["GET", "HEAD"])

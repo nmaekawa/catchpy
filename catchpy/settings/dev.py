@@ -1,4 +1,4 @@
-from .base import *  # noqa
+from catchpy.settings.base import *  # noqa
 
 # add db logging to dev settings
 LOGGING["loggers"]["django.db"] = {

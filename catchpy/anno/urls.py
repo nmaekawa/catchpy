@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from . import views
+from catchpy.anno import views
 
 urlpatterns = [
     # these are for back-compat

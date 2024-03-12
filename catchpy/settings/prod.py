@@ -1,1 +1,1 @@
-from .base import *  # noqa
+from catchpy.settings.base import *  # noqa

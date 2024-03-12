@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Anno, Tag, Target
+from catchpy.anno.models import Anno, Tag, Target
 
 
 @admin.register(Anno)
