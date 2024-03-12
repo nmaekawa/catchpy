@@ -9,24 +9,13 @@ from conftest import (
     make_wa_object,
     make_wa_tag,
 )
-from django.conf import settings
-from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
 
-from catchpy.anno.anno_defaults import (
-    ANNO,
-    ANNOTATORJS_FORMAT,
-    AUDIO,
-    CATCH_ANNO_FORMAT,
-    IMAGE,
-    TEXT,
-    THUMB,
-    VIDEO,
-)
+from catchpy.anno.anno_defaults import ANNO
 from catchpy.anno.crud import CRUD
 from catchpy.anno.json_models import Catcha
-from catchpy.anno.models import PURPOSE_TAGGING, Anno, Tag, Target
+from catchpy.anno.models import Anno
 from catchpy.anno.views import search_api
 from catchpy.consumer.models import Consumer
 
@@ -39,12 +28,12 @@ def test_search_by_username_ok(wa_audio):
         c["id"] = "{}{}".format(catcha["id"], i)
         c["creator"]["id"] = "{}-{}".format(catcha["creator"]["id"], i)
         c["creator"]["name"] = "{}-{}".format(catcha["creator"]["name"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     c = deepcopy(catcha)
     for i in [6, 7, 8, 9]:
         c["id"] = "{}{}".format(catcha["id"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload(user=catcha["creator"]["id"])
     request = make_json_request(
@@ -70,12 +59,12 @@ def test_search_by_exclude_username_ok(wa_audio):
         c["id"] = "{}{}".format(catcha["id"], i)
         c["creator"]["id"] = "{}-{}".format(catcha["creator"]["id"], i)
         c["creator"]["name"] = "{}-{}".format(catcha["creator"]["name"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     c = deepcopy(catcha)
     for i in [6, 7, 8, 9]:
         c["id"] = "{}{}".format(catcha["id"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload(user=catcha["creator"]["id"])
     other_username = "{}-4".format(catcha["creator"]["name"])
@@ -108,12 +97,12 @@ def test_search_by_userid_ok(wa_text):
         c["id"] = "{}{}".format(catcha["id"], i)
         c["creator"]["id"] = "{}-{}".format(catcha["creator"]["id"], i)
         c["creator"]["name"] = "{}-{}".format(catcha["creator"]["name"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     c = deepcopy(catcha)
     for i in [6, 7, 8, 9]:
         c["id"] = "{}{}".format(catcha["id"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload(user=catcha["creator"]["id"])
     request = make_json_request(
@@ -141,12 +130,12 @@ def test_search_by_exclude_userid_ok(wa_text):
         c["id"] = "{}{}".format(catcha["id"], i)
         c["creator"]["id"] = "{}-{}".format(catcha["creator"]["id"], i)
         c["creator"]["name"] = "{}-{}".format(catcha["creator"]["name"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     c = deepcopy(catcha)
     for i in [6, 7, 8, 9]:
         c["id"] = "{}{}".format(catcha["id"], i)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload(user=catcha["creator"]["id"])
     other_userid = "{}-1".format(catcha["creator"]["id"])
@@ -185,7 +174,7 @@ def test_search_by_tags_ok(wa_video):
         c["body"]["items"].append(tag)
         if i % 2 == 0:
             c["body"]["items"].append(common_tag)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload(user=catcha["creator"]["id"])
     request = make_json_request(
@@ -222,7 +211,7 @@ def test_search_by_tag_or_tag(wa_video):
         c["body"]["items"].append(tag)
         if i % 2 == 0:
             c["body"]["items"].append(common_tag)
-        x = CRUD.create_anno(c)
+        _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload(user=catcha["creator"]["id"])
     request = make_json_request(
@@ -255,7 +244,7 @@ def test_search_by_target_source_ok(wa_audio, wa_image):
         for catcha in [catcha1, catcha2]:
             c = deepcopy(catcha)
             c["id"] = "{}{}".format(catcha["id"], i)
-            x = CRUD.create_anno(c)
+            _ = CRUD.create_anno(c)
 
     payload = make_jwt_payload()
     request = make_json_request(
@@ -275,7 +264,7 @@ def test_search_by_target_source_ok(wa_audio, wa_image):
 @pytest.mark.django_db
 def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
-        x = CRUD.create_anno(wa)
+        _ = CRUD.create_anno(wa)
 
     payload = make_jwt_payload()
     request = make_json_request(method="get", query_string="media=video")
@@ -292,7 +281,7 @@ def test_search_by_media_ok(wa_text, wa_video, wa_image, wa_audio):
 @pytest.mark.django_db
 def test_search_by_body_text_ok(wa_list):
     for wa in wa_list:
-        x = CRUD.create_anno(wa)
+        _ = CRUD.create_anno(wa)
 
     wa = make_wa_object(age_in_hours=40)
     # counting that first item in body is the actual annotation
@@ -322,13 +311,13 @@ def test_search_by_body_text_ok(wa_list):
 @pytest.mark.django_db
 def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
-        x = CRUD.create_anno(wa)
+        _ = CRUD.create_anno(wa)
 
     wa = deepcopy(wa_audio)
     search_context_id = "not_the_normal_context_id"
     wa["id"] = "12345678"
     wa["platform"]["context_id"] = search_context_id
-    x = CRUD.create_anno(wa)
+    _ = CRUD.create_anno(wa)
 
     payload = make_jwt_payload()
     request = make_json_request(
@@ -361,13 +350,13 @@ def test_search_by_context_id_ok(wa_text, wa_video, wa_image, wa_audio):
 @pytest.mark.django_db
 def test_search_back_compat_by_context_id_ok(wa_list):
     for wa in wa_list:
-        x = CRUD.create_anno(wa)
+        _ = CRUD.create_anno(wa)
 
     wa = deepcopy(wa_list[0])
     search_context_id = "not_the_normal_context_id"
     wa["id"] = "12345678901234567890"
     wa["platform"]["context_id"] = search_context_id
-    x = CRUD.create_anno(wa)
+    _ = CRUD.create_anno(wa)
 
     tudo = Anno._default_manager.all()
     for z in tudo:
@@ -406,7 +395,7 @@ def test_search_back_compat_by_context_id_ok(wa_list):
 def test_search_by_username_via_client(wa_text, wa_video, wa_image, wa_audio):
 
     for wa in [wa_text, wa_video, wa_image, wa_audio]:
-        x = CRUD.create_anno(wa)
+        _ = CRUD.create_anno(wa)
 
     c = Consumer._default_manager.create()
     payload = make_jwt_payload(apikey=c.consumer)

@@ -1,4 +1,4 @@
-from .base import *
+from .base import *  # noqa
 
 # add db logging to dev settings
 LOGGING["loggers"]["django.db"] = {

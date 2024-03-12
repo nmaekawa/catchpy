@@ -1,10 +1,7 @@
 import json
-import os
-import sys
 
 from django.core.management import BaseCommand
 
-from catchpy.anno.crud import CRUD
 from catchpy.anno.json_models import Catcha
 
 

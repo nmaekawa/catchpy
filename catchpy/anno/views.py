@@ -23,7 +23,6 @@ from .errors import (
     AnnoError,
     AnnotatorJSError,
     DuplicateAnnotationIdError,
-    InvalidInputWebAnnotationError,
     MethodNotAllowedError,
     MissingAnnotationError,
     MissingAnnotationInputError,

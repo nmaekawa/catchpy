@@ -79,7 +79,7 @@ def test_middleware_header_missing():
         return response
 
     middleware = jwt_middleware(get_response)
-    resp = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt is not None
     assert request.catchjwt["error"] == (
@@ -98,7 +98,7 @@ def test_middleware_invalid_token():
         return response
 
     middleware = jwt_middleware(get_response)
-    reps = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt is not None
     assert request.catchjwt
@@ -107,7 +107,7 @@ def test_middleware_invalid_token():
         return response
 
     middleware = jwt_middleware(get_response)
-    resp = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt is not None
     assert request.catchjwt["error"] == "failed to decode auth token"
@@ -133,7 +133,7 @@ def test_middleware_invalid_consumer():
         return response
 
     middleware = jwt_middleware(get_response)
-    resp = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt["error"] == "invalid consumerKey in auth token"
     assert request.catchjwt["userId"] == "anonymous"
@@ -170,7 +170,7 @@ def test_middleware_tampered_token():
         return response
 
     middleware = jwt_middleware(get_response)
-    resp = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt["error"] == "failed to validate auth token signature"
     assert request.catchjwt["userId"] == "anonymous"
@@ -200,7 +200,7 @@ def test_middleware_token_expired():
         return response
 
     middleware = jwt_middleware(get_response)
-    resp = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt["error"] == "token has expired"
     assert request.catchjwt["userId"] == "anonymous"
@@ -230,7 +230,7 @@ def test_middleware_issued_in_future():
         return response
 
     middleware = jwt_middleware(get_response)
-    resp = middleware(request)
+    _ = middleware(request)
 
     assert request.catchjwt["error"] == "invalid `issuedAt` in the future."
     assert request.catchjwt["userId"] == "anonymous"

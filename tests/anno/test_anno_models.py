@@ -18,7 +18,7 @@ def test_relationships_ok():
     anno.anno_tags.set(tags)
 
     # create targets
-    target = baker.make(Target, anno=anno)
+    _ = baker.make(Target, anno=anno)
     assert anno.anno_tags.count() == 3
     assert anno.target_set.count() == 1
 
@@ -60,7 +60,7 @@ def test_body_sanitize():
 
     for b_text in body_unsafe_text:
         catcha["body"]["items"][0]["value"] = b_text
-        with pytest.raises(InvalidInputWebAnnotationError) as e:
+        with pytest.raises(InvalidInputWebAnnotationError):
             safe = Catcha.safe_body_text_value(catcha)
 
     catcha["body"]["items"][0][

@@ -2,7 +2,6 @@
 
 import logging
 
-from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.db.models import (
@@ -38,7 +37,7 @@ from .anno_defaults import (
     TEXT,
     THUMB,
     VIDEO,
-)
+)  # 12mar24 nmaekawa: this is imported by other modules!
 from .managers import SearchManager
 
 logger = logging.getLogger(__name__)

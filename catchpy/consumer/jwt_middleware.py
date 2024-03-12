@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-import iso8601
-import jwt
 from django.conf import settings
 
 from .catchjwt import decode_token, validate_token

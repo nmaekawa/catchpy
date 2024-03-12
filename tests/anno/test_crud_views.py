@@ -14,7 +14,6 @@ from django.urls import reverse
 
 from catchpy.anno.anno_defaults import ANNO, TEXT
 from catchpy.anno.crud import CRUD
-from catchpy.anno.json_models import Catcha
 from catchpy.anno.models import Anno
 from catchpy.anno.views import _format_response, crud_api, crud_compat_api
 from catchpy.consumer.models import Consumer
@@ -367,7 +366,7 @@ def test_create_reply_internal_target_source_id_ok(wa_audio):
     request.catchjwt = payload
 
     response = crud_api(request, to_be_created_id)
-    resp = json.loads(response.content.decode("utf-8"))
+    _ = json.loads(response.content.decode("utf-8"))
     assert response.status_code == 200
 
     x = Anno._default_manager.get(pk=to_be_created_id)

@@ -445,7 +445,7 @@ class CRUD(object):
                 continue
 
             try:
-                anno_deleted = cls.delete_anno(anno)
+                _ = cls.delete_anno(anno)
             except MissingAnnotationError:
                 # ok to be already deleted
                 continue

@@ -1,6 +1,3 @@
-import os
-import sys
-
 from django.core.management import BaseCommand
 
 from catchpy.consumer.catchjwt import encode_catchjwt

@@ -1,10 +1,9 @@
-import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
 from conftest import make_wa_object, make_wa_tag
 
-from catchpy.anno.anno_defaults import ANNO, CATCH_DEFAULT_PLATFORM_NAME
+from catchpy.anno.anno_defaults import ANNO
 from catchpy.anno.crud import CRUD
 from catchpy.anno.errors import (
     AnnoError,
@@ -34,7 +33,7 @@ def test_create_duplicate_anno(wa_image):
     assert Anno._default_manager.count() == 1
 
     x2 = None
-    with pytest.raises(AnnoError) as e:
+    with pytest.raises(AnnoError):
         x2 = CRUD.create_anno(catcha)
 
     assert x2 is None
@@ -50,7 +49,7 @@ def test_import_anno_ok_2(wa_image):
 
     # import first because CRUD.create changes created time in input
     catcha["id"] = "naomi-xx-imported"
-    resp = CRUD.import_annos([catcha])
+    _ = CRUD.import_annos([catcha])
     x2 = Anno._default_manager.get(pk=catcha["id"])
     assert x2 is not None
     assert Anno._default_manager.count() == 1
@@ -77,7 +76,7 @@ def test_import_anno_ok(wa_image):
 
     now = datetime.now(timezone.utc)
 
-    resp = CRUD.import_annos([catcha, catcha_reply])
+    _ = CRUD.import_annos([catcha, catcha_reply])
     x2 = Anno._default_manager.get(pk=catcha["id"])
     assert x2 is not None
 
@@ -245,9 +244,9 @@ def test_update_anno_duplicate_tags(wa_text):
     x = CRUD.create_anno(catcha)
     # save values before update
     original_tags = x.anno_tags.count()
-    original_targets = x.target_set.count()
-    original_body_text = x.body_text
-    original_created = x.created
+    _ = x.target_set.count()
+    _ = x.body_text
+    _ = x.created
 
     assert original_tags > 0
 
@@ -393,7 +392,6 @@ def test_anno_replies_chrono_sorted(wa_text):
 
     # create replies
     x_replies = []
-    x_r2r_replies = []
     for i in range(0, 4):
         r = make_wa_object(age_in_hours=i + 2, media=ANNO, reply_to=x.anno_id)
         xr = CRUD.create_anno(r)
@@ -407,7 +405,7 @@ def test_anno_replies_chrono_sorted(wa_text):
     xr = x.replies[0]
     for i in range(0, 4):
         r2r = make_wa_object(age_in_hours=i + 3, media=ANNO, reply_to=xr.anno_id)
-        x_r2r = CRUD.create_anno(r2r)
+        _ = CRUD.create_anno(r2r)
 
     assert len(xr.replies) == 4
     for i in range(0, 3):
@@ -460,7 +458,7 @@ def test_true_delete_anno_ok(wa_text):
     assert CRUD.get_anno(x.anno_id) is None  # this pulls from db
 
     with pytest.raises(Anno.DoesNotExist):
-        deleted = Anno._default_manager.get(pk=anno_id)
+        _ = Anno._default_manager.get(pk=anno_id)
 
     targets = Target._default_manager.filter(anno__anno_id=anno_id)
     assert targets.count() == 0

@@ -1,21 +1,14 @@
-import logging
 from datetime import datetime, timedelta, timezone
-from random import randint
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import (
     CASCADE,
-    PROTECT,
-    BooleanField,
     CharField,
     DateTimeField,
     ForeignKey,
-    ManyToManyField,
     Model,
     OneToOneField,
-    TextField,
 )
 from django.db.models.signals import post_save
 from django.dispatch import receiver
