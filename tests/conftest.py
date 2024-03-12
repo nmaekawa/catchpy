@@ -61,45 +61,6 @@ def wa_image():
     return make_wa_object(age_in_hours=30, media=IMAGE)
 
 
-@pytest.fixture(scope="function")
-def js_list():
-    jss = [make_annotatorjs_object(age_in_hours=500)]
-    total_medias = len(MEDIAS)
-    for i in range(1, randint(5, 21)):
-        index = i % total_medias
-
-        if MEDIAS[index] == ANNO:
-            continue  # skip replies for now
-
-        jss.append(
-            make_annotatorjs_object(
-                age_in_hours=i * 10, media=MEDIAS[index], reply_to=jss[0]["id"]
-            )
-        )
-
-    return jss
-
-
-@pytest.fixture(scope="function")
-def js_text():
-    return make_annotatorjs_object(age_in_hours=randint(30, 100))
-
-
-@pytest.fixture(scope="function")
-def js_video():
-    return make_annotatorjs_object(age_in_hours=randint(20, 100), media=VIDEO)
-
-
-@pytest.fixture(scope="function")
-def js_audio():
-    return make_annotatorjs_object(age_in_hours=randint(20, 100), media=AUDIO)
-
-
-@pytest.fixture(scope="function")
-def js_image():
-    return make_annotatorjs_object(age_in_hours=randint(20, 100), media=IMAGE)
-
-
 def fetch_fortune():
     process = Popen("fortune", shell=True, stdout=PIPE, stderr=None)
     output, _ = process.communicate()
@@ -294,88 +255,6 @@ def make_wa_tag(tagname):
         "format": "text/html",
         "value": tagname,
     }
-
-
-def make_xywh_annotator():
-    return {
-        "height": str(randint(0, 100)),
-        "width": str(randint(0, 100)),
-        "x": str(randint(0, 100)),
-        "y": str(randint(0, 100)),
-    }
-
-
-def make_ranges_annotator():
-    return {
-        "startOffset": randint(10, 300),
-        "endOffset": randint(350, 750),
-        "start": "/p[1]",
-        "end": "/p[2]",
-    }
-
-
-def make_annotatorjs_object(age_in_hours=0, media=TEXT, reply_to=None, user=None):
-    creator_id = user if user else generate_uid(must_be_int=True)
-
-    if age_in_hours > 0:
-        created_at = get_past_datetime(age_in_hours)
-        created = {
-            "id": generate_uid(must_be_int=True),
-            "created": created_at,
-            "updated": created_at,
-            "user": {
-                "id": creator_id,
-                "name": "user_{}".format(creator_id),
-            },
-        }
-    else:
-        created = {}
-
-    wa = {
-        "contextId": "fake_context",
-        "collectionId": "fake_collection",
-        "permissions": {
-            "read": [],
-            "update": [creator_id],
-            "delete": [creator_id],
-            "admin": [creator_id],
-        },
-        "text": fetch_fortune(),
-        "totalComments": 0,
-        "media": "comment" if media == ANNO else media.lower(),
-        "tags": [],
-        "ranges": [],
-        "uri": get_fake_url(),
-        "parent": "0",
-    }
-
-    for t in range(0, randint(1, 10)):
-        wa["tags"].append("tag{}".format(t))
-
-    if media == TEXT:
-        wa["ranges"].append(make_ranges_annotator())
-        wa["quote"] = fetch_fortune()
-    elif media == VIDEO or media == AUDIO:
-        wa["rangeTime"] = {
-            "start": randint(40, 900),
-            "end": randint(901, 1700),
-        }
-        wa["target"] = {
-            "container": "container_name{}".format(randint(1, 100)),
-            "src": get_fake_url(),
-            "ext": "Youtube",
-        }
-    elif media == IMAGE:
-        wa["bounds"] = make_xywh_annotator()
-        wa["rangePosition"] = make_xywh_annotator()
-        wa["thumb"] = get_fake_url()
-    elif media == ANNO:
-        wa["ranges"].append(make_ranges_annotator())
-        wa["quote"] = fetch_fortune()
-        wa["parent"] = reply_to
-
-    wa.update(created)
-    return wa
 
 
 def make_jwt_payload(apikey=None, user=None, iat=None, ttl=60, override=[]):

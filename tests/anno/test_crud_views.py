@@ -3,7 +3,7 @@ import json
 import pytest
 from catchpy.anno.anno_defaults import ANNO, TEXT
 from catchpy.anno.crud import CRUD
-from catchpy.anno.json_models import AnnoJS, Catcha
+from catchpy.anno.json_models import Catcha
 from catchpy.anno.models import Anno
 from catchpy.anno.views import _format_response, crud_api, crud_compat_api
 from catchpy.consumer.models import Consumer
@@ -284,32 +284,6 @@ def test_create_duplicate(wa_audio):
 
 
 @pytest.mark.django_db
-def test_create_annojs(js_text):
-    js = js_text
-    to_be_created_id = "1234567809876543"
-    payload = make_jwt_payload(user=js["user"]["id"])
-
-    request = make_json_request(
-        method="post", anno_id=to_be_created_id, data=json.dumps(js)
-    )
-    request.catchjwt = payload
-
-    assert js["id"] != to_be_created_id
-
-    response = crud_compat_api(request, to_be_created_id)
-    resp = json.loads(response.content.decode("utf-8"))
-
-    assert response.status_code == 200
-    assert resp["id"] == int(to_be_created_id)
-    assert resp["user"]["id"] == payload["userId"]
-    assert len(resp["tags"]) == len(js["tags"])
-    assert resp["contextId"] == js["contextId"]
-
-    x = Anno._default_manager.get(pk=to_be_created_id)
-    assert x.creator_id == payload["userId"]
-
-
-@pytest.mark.django_db
 def test_create_reply(wa_audio):
     to_be_created_id = "1234-5678-abcd-efgh"
     x = CRUD.create_anno(wa_audio)
@@ -399,36 +373,6 @@ def test_create_reply_internal_target_source_id_ok(wa_audio):
     x = Anno._default_manager.get(pk=to_be_created_id)
     assert x is not None
     assert x.anno_reply_to.anno_id == catch["target"]["items"][0]["source"]
-
-
-@pytest.mark.django_db
-def test_create_compat_annojs(js_text):
-    js = js_text
-
-    c = Consumer._default_manager.create()
-    payload = make_jwt_payload(apikey=c.consumer, user=js["user"]["id"])
-    token = make_encoded_token(c.secret_key, payload)
-
-    client = Client()
-    compat_create_url = reverse("compat_create")
-    response = client.post(
-        compat_create_url,
-        data=json.dumps(js),
-        HTTP_X_ANNOTATOR_AUTH_TOKEN=token,
-        content_type="application/json",
-    )
-
-    assert response.status_code == 200
-    resp = json.loads(response.content.decode("utf-8"))
-    assert resp["id"] != js["id"]  # should not preserve `id` in input annojs
-    assert resp["user"]["id"] == payload["userId"]
-    assert set(resp["tags"]) == set(js["tags"])
-    assert resp["contextId"] == js["contextId"]
-
-    x = Anno._default_manager.get(pk=resp["id"])
-    assert x.creator_id == payload["userId"]
-    catcha = AnnoJS.convert_to_catcha(resp)
-    assert Catcha.are_similar(catcha, x.serialized)
 
 
 @pytest.mark.django_db
