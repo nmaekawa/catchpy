@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import include, path, re_path
 
@@ -20,12 +21,12 @@ from . import views
 
 # import these when adding catchpy to an existing django project
 urls = [
-    re_path(r'^annos/?', include('catchpy.anno.urls')),
-    path('version', views.app_version),
-    path('is_alive', views.is_alive),
+    re_path(r"^annos/?", include("catchpy.anno.urls")),
+    path("version", views.app_version),
+    path("is_alive", views.is_alive),
 ]
 # urlpatterns = urls + [path('admin/', admin.site.urls)]x
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('catchpy/', include(urls)),
+    path("admin/", admin.site.urls),
+    path("catchpy/", include(urls)),
 ]

@@ -12,26 +12,23 @@ from catchpy.anno.decorators import require_catchjwt
 from . import __version__
 
 
-@require_http_methods(['GET', 'HEAD'])
+@require_http_methods(["GET", "HEAD"])
 @csrf_exempt
 def app_version(request):
-    '''return the current version of this project.'''
+    """return the current version of this project."""
     response = JsonResponse(
         status=HTTPStatus.OK,
-        data={'version': __version__},
+        data={"version": __version__},
     )
     return response
 
 
-@require_http_methods(['GET'])
+@require_http_methods(["GET"])
 @csrf_exempt
 @require_catchjwt
 def is_alive(request):
     # if has a valid jwt, then accessed db to check consumer key
     response = JsonResponse(
-        status=HTTPStatus.OK,
-        data={'status': HTTPStatus.OK, 'payload': ['ok']}
+        status=HTTPStatus.OK, data={"status": HTTPStatus.OK, "payload": ["ok"]}
     )
     return response
-
-

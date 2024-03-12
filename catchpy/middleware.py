@@ -1,5 +1,3 @@
-
-
 from django.http.response import HttpResponseRedirectBase
 from django.middleware.common import CommonMiddleware
 
@@ -21,5 +19,3 @@ class HxCommonMiddleware(CommonMiddleware):
     """
 
     response_redirect_class = HxHttpResponsePermanentRedirectPreserveMethod
-
-

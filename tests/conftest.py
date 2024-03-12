@@ -262,9 +262,11 @@ def make_jwt_payload(apikey=None, user=None, iat=None, ttl=60, override=[]):
     return {
         "consumerKey": apikey if apikey else str(uuid4()),
         "userId": user if user else str(uuid4()),
-        "issuedAt": iat
-        if iat
-        else datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "issuedAt": (
+            iat
+            if iat
+            else datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+        ),
         "ttl": ttl,
         "override": override,
         "error": "",

@@ -49,7 +49,8 @@ class Anno(Model):
     modified = DateTimeField(auto_now=True, null=False)
 
     schema_version = CharField(
-        max_length=128, null=False, default=CATCH_CURRENT_SCHEMA_VERSION)
+        max_length=128, null=False, default=CATCH_CURRENT_SCHEMA_VERSION
+    )
     creator_id = CharField(max_length=128, null=False)
     creator_name = CharField(max_length=128, null=False)
 
@@ -57,8 +58,8 @@ class Anno(Model):
     # soft delete
     anno_deleted = BooleanField(db_index=True, default=False)
     # comment to a parent annotation
-    anno_reply_to = ForeignKey('Anno', null=True, blank=True, on_delete=CASCADE)
-    anno_tags = ManyToManyField('Tag', blank=True)
+    anno_reply_to = ForeignKey("Anno", null=True, blank=True, on_delete=CASCADE)
+    anno_tags = ManyToManyField("Tag", blank=True)
     # permissions are lists of user_ids, blank means public
     can_read = ArrayField(CharField(max_length=128), null=True, default=list)
     can_update = ArrayField(CharField(max_length=128), null=True, default=list)
@@ -72,12 +73,11 @@ class Anno(Model):
     # body_format is a mime type, like 'text/html', 'text/richtext',
     # 'application/rtf', 'application/x-rtf', etc
     # note that rich text can have binaries embedded (like images)
-    body_format = CharField(max_length=128, null=False, default='text/html')
+    body_format = CharField(max_length=128, null=False, default="text/html")
 
     target_type = CharField(
-            max_length=16,
-            choices=RESOURCE_TYPE_CHOICES,
-            default=RESOURCE_TYPE_UNDEFINED)
+        max_length=16, choices=RESOURCE_TYPE_CHOICES, default=RESOURCE_TYPE_UNDEFINED
+    )
 
     raw = JSONField()
 
@@ -98,20 +98,20 @@ class Anno(Model):
     class Meta:
         indexes = [
             GinIndex(
-                fields=['raw'],
-                name='anno_raw_gin',
+                fields=["raw"],
+                name="anno_raw_gin",
             ),
         ]
 
     def __repr__(self):
-        return '({}_{})'.format(self.schema_version, self.anno_id)
+        return "({}_{})".format(self.schema_version, self.anno_id)
 
     def __str__(self):
         return self.__repr__()
 
     @property
     def total_replies(self):
-        #return self.anno_set.count()
+        # return self.anno_set.count()
         return self.anno_set.all().filter(anno_deleted=False).count()
 
     @property
@@ -120,7 +120,7 @@ class Anno(Model):
         #
         # ATT: this makes marked_for_deletion replies _unaccessible via API_
         #
-        return self.anno_set.all().filter(anno_deleted=False).order_by('created')
+        return self.anno_set.all().filter(anno_deleted=False).order_by("created")
 
     @property
     def total_targets(self):
@@ -133,43 +133,43 @@ class Anno(Model):
     @property
     def serialized(self):
         s = self.raw.copy()
-        s['totalReplies'] = self.total_replies
-        s['created'] = self.created.replace(microsecond=0).isoformat()
-        s['modified'] = self.modified.replace(microsecond=0).isoformat()
-        s['id'] = self.anno_id
+        s["totalReplies"] = self.total_replies
+        s["created"] = self.created.replace(microsecond=0).isoformat()
+        s["modified"] = self.modified.replace(microsecond=0).isoformat()
+        s["id"] = self.anno_id
         return s
 
     def permissions_for_user(self, user):
-        '''list of ops user is allowed to perform in this anno instance.
+        """list of ops user is allowed to perform in this anno instance.
 
         note: implementation of this method makes it impossible to have update,
         delete, admin open to public.
-        '''
+        """
         permissions = []
         if not self.can_read or user in self.can_read:
-            permissions.append('can_read')
+            permissions.append("can_read")
         if user in self.can_update:
-            permissions.append('can_update')
+            permissions.append("can_update")
         if user in self.can_delete:
-            permissions.append('can_delete')
+            permissions.append("can_delete")
         if user in self.can_admin:
-            permissions.append('can_admin')
+            permissions.append("can_admin")
         return permissions
 
     def mark_as_deleted(self, *args, **kwargs):
-        '''
+        """
         overwrite delete to perform a soft delete.
-        '''
+        """
         self.anno_deleted = True
 
     def has_permission_for(self, op, user_id):
-        '''check if user has permission for operation.'''
-        if op == 'read':
+        """check if user has permission for operation."""
+        if op == "read":
             if not self.can_read or user_id in self.can_read:
                 return True
-        permission = getattr(self, 'can_{}'.format(op))
+        permission = getattr(self, "can_{}".format(op))
         if permission is not None:
-            return (user_id in permission)
+            return user_id in permission
         else:
             return False
 
@@ -195,16 +195,13 @@ class Target(Model):
     # - https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
     target_source = CharField(max_length=2048, null=True)
 
-    target_media = CharField(
-        max_length=56,
-        choices=MEDIA_TYPE_CHOICES,
-        default=TEXT)
+    target_media = CharField(max_length=56, choices=MEDIA_TYPE_CHOICES, default=TEXT)
 
     # delete all targets when deleting anno
-    anno = ForeignKey('Anno', on_delete=CASCADE)
+    anno = ForeignKey("Anno", on_delete=CASCADE)
 
     def __repr__(self):
-        return '({}_{})'.format(self.target_source, self.id)
+        return "({}_{})".format(self.target_source, self.id)
 
     def __str__(self):
         return self.__repr__()
