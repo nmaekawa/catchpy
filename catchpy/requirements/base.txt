@@ -1,7 +1,7 @@
 Django==2.2.11
 iso8601==0.1.12
 jsonschema==3.0.1
-psycopg2==2.8.4
+psycopg2==2.9.6
 PyJWT==1.7.1
 PyLD==1.0.5
 python-dateutil==2.8.1
