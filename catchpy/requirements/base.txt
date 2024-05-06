@@ -7,6 +7,6 @@ PyLD==1.0.5
 python-dateutil==2.8.1
 python-dotenv==0.12.0
 pytz==2019.3
-requests==2.23.0
+requests==2.26.0
 django-log-request-id==1.4.1
 django-cors-headers==3.2.1
