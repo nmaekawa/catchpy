@@ -24,7 +24,7 @@ def app_version(request):
 
 @require_http_methods(['GET'])
 @csrf_exempt
-@require_catchjwt
+# @require_catchjwt - commented out for AWS ECS health check
 def is_alive(request):
     # if has a valid jwt, then accessed db to check consumer key
     response = JsonResponse(
