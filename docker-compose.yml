@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/code
     ports:
-      - "9000:8000"
+      - "8080:8080"
     depends_on:
       - db
     environment:
