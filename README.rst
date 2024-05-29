@@ -37,9 +37,9 @@ Make sure you have docker_ installed to try this quickstart.
     $> cd catchpy
 
     # start docker services
-    $> docker-compose up
-    $> docker-compose exec web python manage.py migrate
-    $> docker-compose exec web python manage.py createsuperuser
+    $> docker compose up
+    $> docker compose exec web python manage.py migrate
+    $> docker compose exec web python manage.py createsuperuser
     $> open http://localhost:9000/static/anno/index.html
 
 
