@@ -14,11 +14,11 @@ services:
       args:
         REQUIREMENTS_FILE: catchpy/requirements/dev.txt
     image: hx/catchpy:dev
-    command: ["./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["./wait-for-it.sh", "db:5432", "--", "./docker_entrypoint.sh"]
     volumes:
       - .:/code
     ports:
-      - "8000:8000"
+      - "9000:8000"
     depends_on:
       - db
     environment:
