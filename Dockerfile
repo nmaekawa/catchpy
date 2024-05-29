@@ -7,5 +7,6 @@ RUN mkdir /code
 WORKDIR /code
 ADD . /code
 
-RUN pip install -r catchpy/requirements/local.txt
+ARG REQUIREMENTS_FILE=catchpy/requirements/local.txt
 
+RUN pip install -r ${REQUIREMENTS_FILE}
