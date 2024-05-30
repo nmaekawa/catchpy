@@ -4,7 +4,6 @@ from datetime import timedelta
 import iso8601
 import jwt
 import logging
-import pytz
 
 from django.conf import settings
 

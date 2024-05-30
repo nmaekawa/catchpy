@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 from django.http import HttpResponse
 from django.test import RequestFactory
 
@@ -181,7 +181,7 @@ def test_middleware_tampered_token():
 
 @pytest.mark.django_db
 def test_middleware_token_expired():
-    date_in_past = datetime.now(pytz.utc) - timedelta(hours=3)
+    date_in_past = datetime.now(ZoneInfo('UTC')) - timedelta(hours=3)
     c = Consumer._default_manager.create()
     token_enc = encode_catchjwt(
         apikey=c.consumer,
@@ -211,7 +211,7 @@ def test_middleware_token_expired():
 
 @pytest.mark.django_db
 def test_middleware_issued_in_future():
-    date_in_future = datetime.now(pytz.utc) + timedelta(hours=3)
+    date_in_future = datetime.now(ZoneInfo('UTC')) + timedelta(hours=3)
     c = Consumer._default_manager.create()
     token_enc = encode_catchjwt(
         apikey=c.consumer,

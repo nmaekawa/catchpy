@@ -1,24 +1,13 @@
 import logging
-from datetime import datetime
-from datetime import timedelta
-import pytz
+from datetime import datetime, timedelta
 from random import randint
 from uuid import uuid4
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
-
-from django.db.models import CASCADE, PROTECT
-from django.db.models import BooleanField
-from django.db.models import CharField
-from django.db.models import DateTimeField
-from django.db.models import ForeignKey
-from django.db.models import ManyToManyField
-from django.db.models import Model
-from django.db.models import OneToOneField
-from django.db.models import TextField
+from django.db.models import CASCADE, CharField, DateTimeField, ForeignKey, Model, OneToOneField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from zoneinfo import ZoneInfo
 
 
 User = get_user_model()
@@ -48,7 +37,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 
 
 def expire_in_weeks(ttl=24):
-    return datetime.now(pytz.utc) + timedelta(weeks=ttl)
+    return datetime.now(ZoneInfo('UTC')) + timedelta(weeks=ttl)
 
 
 def generate_id():
@@ -70,7 +59,7 @@ class Consumer(Model):
 
     def has_expired(self, now=None):
         if now is None:
-            now = datetime.now(pytz.utc)
+            now = datetime.now(ZoneInfo('UTC'))
         return self.expire_on < now
 
     def __repr__(self):
