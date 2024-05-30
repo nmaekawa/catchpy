@@ -56,7 +56,6 @@ class Consumer(Model):
         null=True,
         on_delete=CASCADE)
 
-
     def has_expired(self, now=None):
         if now is None:
             now = datetime.now(ZoneInfo('UTC'))
@@ -69,12 +68,17 @@ class Consumer(Model):
         return self.__repr__()
 
 
-
 @receiver(post_save, sender=CatchpyProfile)
 def create_or_update_profile_consumer(sender, instance, created, **kwargs):
     if created:
-        Consumer.objects.create(prime_profile=instance)
-    instance.prime_consumer.save()
-
-
+        consumer = Consumer.objects.create(parent_profile=instance)
+        instance.prime_consumer = consumer
+        instance.save()
+    else:
+        if not hasattr(instance, 'prime_consumer') or instance.prime_consumer is None:
+            consumer = Consumer.objects.create(parent_profile=instance)
+            instance.prime_consumer = consumer
+            instance.save()
+        else:
+            instance.prime_consumer.save()
 
