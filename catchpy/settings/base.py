@@ -15,8 +15,6 @@ import re
 
 from corsheaders.defaults import default_headers
 
-from .aws import get_ecs_task_ips
-
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_NAME = 'catchpy'
