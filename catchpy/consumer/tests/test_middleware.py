@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
-
 import pytest
 from django.http import HttpResponse
 from django.test import RequestFactory
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from ..catchjwt import decode_token, encode_catchjwt, validate_token
 from ..jwt_middleware import (
