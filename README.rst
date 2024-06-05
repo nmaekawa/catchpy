@@ -162,10 +162,10 @@ tests are located under each Django app:
 Github Actions CI
 ---------------
 Github Actions is configured to run unit tests on every new PR. The tests are configured in
-``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python3.8-3.12 using
-``tox``.
-
----eop
+``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python 3.8-3.12
+(currently supported versions) using `pytest` and a parallelized Github Actions matrix strategy which passes
+the Python version as a build argument to the Dockerfile. `tox` is configured for local developmment
+tests if that is preferred over `act`. 
 
 
 .. _W3C Web Annotation Data Model: https://www.w3.org/TR/annotation-model/
