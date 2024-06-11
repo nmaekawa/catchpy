@@ -23,6 +23,7 @@
     "context_id": {"@id": "catch:platform_context_id", "@type": "xsd:string"},
     "collection_id": {"@id": "catch:platform_collection_id", "@type": "xsd:string"},
     "target_source_id": {"@id": "catch:target_source_id", "@type": "xsd:nonNegativeInteger"},
+    "extra": {"@id": "catch:extra", "@container": "@set"},
     "permissions": {"@id": "catch:permissions", "@type": "@id"},
     "can_read": {"@id": "catch:can_read", "@container": "@set"},
     "can_update": {"@id": "catch:can_update", "@container": "@set"},

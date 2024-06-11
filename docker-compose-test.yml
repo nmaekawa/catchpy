@@ -1,7 +1,7 @@
 version: '3'
 services:
   db:
-    image: postgres
+    image: postgres:15
     ports:
       - "8001:5432"
     environment:
@@ -9,9 +9,11 @@ services:
       POSTGRES_PASSWORD: catchpy
       POSTGRES_DB: catchpy
   web:
-    build: .
-    image: hx/catchpy:dev
-    command: ["./wait-for-it.sh", "db:5432", "--", "./docker_entrypoint.sh"]
+    build: 
+      context: .
+      dockerfile: test.Dockerfile
+    image: hx/catchpy:test
+    command: ["./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - .:/code
     ports:

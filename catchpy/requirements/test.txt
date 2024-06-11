@@ -1,9 +1,13 @@
 -r base.txt
 
+black
+isort
+flake8
 mock
 model-bakery
 pytest
 pytest-django
+pytest-env
 pytest-mock
 
 tox

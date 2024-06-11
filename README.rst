@@ -1,28 +1,33 @@
-# catchpy
+catchpy
+=======
 
 HarvardX annotations storage API
 
 
-## Overview
+Overview
+--------
 
 catchpy is part of AnnotationsX, HarvardX implementation of annotations using
-the [`W3C Web Annotation Data Model`](https://www.w3.org/TR/annotation-model/).
+the `W3C Web Annotation Data Model`_.
 
-The [`OpenAPI Specification`](https://swagger.io/specification/v2/) for the catchpy annotation model can be found at:
+The `OpenAPI Specification`_ for the catchpy annotation model can be found at:
 
-- [/anno/static/anno/catch_api.json](/anno/static/anno/catch_api.json)
+    - https://raw.githubusercontent.com/nmaekawa/catchpy/master/anno/static/anno/catch_api.json
 
 A jsonld serialization of this model can be found at:
 
-- [catch_context_jsonld.json](https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json)
+    - https://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json
 
 
 
-## Quick Start
+Quick Start
+-----------
 
 For those who want to quickly check out what catchpy does.
 
-Make sure you have [docker](https://www.docker.com) installed to try this quickstart.
+Make sure you have docker_ installed to try this quickstart.
+
+::
 
     # clone this repo
     $> git clone https://github.com/nmaekawa/catchpy.git
@@ -31,14 +36,14 @@ Make sure you have [docker](https://www.docker.com) installed to try this quicks
     # start docker services
     $> docker-compose up
     $> docker-compose exec web python manage.py migrate
-    $> docker-compese exec web python manage.py createsupersuser
+    $> docker-compose exec web python manage.py createsuperuser
     $> open http://localhost:8000/static/anno/index.html
 
 
-This last command opens the API page, where you can try the [`Web Annotation`](https://www.w3.org/TR/annotation-model/)
-and the back-compat [AnnotatorJS](http://annotatorjs.org) APIs.
+This last command opens the API page, where you can try the `Web Annotation`_
+and the back-compat AnnotatorJS_ APIs.
 
-To actually issue rest requests, you will need a [jwt](https://jwt.io) token. Generate one
+To actually issue rest requests, you will need a jwt_ token. Generate one
 like below::
 
     # this generates a consumer/secret api key
@@ -61,15 +66,18 @@ into the API page, by clicking on the lock at the right of each API call, or on
 the ``Authorize`` button at the top right of the page.
 
 
-## Not So Quick Start
+Not So Quick Start
+------------------
 
-For those who want to set up a local instance of catchpy, for tests or
-developement.
+For those who want to set up a local instance of Catchpy, for tests or
+development.
 
-Setting up catchpy locally requires:
+Setting up Catchpy locally requires:
 
-    - postgres 9.6 or higher
-    - python 3.5 or higher
+    - Postgres 9.6 or higher
+    - Python 3.8 or higher (Django 4.2 requirement)
+
+::
 
     # clone this repo
     $> git clone https://github.com/nmaekawa/catchpy.git
@@ -122,18 +130,21 @@ You probably know this: ``./manage.py runserver`` is **not for production**
 deployment, use for development environment only!
 
 
-## Run unit tests
+Run unit tests
+---------------
 
 unit tests require:
 
-    - a postgres 9.6 or higher running (and its config in
+    - Postgres 9.6 or higher (config in
       ``catchpy/settings/test.py``); this is hard to fake because it requires
       postgres jsonb data type
 
     - the fortune program, ex: ``brew install fortune`` if you're in macos.
       ``fortune`` is used to create content in test annotations.
 
-tests are located under each django app:
+tests are located under each Django app:
+
+::
 
     # tests for annotations
     CATCHPY_DOTENV_PATH=/path/to/dotenv/file pytest -v anno/tests
@@ -143,3 +154,23 @@ tests are located under each django app:
 
     # or use tox
     CATCHPY_DOTENV_PATH=/path/to/dotenv/file tox
+
+
+Github Actions CI
+---------------
+Github Actions is configured to run unit tests on every new PR. The tests are configured in
+``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python3.8-3.12 using
+``tox``.
+
+---eop
+
+
+.. _W3C Web Annotation Data Model: https://www.w3.org/TR/annotation-model/
+.. _OpenAPI Specification: https://swagger.io/specification/v2/
+.. _docker: https://www.docker.com
+.. _Web Annotation: https://www.w3.org/TR/annotation-model/
+.. _AnnotatorJS: http://annotatorjs.org
+.. _jwt: https://jwt.io
+
+
+

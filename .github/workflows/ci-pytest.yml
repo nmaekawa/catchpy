@@ -1,0 +1,27 @@
+name: CI - Pytest
+
+on:
+    workflow_dispatch:
+    pull_request:
+        types: [opened, reopened, edited, synchronize]
+
+env:
+    CATCHPY_DOTENV_PATH: docker_dotenv.env
+
+jobs:
+    tests:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v3
+          - name: Build Docker images
+            run: |
+              docker compose -f docker-compose-test.yml build
+          - name: Run Docker Compose containers
+            run: |
+              docker compose -f docker-compose-test.yml up -d
+          - name: Run Pytest unit tests within Compose
+            run: |
+              docker compose -f docker-compose-test.yml exec web bash -c "tox"
+          - name: Stop Docker Compose containers
+            if: always()
+            run: docker compose -f docker-compose.yml down

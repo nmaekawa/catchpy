@@ -5,14 +5,20 @@ from django.core.management import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "transfer a selection of annotations, print results to console"
+    help = "transfer a selection of annotations, given instructors user-id map, print results to console"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--filepath",
-            dest="filepath",
+            "--collection_filepath",
+            dest="collection_filepath",
             required=True,
-            help='filepath to json file: [["src_collection_id", "tgt_collection_id"],["src_collection_id2", "tgt_collection_id2"]]',
+            help='filepath to json file: {"src_collection_id": "tgt_collection_id", "src_collection_id2": "tgt_collection_id2"}',
+        )
+        parser.add_argument(
+            "--userid_filepath",
+            dest="userid_filepath",
+            required=True,
+            help='filepath to json file map of source-userid->target-userid: {"srcid1": "tgtid", "srcid2": "tgtid2"}',
         )
         parser.add_argument(
             "--source_context_id",
@@ -32,49 +38,41 @@ class Command(BaseCommand):
             required=False,
             help="",
         )
-        parser.add_argument(
-            "--userid_list",
-            dest="userid_list",
-            required=False,
-            help="comma separated list of userids",
-        )
-        parser.add_argument(
-            "--username_list",
-            dest="username_list",
-            required=False,
-            help="comma separated list of usernames",
-        )
 
     def handle(self, *args, **kwargs):
-        filepath = kwargs["filepath"]
+        collection_f = kwargs["collection_filepath"]
+        userid_f = kwargs["userid_filepath"]
         source_context_id = kwargs["source_context_id"]
         target_context_id = kwargs["target_context_id"]
         platform_name = kwargs.get("platform_name", None)
-        userid_list = None
-        username_list = None
-        if kwargs["userid_list"]:
-            userid_list = kwargs["userid_list"].strip().split(",")
-        if kwargs["username_list"]:
-            username_list = kwargs["username_list"].strip().split(",")
 
-        with open(filepath, "r") as f:
+        with open(collection_f, "r") as f:
             collection_map = json.load(f)
 
+        with open(userid_f, "r") as f:
+            userid_map = json.load(f)
+
+        assert len(userid_map) > 0, "userid map is empty!"
+
         results = []
+        instructors = list(userid_map)
+        collections = list(collection_map)
         # TODO: not testing for repeated collection_id in input.
-        for collection_row in collection_map:
+        for collection_row in collections:
             selected = CRUD.select_annos(
                 context_id=source_context_id,
-                collection_id=collection_row[0],
+                collection_id=collection_row,
                 platform_name=platform_name,
-                userid_list=userid_list,
-                username_list=username_list,
+                userid_list=instructors,
                 is_copy=True,
             )  # do NOT return replies and deleted
+
             copy_result = CRUD.copy_annos(
                 anno_list=selected,
                 target_context_id=target_context_id,
-                target_collection_id=collection_row[1],
+                target_collection_id=collection_map[collection_row],
+                userid_map=userid_map,
+                fix_platform_name=True,
             )
             results.append(
                 {
