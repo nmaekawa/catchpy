@@ -272,7 +272,8 @@ Finally, be sure to run migrations.
 Build and Package
 -----------------
 
+**Build** Wheel
 - install `hatch <https://hatch.pypa.io/latest/install/>`_
 - set version in ``catchpy/__init__.py``
-- package (create Python wheel) ``hatch build``
-- publish to PYPI with ``hatch publish``
+- package (create Python wheel) ``hatch build``. This will create ``.tar.gz`` and ``.whl`` files in the ``./dist`` directory. Catchpy is currently a pure Python package, so the ``.whl`` file is platform independent and can be build on any platform.
+- create a new release on Github and upload the ``.tar.gz`` and ``.whl`` files. Tag the release with the version number. The ``.whl`` file can be targeted as a dependency in other projects.
