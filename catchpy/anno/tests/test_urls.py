@@ -39,7 +39,7 @@ def test_urls():
             'url': reverse('create_or_search'),
             'view_func': 'catchpy.anno.views.create_or_search'},
         {
-            'url': '/catchpy/annos/123-456-789',
+            'url': '/annos/123-456-789',
             'view_func': 'catchpy.anno.views.crud_api'},
     ]
 
