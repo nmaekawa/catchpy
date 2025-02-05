@@ -7,9 +7,10 @@ name = "catchpy"
 dynamic = ["version"]
 description = "Annotation storage backend"
 readme = "README.rst"
-license = ""
 authors = [
     { name = "nmaekawa", email = "nmaekawa@g.harvard.edu" },
+    { name = "coledcrawford", email = "cole_crawford@fas.harvard.edu" },
+    { name = "d-flood", email = "david_flood@fas.harvard.edu" },
 ]
 keywords = [
     "catchpy",
