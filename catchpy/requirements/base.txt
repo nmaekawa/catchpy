@@ -9,4 +9,3 @@ python-dotenv>=1.0.0
 requests>=2.31.0
 django-log-request-id>=2.1.0
 django-cors-headers>=4.2.0
-backports.zoneinfo;python_version<"3.9"

@@ -1,5 +1,5 @@
 # pass in Python version as build arg to allow for tests to be run on multiple versions of Python
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 FROM python:${PYTHON_VERSION}
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONUNBUFFERED 1

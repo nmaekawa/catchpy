@@ -29,5 +29,5 @@ urls = [
 # urlpatterns = urls + [path('admin/', admin.site.urls)]x
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('catchpy/', include(urls)),
+    path('', include(urls)),
 ]
