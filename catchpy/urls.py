@@ -20,9 +20,14 @@ from django.contrib import admin
 
 from . import views
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    re_path(r'^annos/?', include('anno.urls')),
+# import these when adding catchpy to an existing django project
+urls = [
+    re_path(r'^annos/?', include('catchpy.anno.urls')),
     path('version', views.app_version),
     path('is_alive', views.is_alive),
+]
+# urlpatterns = urls + [path('admin/', admin.site.urls)]x
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include(urls)),
 ]

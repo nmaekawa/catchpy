@@ -11,17 +11,25 @@ env:
 jobs:
     tests:
         runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
         steps:
-          - uses: actions/checkout@v3
+          - uses: actions/checkout@v4
+
           - name: Build Docker images
             run: |
-              docker compose -f docker-compose-test.yml build
+              PYTHON_VERSION=${{ matrix.python-version }} docker compose -f docker-compose-test.yml build
+
           - name: Run Docker Compose containers
             run: |
-              docker compose -f docker-compose-test.yml up -d
+              PYTHON_VERSION=${{ matrix.python-version }} docker compose -f docker-compose-test.yml up -d
+
           - name: Run Pytest unit tests within Compose
             run: |
-              docker compose -f docker-compose-test.yml exec web bash -c "tox"
+              docker compose -f docker-compose-test.yml exec web pytest
+
           - name: Stop Docker Compose containers
             if: always()
             run: docker compose -f docker-compose.yml down

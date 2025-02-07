@@ -8,13 +8,13 @@ import json
 from random import randint
 import logging
 
-from anno.anno_defaults import ANNOTATORJS_FORMAT
-from anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
-from anno.anno_defaults import CATCH_RESPONSE_LIMIT
-from anno.tests.conftest import make_wa_object
-from anno.tests.conftest import make_wa_tag
-from anno.tests.conftest import make_annotatorjs_object
-from consumer.catchjwt import encode_catchjwt
+from catchpy.anno.anno_defaults import ANNOTATORJS_FORMAT
+from catchpy.anno.anno_defaults import CATCH_DEFAULT_PLATFORM_NAME
+from catchpy.anno.anno_defaults import CATCH_RESPONSE_LIMIT
+from catchpy.anno.tests.conftest import make_wa_object
+from catchpy.anno.tests.conftest import make_wa_tag
+from catchpy.anno.tests.conftest import make_annotatorjs_object
+from catchpy.consumer.catchjwt import encode_catchjwt
 
 from locust import between
 from locust import HttpLocust

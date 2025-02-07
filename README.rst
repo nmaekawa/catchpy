@@ -25,7 +25,10 @@ Quick Start
 
 For those who want to quickly check out what catchpy does.
 
+CatchPy can also be installed a a Django app in an existing Django project. See `below <#install-as-a-django-app>`_ for more details.
+
 Make sure you have docker_ installed to try this quickstart.
+
 
 ::
 
@@ -34,10 +37,10 @@ Make sure you have docker_ installed to try this quickstart.
     $> cd catchpy
 
     # start docker services
-    $> docker-compose up
-    $> docker-compose exec web python manage.py migrate
-    $> docker-compose exec web python manage.py createsuperuser
-    $> open http://localhost:8000/static/anno/index.html
+    $> docker compose up
+    $> docker compose exec web python manage.py migrate
+    $> docker compose exec web python manage.py createsuperuser
+    $> open http://localhost:9000/static/anno/index.html
 
 
 This last command opens the API page, where you can try the `Web Annotation`_
@@ -47,14 +50,14 @@ To actually issue rest requests, you will need a jwt_ token. Generate one
 like below::
 
     # this generates a consumer/secret api key
-    $> docker-compose exec web python manage.py \
+    $> docker compose exec web python manage.py \
             create_consumer_pair \
                 --consumer "my_consumer" \
                 --secret "super_secret" \
                 --expire_in_weeks 1
 
     # this generates the token that expires in 10 min
-    $> docker-compose exec web python manage.py \
+    $> docker compose exec web python manage.py \
             make_token \
                 --user "exceptional_user" \
                 --api_key "my_consumer" \
@@ -159,10 +162,10 @@ tests are located under each Django app:
 Github Actions CI
 ---------------
 Github Actions is configured to run unit tests on every new PR. The tests are configured in
-``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python3.8-3.12 using
-``tox``.
-
----eop
+``.github/workflows/ci-pytest.yml``. The workflow is configured to run tests on Python 3.8-3.12
+(currently supported versions) using `pytest` and a parallelized Github Actions matrix strategy which passes
+the Python version as a build argument to the Dockerfile. `tox` is configured for local developmment
+tests if that is preferred over `act`. 
 
 
 .. _W3C Web Annotation Data Model: https://www.w3.org/TR/annotation-model/
@@ -173,5 +176,104 @@ Github Actions is configured to run unit tests on every new PR. The tests are co
 .. _jwt: https://jwt.io
 
 
+Install as a Django app
+-----------------------
 
+Add to your `requirements.txt`:
 
+.. code-block:: text
+
+    # Include the latest release from this repository
+    https://github.com/artshumrc/catchpy/releases/download/v2.7.1-django-package/catchpy-2.7.0.tar.gz
+
+Add to your `INSTALLED_APPS` in your Django settings:
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
+        ...
+        'catchpy.anno',
+        'catchpy.consumer',
+        ...
+    ]
+
+Add to your middleware in your Django settings:
+
+.. code-block:: python
+
+    MIDDLEWARE = [
+        ...
+        'corsheaders.middleware.CorsMiddleware',
+        'catchpy.middleware.HxCommonMiddleware',
+        'catchpy.consumer.jwt_middleware.jwt_middleware',
+        ...
+    ]
+
+Add the following to your Django settings:
+
+.. code-block:: python
+
+    # catchpy settings
+    CATCH_JSONLD_CONTEXT_IRI = os.environ.get(
+        'CATCH_JSONLD_CONTEXT_IRI',
+        'http://catchpy.harvardx.harvard.edu.s3.amazonaws.com/jsonld/catch_context_jsonld.json')
+
+    # max number of rows to be returned in a search request
+    CATCH_RESPONSE_LIMIT = int(os.environ.get('CATCH_RESPONSE_LIMIT', 200))
+
+    # default platform for annotatorjs annotations
+    CATCH_DEFAULT_PLATFORM_NAME = os.environ.get(
+        'CATCH_DEFAULT_PLATFORM_NAME', 'hxat-edx_v1.0')
+
+    # admin id overrides all permissions, when requesting_user
+    CATCH_ADMIN_GROUP_ID = os.environ.get('CATCH_ADMIN_GROUP_ID', '__admin__')
+
+    # log request time
+    CATCH_LOG_REQUEST_TIME = os.environ.get(
+        'CATCH_LOG_REQUEST_TIME', 'false').lower() == 'true'
+    CATCH_LOG_SEARCH_TIME = os.environ.get(
+        'CATCH_LOG_SEARCH_TIME', 'false').lower() == 'true'
+
+    # log jwt and jwt error message
+    CATCH_LOG_JWT = os.environ.get(
+        'CATCH_LOG_JWT', 'false').lower() == 'true'
+    CATCH_LOG_JWT_ERROR = os.environ.get(
+        'CATCH_LOG_JWT_ERROR', 'false').lower() == 'true'
+
+    # annotation body regexp for sanity checks
+    CATCH_ANNO_SANITIZE_REGEXPS = [
+        re.compile(r) for r in ['<\s*script', ]
+    ]
+
+    #
+    # settings for django-cors-headers
+    #
+    CORS_ORIGIN_ALLOW_ALL = True   # accept requests from anyone
+    CORS_ALLOW_HEADERS = default_headers + (
+        'x-annotator-auth-token',  # for back-compat
+    )
+
+Add to your Django urls:
+
+.. code-block:: python
+
+    from django.urls import path, include
+
+    from catchpy.urls import urls as catchpy_urls
+
+    urlpatterns = [
+        ...
+        path("catchpy/", include(catchpy_urls)),
+        ...
+    ]
+
+Finally, be sure to run migrations.
+
+Build and Package
+-----------------
+
+**Build** Wheel
+- install `hatch <https://hatch.pypa.io/latest/install/>`_
+- set version in ``catchpy/__init__.py``
+- package (create Python wheel) ``hatch build``. This will create ``.tar.gz`` and ``.whl`` files in the ``./dist`` directory. Catchpy is currently a pure Python package, so the ``.whl`` file is platform independent and can be build on any platform.
+- create a new release on Github and upload the ``.tar.gz`` and ``.whl`` files. Tag the release with the version number. The ``.whl`` file can be targeted as a dependency in other projects.

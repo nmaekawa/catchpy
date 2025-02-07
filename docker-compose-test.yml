@@ -1,7 +1,6 @@
-version: '3'
 services:
   db:
-    image: postgres:15
+    image: postgres:16
     ports:
       - "8001:5432"
     environment:
@@ -12,6 +11,8 @@ services:
     build: 
       context: .
       dockerfile: test.Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION}
     image: hx/catchpy:test
     command: ["./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:

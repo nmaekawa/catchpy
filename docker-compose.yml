@@ -1,7 +1,6 @@
-version: '3'
 services:
   db:
-    image: postgres
+    image: postgres:16
     ports:
       - "8001:5432"
     environment:
@@ -9,7 +8,10 @@ services:
       POSTGRES_PASSWORD: catchpy
       POSTGRES_DB: catchpy
   web:
-    build: .
+    build: 
+      context: .
+      args:
+        REQUIREMENTS_FILE: catchpy/requirements/dev.txt
     image: hx/catchpy:dev
     command: ["./wait-for-it.sh", "db:5432", "--", "./docker_entrypoint.sh"]
     volumes:
